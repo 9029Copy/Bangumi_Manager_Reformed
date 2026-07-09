@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -65,18 +66,16 @@ fun SortAndFilterRow(
     onOpenMoreFilters: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var filterCount by remember { mutableIntStateOf(0) }
-
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 4.dp),
+            .padding(horizontal = 8.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Row(
             modifier = Modifier
                 .weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             FilterChip(
@@ -98,14 +97,11 @@ fun SortAndFilterRow(
                 selected = false,
                 onClick = onOpenMoreFilters,
                 label = {
-                    Text("筛选 - ${filterCount}项")
+                    Text("筛选")
                 },
                 leadingIcon = {
                     Icon(
-                        painter = when (filterCount) {
-                            0 -> painterResource(R.drawable.filter_alt_outlined)
-                            else -> painterResource(R.drawable.filter_alt_filled)
-                        },
+                        painter = painterResource(R.drawable.filter_alt_outlined),
                         contentDescription = "更多筛选",
                         modifier = Modifier.size(FilterChipDefaults.IconSize),
                     )
@@ -113,7 +109,7 @@ fun SortAndFilterRow(
             )
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(6.dp))
 
         // 右侧排序区域：固定靠右
         SortControl(
@@ -201,23 +197,27 @@ private fun SortControl(
 }
 
 
-//@Preview
-//@Composable
-//fun PreviewHere() {
-//    Column(
-//        modifier = Modifier.fillMaxSize().background(Color.White)
-//    ) {
-//        SortAndFilterRow(
-//            isFocusingUpdating = false,
-//            selectedSortTag = SortTags.BY_RECENT_UPDATE,
-//            selectedSortOrder = SortOrders.ASC,
-//
-//            onFocusingUpdatingChanged = {},
-//            onSortTagSelected = {},
-//            onSortOrderSelected = {},
-//
-//            onOpenMoreFilters = {},
-//            modifier = Modifier,
-//        )
-//    }
-//}
+
+
+
+
+@Preview
+@Composable
+private fun PreviewHere() {
+    Column(
+        modifier = Modifier.fillMaxSize().background(Color.White)
+    ) {
+        SortAndFilterRow(
+            isFocusingUpdating = false,
+            selectedSortTag = SortTags.BY_RECENT_UPDATE,
+            selectedSortOrder = SortOrders.ASC,
+
+            onFocusingUpdatingChanged = {},
+            onSortTagSelected = {},
+            onSortOrderSelected = {},
+
+            onOpenMoreFilters = {},
+            modifier = Modifier,
+        )
+    }
+}

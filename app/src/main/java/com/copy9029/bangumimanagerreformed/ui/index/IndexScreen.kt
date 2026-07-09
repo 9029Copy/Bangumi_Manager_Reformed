@@ -118,31 +118,18 @@ fun IndexScreen(
                 sortAndFilterStatus.updateTag == UpdateTags.UPDATING &&
                 sortAndFilterStatus.watchedTag == WatchedTags.ALL
 
-            // temporary
-            val bangumisToShow = remember {
-                listOf(
-                    Bangumi(
-                        bangumiId = 1,
-                        title = "bangumi title 1",
-                        seasonYear = 2026,
-                        seasonMonth = 7,
-                        myScore = 100,
-                        firstBroadcastDate = LocalDate.of(2026, 7, 1),
-                        totalEpisodes = null,
-                        latestWatchedEpisode = 2,
-                        expectedEndDate = null,
-                    ),
-                    Bangumi(
-                        bangumiId = 2,
-                        title = "bangumi title 2",
-                        seasonYear = 2026,
-                        seasonMonth = 7,
-                        myScore = 100,
-                        firstBroadcastDate = LocalDate.of(2026, 7, 2),
-                        totalEpisodes = null,
-                        latestWatchedEpisode = 3,
-                        expectedEndDate = null,
-                    )
+            // TODO: temporary
+            val bangumisToShow = List(10) { index ->
+                Bangumi(
+                    bangumiId = index + 1,
+                    title = "bangumi title ${index + 1}",
+                    seasonYear = 2026,
+                    seasonMonth = 7,
+                    myScore = 100,
+                    firstBroadcastDate = LocalDate.of(2026, 7, 1).plusWeeks(index.toLong()),
+                    totalEpisodes = null,
+                    latestWatchedEpisode = 1,
+                    expectedEndDate = null,
                 )
             }
 

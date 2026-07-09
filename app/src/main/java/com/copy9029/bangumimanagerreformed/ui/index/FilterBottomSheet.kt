@@ -4,22 +4,30 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,8 +60,13 @@ fun FilterBottomSheet(
     endYear: Int,
     modifier: Modifier = Modifier,
 ) {
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+    )
+
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
+        sheetState = sheetState,
         modifier = modifier,
     ) {
         Column(
@@ -62,7 +75,9 @@ fun FilterBottomSheet(
                 .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(text = "筛选", fontSize = 20.sp)
+            Text(text = "筛选", fontSize = 24.sp)
+
+            Spacer(modifier = Modifier.height(3.dp))
 
             FilterSection1(
                 startYear = startYear,
@@ -104,6 +119,8 @@ fun FilterBottomSheet(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(4.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -164,7 +181,7 @@ private fun FilterSection1(
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(text = "季度")
+        Text(text = "季度", fontSize = 18.sp)
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -197,7 +214,7 @@ private fun FilterSection2(
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Text(text = title)
+        Text(text = title, fontSize = 18.sp)
 
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -214,6 +231,7 @@ private data class FilterDropdownOption<T>(
     val label: String,
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun <T> FilterDropdown(
     label: String,
@@ -231,9 +249,17 @@ private fun <T> FilterDropdown(
         ?.label
         ?: "全部"
 
-    Box(modifier = modifier) {
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = {
+            expanded = !expanded
+        },
+        modifier = modifier,
+    ) {
         AssistChip(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
             onClick = {
                 expanded = true
             },
@@ -241,28 +267,35 @@ private fun <T> FilterDropdown(
                 Text("$label：$selectedText")
             },
             trailingIcon = {
-                Icon(
-                    imageVector = Icons.Filled.KeyboardArrowDown,
-                    contentDescription = null,
+                ExposedDropdownMenuDefaults.TrailingIcon(
+                    expanded = expanded,
                 )
             },
         )
 
-        DropdownMenu(
+        ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = {
                 expanded = false
             },
+            modifier = Modifier
+                .heightIn(max = 240.dp)
+                .verticalScroll(rememberScrollState()),
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
+                    modifier = Modifier.height(36.dp),
                     text = {
-                        Text(option.label)
+                        Text(option.label, fontSize = 14.sp, lineHeight = 18.sp,)
                     },
                     onClick = {
                         onValueSelected(option.value)
                         expanded = false
                     },
+                    contentPadding = PaddingValues(
+                        horizontal = 10.dp,
+                        vertical = 2.dp,
+                    ),
                 )
             }
         }
