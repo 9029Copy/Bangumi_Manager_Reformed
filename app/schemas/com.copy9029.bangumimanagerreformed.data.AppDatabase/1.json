@@ -1,0 +1,127 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "dbaf6bbd7b89b00481251d11e3c0b451",
+    "entities": [
+      {
+        "tableName": "bangumi_items",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`bangumiId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `seasonYear` INTEGER NOT NULL, `seasonMonth` INTEGER NOT NULL, `myScore` INTEGER NOT NULL, `firstBroadcastDate` INTEGER NOT NULL, `totalEpisodes` INTEGER, `latestWatchedEpisode` INTEGER NOT NULL, `expectedEndDate` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "bangumiId",
+            "columnName": "bangumiId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "seasonYear",
+            "columnName": "seasonYear",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "seasonMonth",
+            "columnName": "seasonMonth",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "myScore",
+            "columnName": "myScore",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "firstBroadcastDate",
+            "columnName": "firstBroadcastDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalEpisodes",
+            "columnName": "totalEpisodes",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "latestWatchedEpisode",
+            "columnName": "latestWatchedEpisode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "expectedEndDate",
+            "columnName": "expectedEndDate",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "bangumiId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "bangumi_schedule_items",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`bangumiId` INTEGER NOT NULL, `episodeId` INTEGER NOT NULL, `broadcastDate` INTEGER NOT NULL, PRIMARY KEY(`bangumiId`, `episodeId`), FOREIGN KEY(`bangumiId`) REFERENCES `bangumi_items`(`bangumiId`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "bangumiId",
+            "columnName": "bangumiId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "episodeId",
+            "columnName": "episodeId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "broadcastDate",
+            "columnName": "broadcastDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "bangumiId",
+            "episodeId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": [
+          {
+            "table": "bangumi_items",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "bangumiId"
+            ],
+            "referencedColumns": [
+              "bangumiId"
+            ]
+          }
+        ]
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'dbaf6bbd7b89b00481251d11e3c0b451')"
+    ]
+  }
+}
