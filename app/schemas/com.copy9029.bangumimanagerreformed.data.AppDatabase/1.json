@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "dbaf6bbd7b89b00481251d11e3c0b451",
+    "identityHash": "b438335c0b80d39958bd5d603366a694",
     "entities": [
       {
         "tableName": "bangumi_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`bangumiId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `seasonYear` INTEGER NOT NULL, `seasonMonth` INTEGER NOT NULL, `myScore` INTEGER NOT NULL, `firstBroadcastDate` INTEGER NOT NULL, `totalEpisodes` INTEGER, `latestWatchedEpisode` INTEGER NOT NULL, `expectedEndDate` INTEGER)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`bangumiId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `seasonYear` INTEGER NOT NULL, `seasonMonth` INTEGER NOT NULL, `myScore` INTEGER, `themeColorLong` INTEGER NOT NULL, `firstBroadcastDate` INTEGER NOT NULL, `totalEpisodes` INTEGER, `latestWatchedEpisode` INTEGER NOT NULL, `isActive` INTEGER NOT NULL, `expectedEndDate` INTEGER)",
         "fields": [
           {
             "fieldPath": "bangumiId",
@@ -36,6 +36,12 @@
             "fieldPath": "myScore",
             "columnName": "myScore",
             "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "themeColorLong",
+            "columnName": "themeColorLong",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -53,6 +59,12 @@
           {
             "fieldPath": "latestWatchedEpisode",
             "columnName": "latestWatchedEpisode",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isActive",
+            "columnName": "isActive",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -121,7 +133,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'dbaf6bbd7b89b00481251d11e3c0b451')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b438335c0b80d39958bd5d603366a694')"
     ]
   }
 }

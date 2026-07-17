@@ -10,17 +10,19 @@ import java.time.YearMonth
 @Entity(tableName = "bangumi_items")
 data class Bangumi(
     @PrimaryKey(autoGenerate = true)
-    val bangumiId: Int = 0,
+    val bangumiId: Int = 1,
 
     val title: String,
     val seasonYear: Int,
     val seasonMonth: Int,
-    val myScore: Int,   // 0-100, divided by 10 when displayed
+    val myScore: Int?,   // 0-100, divided by 10 when displayed
+    val themeColorLong: Long,
 
     val firstBroadcastDate: LocalDate,
     val totalEpisodes: Int? = null,
 
-    val latestWatchedEpisode: Int,
+    val latestWatchedEpisode: Int = 0, // 0表示未观看  TODO:（不考虑第0话）
+    val isActive: Boolean = true,
 
     // 冗余字段：
     val expectedEndDate: LocalDate? = null, // totalEpisodes改变时 / schedule改变时：更新

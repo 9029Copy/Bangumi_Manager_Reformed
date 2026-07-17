@@ -6,36 +6,32 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.copy9029.bangumimanagerreformed.data.BangumiRepository
+import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiEditScreen
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import com.copy9029.bangumimanagerreformed.ui.index.IndexScreen
+import com.copy9029.bangumimanagerreformed.ui.index.IndexViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import androidx.hilt.navigation.compose.hiltViewModel
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,20 +44,19 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@PreviewScreenSizes
 @Composable
 fun BangumiManagerReformedApp() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    var currentDestination = navBackStackEntry?.destination
+    val currentDestination = navBackStackEntry?.destination
 
     NavigationSuiteScaffold(
         navigationSuiteItems = {
-            AppDestinations.entries.forEach { dest ->
+            BottomDestination.entries.forEach { dest ->
                 item(
                     icon = {
                         Icon(
-                            painterResource(id = dest.icon),
+                            painter = painterResource(id = dest.icon),
                             contentDescription = dest.label
                         )
                     },
@@ -86,26 +81,45 @@ fun BangumiManagerReformedApp() {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = AppDestinations.INDEX.route, // 初始页面
+                startDestination = BottomDestination.INDEX.route, // 初始页面
                 modifier = Modifier.padding(innerPadding)
             ) {
-                composable(AppDestinations.CALENDAR.route) {
+                composable(BottomDestination.CALENDAR.route) {
 //                    CalendarScreen()
-                    IndexScreen()
                 }
-                composable(AppDestinations.INDEX.route) {
-                    IndexScreen()
+                composable(BottomDestination.INDEX.route) {
+                    val indexViewModel: IndexViewModel = hiltViewModel()
+                    IndexScreen(
+                        viewModel = indexViewModel,
+                        onEditClick = { bangumiId ->
+                            navController.navigate(Routes.bangumiEdit(bangumiId))
+                        },
+                    )
                 }
-                composable(AppDestinations.PROFILE.route) {
+                composable(BottomDestination.PROFILE.route) {
 //                    ProfileScreen()
-                    IndexScreen()
+                }
+
+                composable(
+                    route = Routes.BANGUMI_EDIT,
+                    arguments = listOf(
+                        navArgument("bangumiId") { type = NavType.IntType }
+                    ),
+                ) { backStackEntry ->
+                    val bangumiId = backStackEntry.arguments?.getInt("bangumiId")
+                        ?: return@composable
+
+                    BangumiEditScreen(
+                        bangumiId = bangumiId,
+                        onBack = navController::navigateUp,
+                    )
                 }
             }
         }
     }
 }
 
-enum class AppDestinations(
+enum class BottomDestination(
     val label: String,
     val icon: Int,
     val route: String,
@@ -113,4 +127,11 @@ enum class AppDestinations(
     CALENDAR("Calendar", R.drawable.app_dest_calendar, "calendar"),
     INDEX("Index", R.drawable.app_dest_index, "index"),
     PROFILE("Profile", R.drawable.app_dest_profile, "profile"),
+}
+
+object Routes {
+    const val BANGUMI_EDIT = "bangumi_edit/{bangumiId}"
+    fun bangumiEdit(bangumiId: Int): String {
+        return "bangumi_edit/${bangumiId}"
+    }
 }

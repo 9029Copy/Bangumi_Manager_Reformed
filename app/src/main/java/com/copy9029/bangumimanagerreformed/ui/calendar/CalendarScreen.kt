@@ -54,10 +54,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import com.copy9029.bangumimanagerreformed.ui.BangumiViewModel
-
-
-
 
 
 //

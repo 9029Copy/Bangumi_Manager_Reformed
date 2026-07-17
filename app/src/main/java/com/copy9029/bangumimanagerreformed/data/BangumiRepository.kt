@@ -1,13 +1,33 @@
 package com.copy9029.bangumimanagerreformed.data
 
-class BangumiRepository(private val bangumiDao: BangumiDao) {
+import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-    suspend fun insertBangumi(bangumi: Bangumi): Long = bangumiDao.insertBangumi(bangumi)
+class BangumiRepository @Inject constructor(
+    private val bangumiDao: BangumiDao,
+) {
 
-    suspend fun updateBangumi(bangumi: Bangumi) = bangumiDao.updateBangumi(bangumi)
+//    suspend fun insertBangumi(bangumi: Bangumi): Long = bangumiDao.insertBangumi(bangumi)
+//
+//    suspend fun updateBangumi(bangumi: Bangumi) = bangumiDao.updateBangumi(bangumi)
+//
+//    suspend fun deleteBangumi(bangumiId: Int) = bangumiDao.deleteBangumi(bangumiId)
 
-    suspend fun deleteBangumi(bangumi: Bangumi) = bangumiDao.deleteBangumi(bangumi)
+//    fun getLatestAiredEpisode(bangumiId: Int) =
 
 
+    //=============== ViewModel Operations ==================
+
+    fun getAllBangumis(): Flow<List<Bangumi>> {
+        return bangumiDao.getAllBangumis()
+    }
+
+    fun getAllSchedules(): Flow<List<BangumiSchedule>> {
+        return bangumiDao.getAllSchedules()
+    }
+
+    suspend fun watch1Episode(bangumiId: Int) {
+
+    }
 
 }

@@ -1,0 +1,268 @@
+package com.copy9029.bangumimanagerreformed.ui.index
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.copy9029.bangumimanagerreformed.data.Bangumi
+import com.copy9029.bangumimanagerreformed.data.BangumiRepository
+import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
+import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialogUiState
+import com.copy9029.bangumimanagerreformed.ui.bangumi.toDetailDialogUiState
+import com.copy9029.bangumimanagerreformed.util.buildBangumiWatchProgressText
+import com.copy9029.bangumimanagerreformed.util.latestAiredBroadcastDate
+import com.copy9029.bangumimanagerreformed.util.latestAiredEpisode
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+data class IndexUiState(
+    val bangumiList: List<BangumiIndexItemUiState> = emptyList(),
+
+    val sortAndFilterStatus: SortAndFilterStatus = FocusingUpdatingStatus,
+    val isFocusingUpdating: Boolean = true,
+
+    val isFilterSheetVisible: Boolean = false,
+    val filterStartYear: Int = 2025,
+    val filterEndYear: Int = 2027,
+
+    val bangumiDetailSelected: BangumiDetailDialogUiState? = null,  // null -> invisible, notnull -> visible
+
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+)
+
+data class BangumiIndexItemUiState(
+    val titleStr: String,
+    val watchProgressStr: String,
+    val themeColorLong: Long,
+
+    val bangumiIdInt: Int,
+)
+
+@HiltViewModel
+class IndexViewModel @Inject constructor(
+    private val repository: BangumiRepository,
+): ViewModel() {
+
+    private val sortAndFilterStatus = MutableStateFlow(FocusingUpdatingStatus)
+    private val isFilterSheetVisible = MutableStateFlow(false)
+    private val selectedBangumiId = MutableStateFlow<Int?>(null)
+
+    val uiState: StateFlow<IndexUiState> = combine(
+        repository.getAllBangumis(),
+        repository.getAllSchedules(),
+        sortAndFilterStatus,
+        isFilterSheetVisible,
+        selectedBangumiId,
+    ) { bangumis, schedules, sortAndFilterStatus, filterSheetVisible, selectedId ->
+
+        val schedulesByBangumiId = schedules.groupBy { it.bangumiId }
+
+        val filteredBangumis = bangumis
+            .filterByStatus(sortAndFilterStatus, /*schedulesByBangumiId*/)
+            .sortByStatus(sortAndFilterStatus, schedulesByBangumiId)
+
+        val itemUiStates = filteredBangumis.map { bangumi ->
+            bangumi.toIndexItemUiState(
+                schedules = schedulesByBangumiId[bangumi.bangumiId].orEmpty(),
+            )
+        }
+
+        val selectedBangumi = bangumis.firstOrNull {
+            it.bangumiId == selectedId
+        }
+
+        IndexUiState(
+            bangumiList = itemUiStates,
+            sortAndFilterStatus = sortAndFilterStatus,
+            isFocusingUpdating = sortAndFilterStatus == FocusingUpdatingStatus,
+            isFilterSheetVisible = filterSheetVisible,
+            filterStartYear = bangumis.minOfOrNull { it.seasonYear } ?: 2025,
+            filterEndYear = bangumis.maxOfOrNull { it.seasonYear } ?: 2027,
+            bangumiDetailSelected = selectedBangumi?.toDetailDialogUiState(
+                schedules = schedulesByBangumiId[selectedBangumi.bangumiId].orEmpty(),
+            ),
+            isLoading = false,
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = IndexUiState(isLoading = true),
+    )
+
+    fun onFocusingUpdatingChanged(checked: Boolean) {
+        sortAndFilterStatus.value = if (checked) {
+            FocusingUpdatingStatus
+        } else {
+            UnfocusingUpdatingStatus
+        }
+    }
+
+    fun onSortTagSelected(sortTag: SortTags) {
+        sortAndFilterStatus.value =
+            sortAndFilterStatus.value.copy(sortTag = sortTag)
+    }
+
+    fun onSortOrderSelected(sortOrder: SortOrders) {
+        sortAndFilterStatus.value =
+            sortAndFilterStatus.value.copy(sortOrder = sortOrder)
+    }
+
+    fun onFilterStatusChanged(status: SortAndFilterStatus) {
+        sortAndFilterStatus.value = status
+    }
+
+    fun onOpenFilterSheet() {
+        isFilterSheetVisible.value = true
+    }
+
+    fun onDismissFilterSheet() {
+        isFilterSheetVisible.value = false
+    }
+
+    fun onBangumiClick(bangumiId: Int) {
+        selectedBangumiId.value = bangumiId
+    }
+
+    fun onDismissDetailDialog() {
+        selectedBangumiId.value = null
+    }
+
+    fun onAdd1BangumiClick(bangumiId: Int) {
+        viewModelScope.launch {
+            repository.watch1Episode(bangumiId)
+        }
+    }
+
+    fun onItemMoreClick(bangumiId: Int) {
+        // TODO
+    }
+
+}
+
+
+
+private fun List<Bangumi>.filterByStatus(
+    sortAndFilterStatus: SortAndFilterStatus,
+//    schedulesByBangumiId: Map<Int, List<BangumiSchedule>>
+): List<Bangumi> {
+    val today = LocalDate.now()
+
+    return this
+        .filter { bangumi ->
+            sortAndFilterStatus.seasonYear == null ||
+                    bangumi.seasonYear == sortAndFilterStatus.seasonYear
+        }
+        .filter { bangumi ->
+            sortAndFilterStatus.seasonMonth == null ||
+                    bangumi.seasonMonth == sortAndFilterStatus.seasonMonth
+        }
+        .filter { bangumi ->
+            when (sortAndFilterStatus.watchedTag) {
+                WatchedTags.ALL -> true
+                WatchedTags.FINISHED -> bangumi.isFinished(today)   // 已看完: 仅"已完结已看完"
+                WatchedTags.UNFINISHED -> !bangumi.isFinished(today) // 未看完: 包括“已完结未看完”和“未完结”
+            }
+        }
+        .filter { bangumi ->
+            when (sortAndFilterStatus.inactiveTag) {
+                InactiveTags.ALL -> true
+                InactiveTags.ACTIVE -> bangumi.isActive
+                InactiveTags.INACTIVE -> !bangumi.isActive
+            }
+        }
+}
+
+
+private fun List<Bangumi>.sortByStatus(
+    sortAndFilterStatus: SortAndFilterStatus,
+    schedulesByBangumiId: Map<Int, List<BangumiSchedule>>
+): List<Bangumi> {
+    val today = LocalDate.now()
+    val sorted = when (sortAndFilterStatus.sortTag) {
+        SortTags.FOCUSING_UPDATE_MODE -> {
+            sortedWith(
+                compareByDescending<Bangumi> { bangumi ->
+                    val latestAired = bangumi.latestAiredEpisode(
+                        schedules = schedulesByBangumiId[bangumi.bangumiId].orEmpty(),
+                        today = today,
+                    )
+
+                    bangumi.latestWatchedEpisode < latestAired
+                }.thenByDescending { bangumi ->
+                    bangumi.latestAiredBroadcastDate(
+                        schedules = schedulesByBangumiId[bangumi.bangumiId].orEmpty(),
+                        today = today,
+                    ) ?: LocalDate.MIN
+                }
+            )
+        }
+
+        SortTags.BY_RECENT_UPDATE -> {
+            sortedBy { bangumi ->
+                bangumi.latestAiredBroadcastDate(
+                    schedules = schedulesByBangumiId[bangumi.bangumiId].orEmpty(),
+                    today = today,
+                ) ?: LocalDate.MIN
+            }
+        }
+
+        SortTags.BY_START_TIME -> {
+            sortedBy { it.firstBroadcastDate }
+        }
+    }
+
+    return when (sortAndFilterStatus.sortOrder) {
+        SortOrders.ASC -> sorted.asReversed()
+        SortOrders.DESC -> sorted
+    }
+}
+
+
+private fun Bangumi.toIndexItemUiState(
+    schedules: List<BangumiSchedule>,
+): BangumiIndexItemUiState {
+    val today = LocalDate.now()
+    val latestAiredEpisode = latestAiredEpisode(
+        schedules = schedules,
+        today = today,
+    )
+    return BangumiIndexItemUiState(
+        titleStr = title,
+        watchProgressStr = buildBangumiWatchProgressText(
+            latestWatchedEpisode = latestWatchedEpisode,
+            latestAiredEpisode = latestAiredEpisode,
+            totalEpisodes = totalEpisodes,
+            startDate = firstBroadcastDate,
+        ),
+        themeColorLong = themeColorLong,
+        bangumiIdInt = bangumiId,
+    )
+}
+
+
+/**
+ * 是否看完
+ */
+private fun Bangumi.isFinished(today: LocalDate): Boolean {
+    return if (this.isUpdating(today)) {
+        false
+    } else {
+        latestWatchedEpisode >= totalEpisodes!!.toInt()
+    }
+}
+
+/**
+ * 是否正在连载中
+ */
+private fun Bangumi.isUpdating(today: LocalDate): Boolean {
+    return expectedEndDate == null || !expectedEndDate.isBefore(today)
+}
+
+
+

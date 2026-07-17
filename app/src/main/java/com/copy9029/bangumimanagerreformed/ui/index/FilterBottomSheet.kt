@@ -1,9 +1,7 @@
 package com.copy9029.bangumimanagerreformed.ui.index
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,18 +9,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -33,21 +28,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-enum class UpdateTags(val label: String) {
-    ALL("全部"),
-    UPDATING("连载中"),
-    ENDED("已完结"),
-}
 
 enum class WatchedTags(val label: String) {
     ALL("全部"),
     UNFINISHED("未看完"),
     FINISHED("已看完"),
+}
+
+enum class InactiveTags(val label: String) {
+    ACTIVE("不显示"),
+    ALL("显示"),
+    INACTIVE("仅显示"),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,12 +89,12 @@ fun FilterBottomSheet(
                 },
             )
 
-            FilterSection2(title = "更新状态") {
-                UpdateTags.entries.forEach { tag ->
+            FilterSection2(title = "观看状态") {
+                WatchedTags.entries.forEach { tag ->
                     FilterChip(
-                        selected = status.updateTag == tag,
+                        selected = status.watchedTag == tag,
                         onClick = {
-                            onStatusChange(status.copy(updateTag = tag))
+                            onStatusChange(status.copy(watchedTag = tag))
                         },
                         label = {
                             Text(tag.label)
@@ -106,12 +103,12 @@ fun FilterBottomSheet(
                 }
             }
 
-            FilterSection2(title = "观看状态") {
-                WatchedTags.entries.forEach { tag ->
+            FilterSection2(title = "不活跃项") {
+                InactiveTags.entries.forEach { tag ->
                     FilterChip(
-                        selected = status.watchedTag == tag,
+                        selected = status.inactiveTag == tag,
                         onClick = {
-                            onStatusChange(status.copy(watchedTag = tag))
+                            onStatusChange(status.copy(inactiveTag = tag))
                         },
                         label = {
                             Text(tag.label)
@@ -132,8 +129,8 @@ fun FilterBottomSheet(
                             status.copy(
                                 seasonYear = null,
                                 seasonMonth = null,
-                                updateTag = UpdateTags.ALL,
                                 watchedTag = WatchedTags.ALL,
+                                inactiveTag = InactiveTags.ACTIVE,
                             )
                         )
                     },
@@ -211,14 +208,18 @@ private fun FilterSection2(
     title: String,
     content: @Composable () -> Unit,
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(text = title, fontSize = 18.sp)
 
-        FlowRow(
+        Spacer(modifier = Modifier.width(30.dp))
+
+        Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+//            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             content()
         }
@@ -252,7 +253,7 @@ private fun <T> FilterDropdown(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = {
-            expanded = !expanded
+            expanded = !expanded    // FIXME
         },
         modifier = modifier,
     ) {
@@ -308,9 +309,6 @@ private fun <T> FilterDropdown(
 
 
 
-
-
-
 @Preview
 @Composable
 private fun PreviewBottomSheet() {
@@ -318,9 +316,9 @@ private fun PreviewBottomSheet() {
         status = SortAndFilterStatus(
             null,
             null,
-            UpdateTags.ALL,
             WatchedTags.ALL,
-            SortTags.BY_START_TIME,
+            InactiveTags.ACTIVE,
+            SortTags.FOCUSING_UPDATE_MODE,
             SortOrders.ASC
         ),
         onStatusChange = {},

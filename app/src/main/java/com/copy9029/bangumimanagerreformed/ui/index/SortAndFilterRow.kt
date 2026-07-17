@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,7 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,14 +34,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.copy9029.bangumimanagerreformed.R
-import java.time.YearMonth
-
-
 
 
 enum class SortTags(val label: String) {
+    FOCUSING_UPDATE_MODE("按完成状态"),
     BY_RECENT_UPDATE("按更新时间"),
-    BY_NAME("按名称"),
     BY_START_TIME("按开播日期"),
 }
 
@@ -82,7 +77,7 @@ fun SortAndFilterRow(
                 selected = isFocusingUpdating,
                 onClick = { onFocusingUpdatingChanged(!isFocusingUpdating) },
                 label = {
-                    Text("仅看连载中")
+                    Text("追更模式")
                 },
                 leadingIcon = {
                     Checkbox(
