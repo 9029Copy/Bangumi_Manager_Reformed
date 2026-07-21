@@ -9,7 +9,15 @@ import androidx.room.TypeConverters
 // entities 数组里放入所有的 Entity（表）
 // version 是数据库版本号，以后修改表结构时需要升级这个版本号
 @TypeConverters(Converters::class)
-@Database(entities = [Bangumi::class, BangumiSchedule::class], version = 1, exportSchema = true)
+@Database(
+    entities = [
+        Bangumi::class,
+        BangumiSchedule::class,
+//        ThemeColor::class,  // TODO: themeColor
+    ],
+    version = 1,
+    exportSchema = true
+)
 abstract class AppDatabase : RoomDatabase() {
 
     // 抽象方法，返回我们的 DAO。Room 会在编译时自动帮我们实现这个接口。

@@ -6,11 +6,22 @@ import java.time.LocalDate
 
 
 fun buildBangumiWatchProgressText(
+    dayOfWeekInt: Int,
     latestWatchedEpisode: Int,
     latestAiredEpisode: Int,
     totalEpisodes: Int?,
     startDate: LocalDate,
 ): String {
+    val str0 = when (dayOfWeekInt) {
+        1 -> "周一"
+        2 -> "周二"
+        3 -> "周三"
+        4 -> "周四"
+        5 -> "周五"
+        6 -> "周六"
+        7 -> "周日"
+        else -> "周？"
+    }
     val str1 = if (latestWatchedEpisode > 0/*TODO: 第0话？*/) {
         "已看完第 $latestWatchedEpisode 话"
     } else {
@@ -27,7 +38,7 @@ fun buildBangumiWatchProgressText(
         "${startDate.month} 月 ${startDate.dayOfMonth} 日开播"
     }
 
-    return "$str1 丨 $str2"
+    return "$str0 丨 $str1 丨 $str2"
 }
 
 

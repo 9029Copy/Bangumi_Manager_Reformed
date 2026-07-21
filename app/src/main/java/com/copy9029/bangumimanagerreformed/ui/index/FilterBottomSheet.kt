@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 
 
 enum class WatchedTags(val label: String) {
@@ -253,7 +254,7 @@ private fun <T> FilterDropdown(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = {
-            expanded = !expanded    // FIXME
+            expanded = !expanded
         },
         modifier = modifier,
     ) {
@@ -312,18 +313,21 @@ private fun <T> FilterDropdown(
 @Preview
 @Composable
 private fun PreviewBottomSheet() {
-    FilterBottomSheet(
-        status = SortAndFilterStatus(
-            null,
-            null,
-            WatchedTags.ALL,
-            InactiveTags.ACTIVE,
-            SortTags.FOCUSING_UPDATE_MODE,
-            SortOrders.ASC
-        ),
-        onStatusChange = {},
-        onDismissRequest = {},
-        startYear = 2025,
-        endYear = 2026,
-    )
+    BangumiManagerReformedTheme(dynamicColor = false) {
+        FilterBottomSheet(
+            status = SortAndFilterStatus(
+                null,
+                null,
+                WatchedTags.ALL,
+                InactiveTags.ACTIVE,
+                SortTags.FOCUSING_UPDATE_MODE,
+                SortOrders.ASC
+            ),
+            onStatusChange = {},
+            onDismissRequest = {},
+            startYear = 2025,
+            endYear = 2026,
+        )
+    }
+
 }

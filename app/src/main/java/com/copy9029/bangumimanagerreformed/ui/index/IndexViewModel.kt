@@ -42,6 +42,7 @@ data class BangumiIndexItemUiState(
     val themeColorLong: Long,
 
     val bangumiIdInt: Int,
+    val isActive: Boolean,
 )
 
 @HiltViewModel
@@ -49,22 +50,22 @@ class IndexViewModel @Inject constructor(
     private val repository: BangumiRepository,
 ): ViewModel() {
 
-    private val sortAndFilterStatus = MutableStateFlow(FocusingUpdatingStatus)
-    private val isFilterSheetVisible = MutableStateFlow(false)
-    private val selectedBangumiId = MutableStateFlow<Int?>(null)
+    private val _sortAndFilterStatus = MutableStateFlow(FocusingUpdatingStatus)
+    private val _isFilterSheetVisible = MutableStateFlow(false)
+    private val _selectedBangumiId = MutableStateFlow<Int?>(null)
 
     val uiState: StateFlow<IndexUiState> = combine(
         repository.getAllBangumis(),
         repository.getAllSchedules(),
-        sortAndFilterStatus,
-        isFilterSheetVisible,
-        selectedBangumiId,
+        _sortAndFilterStatus,
+        _isFilterSheetVisible,
+        _selectedBangumiId,
     ) { bangumis, schedules, sortAndFilterStatus, filterSheetVisible, selectedId ->
 
         val schedulesByBangumiId = schedules.groupBy { it.bangumiId }
 
         val filteredBangumis = bangumis
-            .filterByStatus(sortAndFilterStatus, /*schedulesByBangumiId*/)
+            .filterByStatus(sortAndFilterStatus)
             .sortByStatus(sortAndFilterStatus, schedulesByBangumiId)
 
         val itemUiStates = filteredBangumis.map { bangumi ->
@@ -96,7 +97,7 @@ class IndexViewModel @Inject constructor(
     )
 
     fun onFocusingUpdatingChanged(checked: Boolean) {
-        sortAndFilterStatus.value = if (checked) {
+        _sortAndFilterStatus.value = if (checked) {
             FocusingUpdatingStatus
         } else {
             UnfocusingUpdatingStatus
@@ -104,42 +105,60 @@ class IndexViewModel @Inject constructor(
     }
 
     fun onSortTagSelected(sortTag: SortTags) {
-        sortAndFilterStatus.value =
-            sortAndFilterStatus.value.copy(sortTag = sortTag)
+        _sortAndFilterStatus.value =
+            _sortAndFilterStatus.value.copy(sortTag = sortTag)
     }
 
     fun onSortOrderSelected(sortOrder: SortOrders) {
-        sortAndFilterStatus.value =
-            sortAndFilterStatus.value.copy(sortOrder = sortOrder)
+        _sortAndFilterStatus.value =
+            _sortAndFilterStatus.value.copy(sortOrder = sortOrder)
     }
 
     fun onFilterStatusChanged(status: SortAndFilterStatus) {
-        sortAndFilterStatus.value = status
+        _sortAndFilterStatus.value = status
     }
 
     fun onOpenFilterSheet() {
-        isFilterSheetVisible.value = true
+        _isFilterSheetVisible.value = true
     }
 
     fun onDismissFilterSheet() {
-        isFilterSheetVisible.value = false
+        _isFilterSheetVisible.value = false
     }
 
     fun onBangumiClick(bangumiId: Int) {
-        selectedBangumiId.value = bangumiId
+        _selectedBangumiId.value = bangumiId
     }
 
     fun onDismissDetailDialog() {
-        selectedBangumiId.value = null
+        _selectedBangumiId.value = null
     }
 
     fun onAdd1BangumiClick(bangumiId: Int) {
         viewModelScope.launch {
-            repository.watch1Episode(bangumiId)
+            repository.watchedEpisodeAdd(bangumiId, 1)
         }
     }
 
-    fun onItemMoreClick(bangumiId: Int) {
+    fun onMinus1BangumiClick(bangumiId: Int) {
+        viewModelScope.launch {
+            repository.watchedEpisodeAdd(bangumiId, -1)
+        }
+    }
+
+    fun onSetBangumiActiveClick(bangumiId: Int) {
+        viewModelScope.launch {
+            repository.toggleBangumiActive(bangumiId)
+        }
+    }
+
+    fun onDeleteBangumiClick(bangumiId: Int) {
+        viewModelScope.launch {
+            repository.deleteBangumi(bangumiId)
+        }
+    }
+
+    fun onTopMoreClick() {
         // TODO
     }
 
@@ -232,9 +251,14 @@ private fun Bangumi.toIndexItemUiState(
         schedules = schedules,
         today = today,
     )
+    val latestAiredDate = latestAiredBroadcastDate(
+        schedules = schedules,
+        today = today,
+    )
     return BangumiIndexItemUiState(
         titleStr = title,
         watchProgressStr = buildBangumiWatchProgressText(
+            dayOfWeekInt = latestAiredDate?.dayOfWeek?.value ?: firstBroadcastDate.dayOfWeek.value,
             latestWatchedEpisode = latestWatchedEpisode,
             latestAiredEpisode = latestAiredEpisode,
             totalEpisodes = totalEpisodes,
@@ -242,6 +266,7 @@ private fun Bangumi.toIndexItemUiState(
         ),
         themeColorLong = themeColorLong,
         bangumiIdInt = bangumiId,
+        isActive = isActive,
     )
 }
 

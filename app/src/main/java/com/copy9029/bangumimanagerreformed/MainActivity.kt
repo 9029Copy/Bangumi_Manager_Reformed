@@ -30,6 +30,7 @@ import com.copy9029.bangumimanagerreformed.ui.index.IndexScreen
 import com.copy9029.bangumimanagerreformed.ui.index.IndexViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -85,12 +86,15 @@ fun BangumiManagerReformedApp() {
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(BottomDestination.CALENDAR.route) {
+                    val addSheetViewModel: AddSheetViewModel = hiltViewModel()
 //                    CalendarScreen()
                 }
                 composable(BottomDestination.INDEX.route) {
                     val indexViewModel: IndexViewModel = hiltViewModel()
+                    val addSheetViewModel: AddSheetViewModel = hiltViewModel()
                     IndexScreen(
-                        viewModel = indexViewModel,
+                        indexViewModel = indexViewModel,
+                        addSheetViewModel = addSheetViewModel,
                         onEditClick = { bangumiId ->
                             navController.navigate(Routes.bangumiEdit(bangumiId))
                         },

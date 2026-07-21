@@ -10,7 +10,7 @@ import java.time.YearMonth
 @Entity(tableName = "bangumi_items")
 data class Bangumi(
     @PrimaryKey(autoGenerate = true)
-    val bangumiId: Int = 1,
+    val bangumiId: Int = 0,
 
     val title: String,
     val seasonYear: Int,
@@ -49,3 +49,12 @@ data class BangumiSchedule(
     val broadcastDate: LocalDate,
 
 )
+
+
+//@Entity(tableName = "theme_color_items")  // TODO: themeColor
+//data class ThemeColor(
+//    @PrimaryKey(autoGenerate = false)
+//    val seasonMonth: Int = 99,  // 1, 4, 7, 10  /  99(unspecified)
+//
+//    val themeColorLong: Long,
+//)

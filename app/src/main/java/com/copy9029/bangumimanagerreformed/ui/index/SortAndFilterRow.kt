@@ -34,6 +34,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.copy9029.bangumimanagerreformed.R
+import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 
 
 enum class SortTags(val label: String) {
@@ -199,20 +200,23 @@ private fun SortControl(
 @Preview
 @Composable
 private fun PreviewHere() {
-    Column(
-        modifier = Modifier.fillMaxSize().background(Color.White)
-    ) {
-        SortAndFilterRow(
-            isFocusingUpdating = false,
-            selectedSortTag = SortTags.BY_RECENT_UPDATE,
-            selectedSortOrder = SortOrders.ASC,
+    BangumiManagerReformedTheme(dynamicColor = false) {
+        Column(
+            modifier = Modifier.fillMaxSize().background(Color.White)
+        ) {
+            SortAndFilterRow(
+                isFocusingUpdating = false,
+                selectedSortTag = SortTags.BY_RECENT_UPDATE,
+                selectedSortOrder = SortOrders.ASC,
 
-            onFocusingUpdatingChanged = {},
-            onSortTagSelected = {},
-            onSortOrderSelected = {},
+                onFocusingUpdatingChanged = {},
+                onSortTagSelected = {},
+                onSortOrderSelected = {},
 
-            onOpenMoreFilters = {},
-            modifier = Modifier,
-        )
+                onOpenMoreFilters = {},
+                modifier = Modifier,
+            )
+        }
     }
+
 }

@@ -33,8 +33,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.copy9029.bangumimanagerreformed.data.Bangumi
 import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
+import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import com.copy9029.bangumimanagerreformed.util.latestAiredEpisode
 import com.copy9029.bangumimanagerreformed.util.buildBangumiWatchProgressText
+import com.copy9029.bangumimanagerreformed.util.latestAiredBroadcastDate
 import java.time.LocalDate
 
 
@@ -57,6 +59,10 @@ fun Bangumi.toDetailDialogUiState(
         schedules = schedules,
         today = today,
     )
+    val latestAiredDate = latestAiredBroadcastDate(
+        schedules = schedules,
+        today = today,
+    )
 
     return BangumiDetailDialogUiState(
         titleStr = title,
@@ -65,6 +71,7 @@ fun Bangumi.toDetailDialogUiState(
         )[firstBroadcastDate.dayOfWeek.value]}",
         seasonStr = "$seasonYear 年 $seasonMonth 月",
         watchProgressStr = buildBangumiWatchProgressText(
+            dayOfWeekInt = latestAiredDate?.dayOfWeek?.value ?: firstBroadcastDate.dayOfWeek.value,
             latestWatchedEpisode = latestWatchedEpisode,
             latestAiredEpisode = latestAiredEpisode,
             totalEpisodes = totalEpisodes,
@@ -252,19 +259,22 @@ private fun ColorInfoRow(
 @Preview
 @Composable
 private fun PreviewHere() {
-    BangumiDetailDialog(
-        uiState = BangumiDetailDialogUiState(
-            titleStr = "标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题",
-            dayOfWeekStr = "每周一",
-            seasonStr = "2026 年 07 月",
-            watchProgressStr = "已看完第 0 话 丨 更新到第 2 话",
-            themeColorLong = 0xFFFF0000,
-            scoreStr = "未知",
-            firstBroadcastDateStr = "2026-07-01",
-            inProjectIDInt = 114,
-        ),
+    BangumiManagerReformedTheme(dynamicColor = false) {
+        BangumiDetailDialog(
+            uiState = BangumiDetailDialogUiState(
+                titleStr = "标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题",
+                dayOfWeekStr = "每周一",
+                seasonStr = "2026 年 07 月",
+                watchProgressStr = "已看完第 0 话 丨 更新到第 2 话",
+                themeColorLong = 0xFFFF0000,
+                scoreStr = "未知",
+                firstBroadcastDateStr = "2026-07-01",
+                inProjectIDInt = 114,
+            ),
 
-        onEditClick = {},
-        onDismissRequest = {},
-    )
+            onEditClick = {},
+            onDismissRequest = {},
+        )
+    }
+
 }
