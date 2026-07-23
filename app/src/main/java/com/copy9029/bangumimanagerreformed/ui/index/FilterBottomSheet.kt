@@ -38,8 +38,8 @@ import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 
 enum class WatchedTags(val label: String) {
     ALL("全部"),
-    UNFINISHED("未看完"),
-    FINISHED("已看完"),
+    UNFINISHED("未结束"),
+    FINISHED("已结束"),
 }
 
 enum class InactiveTags(val label: String) {
@@ -73,7 +73,7 @@ fun FilterBottomSheet(
                 .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(text = "筛选", fontSize = 24.sp)
+            Text(text = "筛选", fontSize = 20.sp)
 
             Spacer(modifier = Modifier.height(3.dp))
 
@@ -90,7 +90,7 @@ fun FilterBottomSheet(
                 },
             )
 
-            FilterSection2(title = "观看状态") {
+            FilterSection2(title = "结束状态") {
                 WatchedTags.entries.forEach { tag ->
                     FilterChip(
                         selected = status.watchedTag == tag,
@@ -98,8 +98,9 @@ fun FilterBottomSheet(
                             onStatusChange(status.copy(watchedTag = tag))
                         },
                         label = {
-                            Text(tag.label)
+                            Text(text = tag.label, fontSize = 12.sp)
                         },
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
@@ -112,8 +113,9 @@ fun FilterBottomSheet(
                             onStatusChange(status.copy(inactiveTag = tag))
                         },
                         label = {
-                            Text(tag.label)
+                            Text(text = tag.label, fontSize = 12.sp)
                         },
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
@@ -176,25 +178,26 @@ private fun FilterSection1(
         FilterDropdownOption(10, "10月"),
     )
 
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(text = "季度", fontSize = 18.sp)
+        Text(text = "季度", fontSize = 16.sp)
+
+        Spacer(modifier = Modifier.width(30.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             FilterDropdown(
-                label = "年份",
                 selectedValue = selectedYear,
                 options = yearOptions,
                 onValueSelected = onYearSelected,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1.1f),
             )
 
             FilterDropdown(
-                label = "月份",
                 selectedValue = selectedMonth,
                 options = monthOptions,
                 onValueSelected = onMonthSelected,
@@ -213,7 +216,7 @@ private fun FilterSection2(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(text = title, fontSize = 18.sp)
+        Text(text = title, fontSize = 16.sp)
 
         Spacer(modifier = Modifier.width(30.dp))
 
@@ -236,7 +239,6 @@ private data class FilterDropdownOption<T>(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun <T> FilterDropdown(
-    label: String,
     selectedValue: T,
     options: List<FilterDropdownOption<T>>,
     onValueSelected: (T) -> Unit,
@@ -266,7 +268,7 @@ private fun <T> FilterDropdown(
                 expanded = true
             },
             label = {
-                Text("$label：$selectedText")
+                Text(text = selectedText, fontSize = 12.sp)
             },
             trailingIcon = {
                 ExposedDropdownMenuDefaults.TrailingIcon(
@@ -288,7 +290,7 @@ private fun <T> FilterDropdown(
                 DropdownMenuItem(
                     modifier = Modifier.height(36.dp),
                     text = {
-                        Text(option.label, fontSize = 14.sp, lineHeight = 18.sp,)
+                        Text(option.label, fontSize = 12.sp, lineHeight = 18.sp,)
                     },
                     onClick = {
                         onValueSelected(option.value)

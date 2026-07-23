@@ -63,19 +63,12 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 
-data class BangumiAddInfo(
-    val seasonYear: Int,
-    val seasonMonth: Int,
-    val themeColorLong: Long,
-    val title: String,
-    val firstBroadcastDate: LocalDate,
-)
-
 @Composable
 fun BangumiAddSheet(
     viewModel: AddSheetViewModel,
     defaultFirstBroadcastDate: LocalDate,
     onDismissRequest: () -> Unit,
+    onBatchClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LaunchedEffect(defaultFirstBroadcastDate) {
@@ -94,7 +87,7 @@ fun BangumiAddSheet(
             onParseClick = viewModel::onParseFormattedText,
             onTitleChanged = viewModel::onTitleChanged,
             onFirstBroadcastDateChanged = viewModel::onFirstBroadcastDateChanged,
-            onBatchClick = { /* TODO: navigate/open batch add */ },
+            onBatchClick = onBatchClick,
             onDismissRequest = onDismissRequest,
             onConfirmClick = {
                 if (viewModel.onConfirmClick(defaultFirstBroadcastDate)) {
@@ -142,10 +135,10 @@ fun BangumiAddSheetContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(text = "添加项目", fontSize = 24.sp)
+                Text(text = "添加项目", fontSize = 20.sp)
 
                 TextButton(onClick = onBatchClick) {
-                    Text(text = "批量添加", fontSize = 18.sp)
+                    Text(text = "批量添加", fontSize = 16.sp)
                 }
             }
 
@@ -171,14 +164,11 @@ fun BangumiAddSheetContent(
                     label = { Text("格式化文本") },
                     modifier = Modifier.weight(1f),
                     minLines = 2,
-                    maxLines = 5,
+                    maxLines = 7,
                 )
 
                 TextButton(onClick = onParseClick) {
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = "解析",
-                    )
+                    Text(text = "解析")
                 }
             }
 
@@ -199,9 +189,10 @@ fun BangumiAddSheetContent(
                     value = uiState.title,
                     onValueChange = onTitleChanged,
                     label = { Text("标题") },
+                    textStyle = TextStyle.Default.copy(fontSize = 14.sp),
                     modifier = Modifier.weight(1.8f),
                     minLines = 1,
-                    maxLines = 4,
+                    maxLines = 6,
                     isError = uiState.titleError != null,
                 )
 
@@ -242,7 +233,7 @@ fun BangumiAddSheetContent(
 
 
 @Composable
-private fun SeasonSelectSection(
+fun SeasonSelectSection(
     startYear: Int,
     endYear: Int,
     selectedYear: Int,
@@ -270,7 +261,7 @@ private fun SeasonSelectSection(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(text = "季度", fontSize = 18.sp)
+        Text(text = "季度", fontSize = 16.sp)
 
         Spacer(modifier = Modifier.width(20.dp))
 
@@ -309,7 +300,7 @@ private fun SeasonSelectSection(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FirstBroadcastDateField(
+fun FirstBroadcastDateField(
     date: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
@@ -321,6 +312,7 @@ private fun FirstBroadcastDateField(
     ) {
         OutlinedTextField(
             value = date.toString(),
+            textStyle = TextStyle.Default.copy(fontSize = 12.sp),
             onValueChange = {},
             label = { Text("开播日期") },
             readOnly = true,

@@ -30,7 +30,9 @@ import com.copy9029.bangumimanagerreformed.ui.index.IndexScreen
 import com.copy9029.bangumimanagerreformed.ui.index.IndexViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddBatchViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
+import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddBatchScreen
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -98,13 +100,25 @@ fun BangumiManagerReformedApp() {
                         onEditClick = { bangumiId ->
                             navController.navigate(Routes.bangumiEdit(bangumiId))
                         },
+                        onBatchClick = {
+                            navController.navigate(Routes.BANGUMI_ADD_BATCH)
+                        }
                     )
                 }
                 composable(BottomDestination.PROFILE.route) {
 //                    ProfileScreen()
                 }
 
-                composable(
+                composable(Routes.BANGUMI_ADD_BATCH) {
+                    val viewModel: AddBatchViewModel = hiltViewModel()
+
+                    BangumiAddBatchScreen(
+                        viewModel = viewModel,
+                        onBack = navController::navigateUp,
+                    )
+                }
+
+                composable(                         // FIXME
                     route = Routes.BANGUMI_EDIT,
                     arguments = listOf(
                         navArgument("bangumiId") { type = NavType.IntType }
@@ -138,4 +152,6 @@ object Routes {
     fun bangumiEdit(bangumiId: Int): String {
         return "bangumi_edit/${bangumiId}"
     }
+
+    const val BANGUMI_ADD_BATCH = "bangumi_add_batch"
 }

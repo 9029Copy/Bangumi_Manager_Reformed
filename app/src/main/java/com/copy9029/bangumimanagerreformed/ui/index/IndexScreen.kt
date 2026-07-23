@@ -90,6 +90,7 @@ fun IndexScreen(
     indexViewModel: IndexViewModel,
     addSheetViewModel: AddSheetViewModel,
     onEditClick: (Int) -> Unit,
+    onBatchClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val uiState by indexViewModel.uiState.collectAsStateWithLifecycle()
@@ -126,6 +127,10 @@ fun IndexScreen(
             defaultFirstBroadcastDate = LocalDate.now(),
             onDismissRequest = {
                 isAddSheetVisible = false
+            },
+            onBatchClick = {
+                isAddSheetVisible = false
+                onBatchClick()
             },
         )
     }
@@ -367,7 +372,7 @@ private fun IndexScreenItem(
     modifier: Modifier = Modifier,
 ) {
     val colorScheme = generateBangumiColorScheme(   // TODO: theme Color
-        if (isActive) uiState.themeColorLong else 0xFFFFFFFF
+        if (isActive) uiState.themeColorLong else 0xFFE0E0E0
     )
 
     Card(
@@ -553,12 +558,3 @@ private fun PreviewHere() {
         )
     }
 }
-
-
-/*
-// TODO: issues
-
-1. 添加项目Sheet，开播日期太窄看不全
-2. 筛选页面，按钮内文字出现换行
-
- */

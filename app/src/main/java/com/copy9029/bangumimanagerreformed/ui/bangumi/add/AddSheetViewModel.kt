@@ -2,7 +2,9 @@ package com.copy9029.bangumimanagerreformed.ui.bangumi.add
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.copy9029.bangumimanagerreformed.data.BangumiAddInfo
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
+import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
 import com.copy9029.bangumimanagerreformed.util.calcNearestSeason
 import com.copy9029.bangumimanagerreformed.util.parseSingleFormattedText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,13 +15,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
-
-val themeColorByMonth = mapOf(
-    1 to 0xFFFFFFAAL,
-    4 to 0xFFB3FFB3L,
-    7 to 0xFF80FFFFL,
-    10 to 0xFFFF9191L,
-)
 
 data class BangumiAddSheetUiState(
     val seasonYear: Int,
@@ -92,7 +87,6 @@ class AddSheetViewModel @Inject constructor(
             state?.copy(
                 title = value,
                 titleError = null,
-                formattedText = "",
                 formattedTextError = null,
             )
         }
@@ -102,7 +96,6 @@ class AddSheetViewModel @Inject constructor(
         _uiState.update { state ->
             state?.copy(
                 firstBroadcastDate = date,
-                formattedText = "",
                 formattedTextError = null,
             )
         }

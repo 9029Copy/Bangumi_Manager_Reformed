@@ -1,6 +1,5 @@
 package com.copy9029.bangumimanagerreformed.data
 
-import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddInfo
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -73,6 +72,12 @@ class BangumiRepository @Inject constructor(
             broadcastDate = info.firstBroadcastDate
         )
         insertSchedule(schedule)
+    }
+
+    suspend fun addNewBangumisBatch(infos: List<BangumiAddInfo>) {
+        infos.forEach { info ->
+            addNewBangumi(info)
+        }
     }
 
     suspend fun toggleBangumiActive(bangumiId: Int) {

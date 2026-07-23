@@ -4,8 +4,21 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import java.time.LocalDate
-import java.time.YearMonth
 
+val themeColorByMonth = mapOf(
+    1 to 0xFFFFFFAAL,
+    4 to 0xFFB3FFB3L,
+    7 to 0xFF80FFFFL,
+    10 to 0xFFFF9191L,
+)
+
+data class BangumiAddInfo(
+    val seasonYear: Int,
+    val seasonMonth: Int,
+    val themeColorLong: Long,
+    val title: String,
+    val firstBroadcastDate: LocalDate,
+)
 
 @Entity(tableName = "bangumi_items")
 data class Bangumi(
