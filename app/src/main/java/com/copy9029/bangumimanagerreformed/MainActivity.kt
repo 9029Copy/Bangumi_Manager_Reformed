@@ -14,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -23,8 +22,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.copy9029.bangumimanagerreformed.data.BangumiRepository
-import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiEditScreen
+import com.copy9029.bangumimanagerreformed.ui.bangumi.edit.BangumiEditScreen
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import com.copy9029.bangumimanagerreformed.ui.index.IndexScreen
 import com.copy9029.bangumimanagerreformed.ui.index.IndexViewModel

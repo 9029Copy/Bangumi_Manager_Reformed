@@ -1,14 +1,12 @@
 package com.copy9029.bangumimanagerreformed.data
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
-import java.time.LocalDate
-import java.time.YearMonth
 
 @Dao
 interface BangumiDao {
@@ -25,6 +23,13 @@ interface BangumiDao {
     """)
     fun getAllSchedules(): Flow<List<BangumiSchedule>>
 
+    @Query("""
+        SELECT * FROM bangumi_schedule_items
+        WHERE bangumiId = :bangumiId
+        ORDER BY episodeId ASC
+    """)
+    suspend fun getSchedulesByBangumiId(bangumiId: Int): List<BangumiSchedule>
+
 //    @Query("SELECT * FROM theme_color_items ORDER BY seasonMonth ASC")  // TODO: themeColor
 //    fun getAllThemeColors(): Flow<List<ThemeColor>>
 
@@ -33,6 +38,12 @@ interface BangumiDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSchedule(schedule: BangumiSchedule)
+
+    @Query("""
+        DELETE FROM bangumi_schedule_items
+        WHERE bangumiId = :bangumiId AND episodeId = :episodeId
+    """)
+    suspend fun deleteSchedule(bangumiId: Int, episodeId: Int)
 
     @Update
     suspend fun updateBangumi(bangumi: Bangumi)

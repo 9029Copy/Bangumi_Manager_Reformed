@@ -222,6 +222,16 @@ private fun List<Bangumi>.sortByStatus(
             )
         }
 
+        SortTags.BY_EDITED_ORDER -> {
+            sortedWith(
+                compareByDescending<Bangumi> {
+                    it.lastBasicInfoModifiedAtMillis
+                }.thenByDescending {
+                    it.bangumiId
+                }
+            )
+        }
+
         SortTags.BY_RECENT_UPDATE -> {
             sortedBy { bangumi ->
                 bangumi.latestAiredBroadcastDate(

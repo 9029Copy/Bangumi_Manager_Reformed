@@ -1,5 +1,6 @@
 package com.copy9029.bangumimanagerreformed.data
 
+import com.copy9029.bangumimanagerreformed.util.calculateExpectedEndDate
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -7,18 +8,40 @@ class BangumiRepository @Inject constructor(
     private val bangumiDao: BangumiDao,
 ) {
 
+    private suspend fun updateBangumi(bangumi: Bangumi) {
+        val storedBangumi = bangumiDao.getBangumiById(bangumi.bangumiId)
+            ?: return
 
+        val totalEpisodesChanged = storedBangumi.totalEpisodes != bangumi.totalEpisodes
+        val expectedEndDate = if (totalEpisodesChanged) {
+            val schedules = bangumiDao.getSchedulesByBangumiId(bangumi.bangumiId)
+            bangumi.calculateExpectedEndDate(schedules)
+        } else {
+            storedBangumi.expectedEndDate
+        }
 
-    suspend fun updateBangumi(bangumi: Bangumi) {
-        bangumiDao.updateBangumi(bangumi)
+        val bangumiToUpdate = bangumi.copy(
+            lastBasicInfoModifiedAtMillis = if (storedBangumi.hasSameBasicInfoAs(bangumi)) {
+                storedBangumi.lastBasicInfoModifiedAtMillis
+            } else {
+                System.currentTimeMillis()
+            },
+            expectedEndDate = expectedEndDate,
+        )
+
+        bangumiDao.updateBangumi(bangumiToUpdate)
     }
 
-    private suspend fun insertSchedule(schedule: BangumiSchedule) {
+    private suspend fun insertOrUpdateSchedule(schedule: BangumiSchedule) {
         bangumiDao.insertSchedule(schedule)
+        refreshExpectedEndDate(schedule.bangumiId)
     }
 
     private suspend fun deleteSchedule(bangumiId: Int, episodeId: Int) {
+        if (episodeId <= 1) return
 
+        bangumiDao.deleteSchedule(bangumiId, episodeId)
+        refreshExpectedEndDate(bangumiId)
     }
 
 
@@ -62,6 +85,7 @@ class BangumiRepository @Inject constructor(
             totalEpisodes = null,
             latestWatchedEpisode = 0,
             isActive = true,
+            lastBasicInfoModifiedAtMillis = System.currentTimeMillis(),
             expectedEndDate = null,
         )
         val id = bangumiDao.insertBangumi(bangumi)
@@ -71,7 +95,7 @@ class BangumiRepository @Inject constructor(
             episodeId = 1,
             broadcastDate = info.firstBroadcastDate
         )
-        insertSchedule(schedule)
+        insertOrUpdateSchedule(schedule)
     }
 
     suspend fun addNewBangumisBatch(infos: List<BangumiAddInfo>) {
@@ -95,4 +119,30 @@ class BangumiRepository @Inject constructor(
     }
 
 
+
+    // ========================= private ===============================
+
+    private suspend fun refreshExpectedEndDate(bangumiId: Int) {
+        val bangumi = bangumiDao.getBangumiById(bangumiId)
+            ?: return
+        val schedules = bangumiDao.getSchedulesByBangumiId(bangumiId)
+        val expectedEndDate = bangumi.calculateExpectedEndDate(schedules)
+
+        if (bangumi.expectedEndDate != expectedEndDate) {
+            bangumiDao.updateBangumi(
+                bangumi.copy(expectedEndDate = expectedEndDate)
+            )
+        }
+    }
+
+}
+
+private fun Bangumi.hasSameBasicInfoAs(other: Bangumi): Boolean {
+    return title == other.title &&
+            seasonYear == other.seasonYear &&
+            seasonMonth == other.seasonMonth &&
+            myScore == other.myScore &&
+            themeColorLong == other.themeColorLong &&
+            totalEpisodes == other.totalEpisodes &&
+            isActive == other.isActive
 }

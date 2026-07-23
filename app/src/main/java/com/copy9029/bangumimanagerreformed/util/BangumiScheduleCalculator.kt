@@ -109,3 +109,16 @@ fun Bangumi.episodeBroadcastDate(
 
     return anchor.broadcastDate.plusWeeks(weeksAfterAnchor.toLong())
 }
+
+
+fun Bangumi.calculateExpectedEndDate(
+    schedules: List<BangumiSchedule>,
+): LocalDate? {
+    val finalEpisodeId = totalEpisodes?.takeIf { it > 0 }
+        ?: return null
+
+    return episodeBroadcastDate(
+        episodeId = finalEpisodeId,
+        schedules = schedules,
+    )
+}

@@ -1,4 +1,4 @@
-package com.copy9029.bangumimanagerreformed.ui.bangumi
+package com.copy9029.bangumimanagerreformed.ui.bangumi.edit
 
 import androidx.compose.runtime.Composable
 
