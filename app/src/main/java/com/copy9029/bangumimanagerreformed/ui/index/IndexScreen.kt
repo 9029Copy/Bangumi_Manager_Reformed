@@ -177,7 +177,7 @@ private fun IndexScreenContent(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "IndexScreen", fontSize = 20.sp)
+                    Text(text = "番剧列表", fontSize = 20.sp)
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,

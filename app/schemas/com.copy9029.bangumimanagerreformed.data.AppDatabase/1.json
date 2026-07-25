@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "b438335c0b80d39958bd5d603366a694",
+    "identityHash": "baecaa2f9fb3c4574c591576b33a6eab",
     "entities": [
       {
         "tableName": "bangumi_items",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`bangumiId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `seasonYear` INTEGER NOT NULL, `seasonMonth` INTEGER NOT NULL, `myScore` INTEGER, `themeColorLong` INTEGER NOT NULL, `firstBroadcastDate` INTEGER NOT NULL, `totalEpisodes` INTEGER, `latestWatchedEpisode` INTEGER NOT NULL, `isActive` INTEGER NOT NULL, `expectedEndDate` INTEGER)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`bangumiId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `seasonYear` INTEGER NOT NULL, `seasonMonth` INTEGER NOT NULL, `myScore` INTEGER, `themeColorLong` INTEGER NOT NULL, `firstBroadcastDate` INTEGER NOT NULL, `totalEpisodes` INTEGER, `latestWatchedEpisode` INTEGER NOT NULL, `isActive` INTEGER NOT NULL, `lastBasicInfoModifiedAtMillis` INTEGER NOT NULL, `expectedEndDate` INTEGER)",
         "fields": [
           {
             "fieldPath": "bangumiId",
@@ -65,6 +65,12 @@
           {
             "fieldPath": "isActive",
             "columnName": "isActive",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastBasicInfoModifiedAtMillis",
+            "columnName": "lastBasicInfoModifiedAtMillis",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -133,7 +139,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b438335c0b80d39958bd5d603366a694')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'baecaa2f9fb3c4574c591576b33a6eab')"
     ]
   }
 }

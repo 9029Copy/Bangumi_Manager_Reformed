@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
@@ -15,7 +14,10 @@ interface BangumiDao {
     fun getAllBangumis(): Flow<List<Bangumi>>
 
     @Query("SELECT * FROM bangumi_items WHERE bangumiId = :bangumiId")
-    suspend fun getBangumiById(bangumiId: Int): Bangumi?
+    suspend fun getBangumiByIdOnce(bangumiId: Int): Bangumi?
+
+    @Query("SELECT * FROM bangumi_items WHERE bangumiId = :bangumiId")
+    fun getBangumiById(bangumiId: Int): Flow<Bangumi?>
 
     @Query("""
         SELECT * FROM bangumi_schedule_items

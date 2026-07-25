@@ -54,7 +54,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
 
+@Composable
+fun PageCalendarScreen(
+    calendarViewModel: CalendarViewModel,
+    addSheetViewModel: AddSheetViewModel,
+    onEditClick: (Int) -> Unit,
+    onBatchClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+
+}
 
 //
 //@OptIn(ExperimentalMaterial3Api::class)

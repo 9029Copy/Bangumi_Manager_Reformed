@@ -8,8 +8,8 @@ class BangumiRepository @Inject constructor(
     private val bangumiDao: BangumiDao,
 ) {
 
-    private suspend fun updateBangumi(bangumi: Bangumi) {
-        val storedBangumi = bangumiDao.getBangumiById(bangumi.bangumiId)
+    suspend fun updateBangumi(bangumi: Bangumi) {
+        val storedBangumi = bangumiDao.getBangumiByIdOnce(bangumi.bangumiId)
             ?: return
 
         val totalEpisodesChanged = storedBangumi.totalEpisodes != bangumi.totalEpisodes
@@ -51,12 +51,22 @@ class BangumiRepository @Inject constructor(
         return bangumiDao.getAllBangumis()
     }
 
+    fun getBangumiById(bangumiId: Int): Flow<Bangumi?> {
+        return bangumiDao.getBangumiById(bangumiId)
+    }
+
     fun getAllSchedules(): Flow<List<BangumiSchedule>> {
         return bangumiDao.getAllSchedules()
     }
 
+    suspend fun getSchedulesByBangumiId(
+        bangumiId: Int,
+    ): List<BangumiSchedule> {
+        return bangumiDao.getSchedulesByBangumiId(bangumiId)
+    }
+
     suspend fun watchedEpisodeAdd(bangumiId: Int, num: Int) {
-        val bangumi = bangumiDao.getBangumiById(bangumiId)
+        val bangumi = bangumiDao.getBangumiByIdOnce(bangumiId)
         if (bangumi != null) {
             val newNum = bangumi.latestWatchedEpisode + num
             if (newNum >= 0) {
@@ -105,7 +115,7 @@ class BangumiRepository @Inject constructor(
     }
 
     suspend fun toggleBangumiActive(bangumiId: Int) {
-        val bangumi = bangumiDao.getBangumiById(bangumiId)
+        val bangumi = bangumiDao.getBangumiByIdOnce(bangumiId)
         if (bangumi != null) {
             val oldActive = bangumi.isActive
             updateBangumi(
@@ -123,7 +133,7 @@ class BangumiRepository @Inject constructor(
     // ========================= private ===============================
 
     private suspend fun refreshExpectedEndDate(bangumiId: Int) {
-        val bangumi = bangumiDao.getBangumiById(bangumiId)
+        val bangumi = bangumiDao.getBangumiByIdOnce(bangumiId)
             ?: return
         val schedules = bangumiDao.getSchedulesByBangumiId(bangumiId)
         val expectedEndDate = bangumi.calculateExpectedEndDate(schedules)

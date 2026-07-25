@@ -31,6 +31,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddBatchViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddBatchScreen
+import com.copy9029.bangumimanagerreformed.ui.bangumi.edit.BangumiEditViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -108,25 +109,24 @@ fun BangumiManagerReformedApp() {
                 }
 
                 composable(Routes.BANGUMI_ADD_BATCH) {
-                    val viewModel: AddBatchViewModel = hiltViewModel()
-
+                    val addBatchViewModel: AddBatchViewModel = hiltViewModel()
                     BangumiAddBatchScreen(
-                        viewModel = viewModel,
+                        viewModel = addBatchViewModel,
                         onBack = navController::navigateUp,
                     )
                 }
 
-                composable(                         // FIXME
+                composable(
                     route = Routes.BANGUMI_EDIT,
                     arguments = listOf(
-                        navArgument("bangumiId") { type = NavType.IntType }
+                        navArgument(Routes.BANGUMI_ID_ARGUMENT) {
+                            type = NavType.IntType
+                        }
                     ),
-                ) { backStackEntry ->
-                    val bangumiId = backStackEntry.arguments?.getInt("bangumiId")
-                        ?: return@composable
-
+                ) {
+                    val editViewModel: BangumiEditViewModel = hiltViewModel()
                     BangumiEditScreen(
-                        bangumiId = bangumiId,
+                        viewModel = editViewModel,
                         onBack = navController::navigateUp,
                     )
                 }
@@ -146,7 +146,9 @@ enum class BottomDestination(
 }
 
 object Routes {
-    const val BANGUMI_EDIT = "bangumi_edit/{bangumiId}"
+    const val BANGUMI_ID_ARGUMENT = "bangumiId"
+    const val BANGUMI_EDIT = "bangumi_edit/{$BANGUMI_ID_ARGUMENT}"
+
     fun bangumiEdit(bangumiId: Int): String {
         return "bangumi_edit/${bangumiId}"
     }
