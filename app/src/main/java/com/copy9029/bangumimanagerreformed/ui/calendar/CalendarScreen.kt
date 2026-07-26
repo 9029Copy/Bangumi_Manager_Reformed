@@ -1,33 +1,25 @@
 package com.copy9029.bangumimanagerreformed.ui.calendar
 
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
@@ -36,15 +28,19 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,20 +48,282 @@ import java.time.LocalDate
 import java.time.YearMonth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
+import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheet
+import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
+import com.copy9029.bangumimanagerreformed.util.generateBangumiColorScheme
 
 @Composable
 fun PageCalendarScreen(
     calendarViewModel: CalendarViewModel,
     addSheetViewModel: AddSheetViewModel,
-    onEditClick: (Int) -> Unit,
     onBatchClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val uiState by calendarViewModel.uiState.collectAsStateWithLifecycle()
+    var isAddSheetVisible by rememberSaveable {
+        mutableStateOf(false)
+    }
 
+    CalendarScreenContent(
+        uiState = uiState,
+        onAddClick = {
+            isAddSheetVisible = true
+        },
+        modifier = modifier,
+    )
+
+    if (isAddSheetVisible) {
+        BangumiAddSheet(
+            viewModel = addSheetViewModel,
+            defaultFirstBroadcastDate = LocalDate.now(),
+            onDismissRequest = {
+                isAddSheetVisible = false
+            },
+            onBatchClick = {
+                isAddSheetVisible = false
+                onBatchClick()
+            },
+        )
+    }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CalendarScreenContent(
+    uiState: CalendarUiState,
+    onAddClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = uiState.initialWeekIndex,
+    )
+    val displayedMonth by remember(uiState.firstWeekStart, listState) {
+        derivedStateOf {
+            YearMonth.from(
+                uiState.firstWeekStart
+                    .plusWeeks(listState.firstVisibleItemIndex.toLong())
+                    .plusDays(3),
+            )
+        }
+    }
+
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text("${displayedMonth.year} 年 ${displayedMonth.monthValue} 月")
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.primary,
+                ),
+            )
+        },
+        floatingActionButton = {
+            SmallFloatingActionButton(onClick = onAddClick) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "添加项目",
+                )
+            }
+        },
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
+        ) {
+            DaysOfWeekHeader()
+
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+            ) {
+                items(
+                    count = uiState.weekCount,
+                    key = { weekIndex ->
+                        uiState.firstWeekStart
+                            .plusWeeks(weekIndex.toLong())
+                            .toEpochDay()
+                    },
+                ) { weekIndex ->
+                    CalendarWeekRow(
+                        weekStart = uiState.firstWeekStart
+                            .plusWeeks(weekIndex.toLong()),
+                        bangumisByDate = uiState.bangumisByDate,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DaysOfWeekHeader(
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(horizontal = 6.dp),
+    ) {
+        listOf("一", "二", "三", "四", "五", "六", "日").forEach { day ->
+            Text(
+                text = day,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 6.dp),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.labelMedium,
+            )
+        }
+    }
+}
+
+@Composable
+private fun CalendarWeekRow(
+    weekStart: LocalDate,
+    bangumisByDate: Map<LocalDate, List<CalendarBangumiItemUiState>>,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .padding(horizontal = 6.dp),
+    ) {
+        repeat(7) { dayOffset ->
+            val date = weekStart.plusDays(dayOffset.toLong())
+            CalendarDateCell(
+                date = date,
+                isToday = date == LocalDate.now(),
+                bangumis = bangumisByDate[date].orEmpty(),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun CalendarDateCell(
+    date: LocalDate,
+    isToday: Boolean,
+    bangumis: List<CalendarBangumiItemUiState>,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier
+            .padding(1.dp),
+        shape = RoundedCornerShape(3.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(3.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (isToday) {
+                    Text(
+                        text = "今",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                    )
+                } else {
+                    Text(
+                        text = date.dayOfMonth.toString(),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+
+            }
+
+            bangumis.forEach { item ->
+                CalendarBangumiTag(item)
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalendarBangumiTag(
+    item: CalendarBangumiItemUiState,
+    modifier: Modifier = Modifier,
+) {
+    val colorScheme = generateBangumiColorScheme(item.themeColorLong)
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = colorScheme.cardContainer,
+        shape = RoundedCornerShape(3.dp),
+    ) {
+        Text(
+            text = item.title,
+            modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp),
+            color = colorScheme.primaryContent,
+            fontSize = 10.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+
+
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewCalendarScreenContent() {
+    val today = LocalDate.now()
+    BangumiManagerReformedTheme(dynamicColor = false) {
+        CalendarScreenContent(
+            uiState = CalendarUiState(
+                firstWeekStart = today.minusDays(
+                    (today.dayOfWeek.value - 1).toLong()
+                ),
+                weekCount = 3,
+                initialWeekIndex = 0,
+                bangumisByDate = mapOf(
+                    today to listOf(
+                        CalendarBangumiItemUiState(
+                            bangumiId = 1,
+                            episodeId = 3,
+                            title = "示例动画",
+                            themeColorLong = 0xFF80FFFFL,
+                        ),
+                    ),
+                ),
+            ),
+            onAddClick = {},
+        )
+    }
+}
+
+// ==================== 旧版 HorizontalPager 实现（保留供参考） ====================
 
 //
 //@OptIn(ExperimentalMaterial3Api::class)
