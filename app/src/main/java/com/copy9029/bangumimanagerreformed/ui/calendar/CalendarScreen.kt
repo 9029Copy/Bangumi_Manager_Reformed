@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
@@ -73,6 +74,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
+import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialog
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheet
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
@@ -80,10 +82,11 @@ import com.copy9029.bangumimanagerreformed.util.generateBangumiColorScheme
 import kotlinx.coroutines.launch
 
 @Composable
-fun PageCalendarScreen(
+fun CalendarScreen(
     calendarViewModel: CalendarViewModel,
     addSheetViewModel: AddSheetViewModel,
     onBatchClick: () -> Unit,
+    onEditClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val uiState by calendarViewModel.uiState.collectAsStateWithLifecycle()
@@ -97,6 +100,13 @@ fun PageCalendarScreen(
             isAddSheetVisible = true
         },
         onDateClick = calendarViewModel::onDateClick,
+        onBangumiClick = calendarViewModel::onBangumiClick,
+        onDismissDetailDialog = calendarViewModel::onDismissDetailDialog,
+        onMarkEpisodeDoneClick = calendarViewModel::onMarkEpisodeDoneClick,
+        onMarkEpisodeUndoneClick = calendarViewModel::onMarkEpisodeUndoneClick,
+        onToggleBangumiActiveClick = calendarViewModel::onToggleBangumiActiveClick,
+        onDeleteBangumiClick = calendarViewModel::onDeleteBangumiClick,
+        onEditClick = onEditClick,
         modifier = modifier,
     )
 
@@ -125,6 +135,13 @@ private fun CalendarScreenContent(
     uiState: CalendarUiState,
     onAddClick: () -> Unit,
     onDateClick: (LocalDate) -> Unit,
+    onBangumiClick: (Int) -> Unit,
+    onDismissDetailDialog: () -> Unit,
+    onMarkEpisodeDoneClick: (Int, Int) -> Unit,
+    onMarkEpisodeUndoneClick: (Int, Int) -> Unit,
+    onToggleBangumiActiveClick: (Int) -> Unit,
+    onDeleteBangumiClick: (Int) -> Unit,
+    onEditClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -261,12 +278,29 @@ private fun CalendarScreenContent(
                             CalendarSelectedDateDetails(
                                 bangumis = uiState.bangumisByDate[selectedDate].orEmpty(),
                                 onAddClick = onAddClick,
+                                onBangumiClick = onBangumiClick,
+                                onMarkEpisodeDoneClick = onMarkEpisodeDoneClick,
+                                onMarkEpisodeUndoneClick = onMarkEpisodeUndoneClick,
+                                onToggleBangumiActiveClick = onToggleBangumiActiveClick,
+                                onDeleteBangumiClick = onDeleteBangumiClick,
+                                onEditClick = onEditClick,
                             )
                         }
                     }
                 }
             }
         }
+    }
+
+    uiState.bangumiDetailSelected?.let { detail ->
+        BangumiDetailDialog(
+            uiState = detail,
+            onDismissRequest = onDismissDetailDialog,
+            onEditClick = {
+                onDismissDetailDialog()
+                onEditClick(detail.inProjectIDInt)
+            },
+        )
     }
 
     if (isDatePickerVisible) {
@@ -392,8 +426,24 @@ private fun CalendarWeekRow(
 private fun CalendarSelectedDateDetails(
     bangumis: List<CalendarBangumiItemUiState>,
     onAddClick: () -> Unit,
+    onBangumiClick: (Int) -> Unit,
+    onMarkEpisodeDoneClick: (Int, Int) -> Unit,
+    onMarkEpisodeUndoneClick: (Int, Int) -> Unit,
+    onToggleBangumiActiveClick: (Int) -> Unit,
+    onDeleteBangumiClick: (Int) -> Unit,
+    onEditClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var expandedMoreMenuBangumiId by rememberSaveable {
+        mutableStateOf<Int?>(null)
+    }
+    var pendingSetActiveBangumi by remember {
+        mutableStateOf<CalendarBangumiItemUiState?>(null)
+    }
+    var pendingDeleteBangumi by remember {
+        mutableStateOf<CalendarBangumiItemUiState?>(null)
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -403,6 +453,34 @@ private fun CalendarSelectedDateDetails(
         bangumis.forEach { bangumi ->
             CalendarSelectedDateDetailCard(
                 item = bangumi,
+                isMoreMenuExpanded = expandedMoreMenuBangumiId == bangumi.bangumiId,
+                onClick = {
+                    onBangumiClick(bangumi.bangumiId)
+                },
+                onDoneButtonClick = {
+                    if (bangumi.isDone) {
+                        onMarkEpisodeUndoneClick(bangumi.bangumiId, bangumi.episodeId)
+                    } else {
+                        onMarkEpisodeDoneClick(bangumi.bangumiId, bangumi.episodeId)
+                    }
+                },
+                onEditClick = {
+                    onEditClick(bangumi.bangumiId)
+                },
+                onMoreClick = {
+                    expandedMoreMenuBangumiId = bangumi.bangumiId
+                },
+                onDismissMoreMenu = {
+                    expandedMoreMenuBangumiId = null
+                },
+                onToggleActiveClick = {
+                    expandedMoreMenuBangumiId = null
+                    pendingSetActiveBangumi = bangumi
+                },
+                onDeleteClick = {
+                    expandedMoreMenuBangumiId = null
+                    pendingDeleteBangumi = bangumi
+                },
             )
         }
 
@@ -427,19 +505,102 @@ private fun CalendarSelectedDateDetails(
             }
         }
     }
+
+    pendingSetActiveBangumi?.let { bangumi ->
+        val actionText = if (bangumi.isActive) "隐藏" else "取消隐藏"
+        AlertDialog(
+            onDismissRequest = {
+                pendingSetActiveBangumi = null
+            },
+            title = {
+                Text("你确定要${actionText}这个项目吗？")
+            },
+            text = {
+                Text(bangumi.title)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingSetActiveBangumi = null
+                        onToggleBangumiActiveClick(bangumi.bangumiId)
+                    },
+                ) {
+                    Text("确定")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        pendingSetActiveBangumi = null
+                    },
+                ) {
+                    Text("取消")
+                }
+            },
+        )
+    }
+
+    pendingDeleteBangumi?.let { bangumi ->
+        AlertDialog(
+            onDismissRequest = {
+                pendingDeleteBangumi = null
+            },
+            title = {
+                Text("你确定要删除这个项目吗？")
+            },
+            text = {
+                Text(bangumi.title)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingDeleteBangumi = null
+                        onDeleteBangumiClick(bangumi.bangumiId)
+                    },
+                ) {
+                    Text("删除")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        pendingDeleteBangumi = null
+                    },
+                ) {
+                    Text("取消")
+                }
+            },
+        )
+    }
 }
 
 @Composable
 private fun CalendarSelectedDateDetailCard(
     item: CalendarBangumiItemUiState,
+    isMoreMenuExpanded: Boolean,
+    onClick: () -> Unit,
+    onDoneButtonClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onMoreClick: () -> Unit,
+    onDismissMoreMenu: () -> Unit,
+    onToggleActiveClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colorScheme = generateBangumiColorScheme(item.themeColorLong)
+    val titleColor = if (item.isDone) {
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+    val episodeColor = if (item.isDone) {
+        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
 
     Card(
-        onClick = {
-            // TODO: 打开 Calendar 详情
-        },
+        onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(6.dp),
         colors = CardDefaults.cardColors(
@@ -459,27 +620,18 @@ private fun CalendarSelectedDateDetailCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start
             ) {
-                if (item.isDone) {
-                    IconButton(
-                        modifier = Modifier.size(32.dp),
-                        onClick = {
-                            // TODO
-                        },
-                    ) {
+                IconButton(
+                    modifier = Modifier.size(32.dp),
+                    onClick = onDoneButtonClick,
+                ) {
+                    if (item.isDone) {
                         Icon(
                             imageVector = Icons.Filled.Check,
                             contentDescription = "已完成",
                             modifier = Modifier.size(24.dp),
                             tint = colorScheme.main,
                         )
-                    }
-                } else {
-                    IconButton(
-                        modifier = Modifier.size(32.dp),
-                        onClick = {
-                            // TODO
-                        },
-                    ) {
+                    } else {
                         Icon(
                             painter = painterResource(R.drawable.calendar_outline_circle),
                             contentDescription = "未完成",
@@ -497,6 +649,7 @@ private fun CalendarSelectedDateDetailCard(
                 ) {
                     Text(
                         text = item.title,
+                        color = titleColor,
                         style = MaterialTheme.typography.titleSmall,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -504,7 +657,7 @@ private fun CalendarSelectedDateDetailCard(
 
                     Text(
                         text = "第 ${item.episodeId} 集",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = episodeColor,
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -518,9 +671,7 @@ private fun CalendarSelectedDateDetailCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CalendarCircleActionButton(
-                    onClick = {
-                        // TODO: 编辑该项目。
-                    },
+                    onClick = onEditClick,
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Edit,
@@ -529,16 +680,31 @@ private fun CalendarSelectedDateDetailCard(
                     )
                 }
 
-                CalendarCircleActionButton(
-                    onClick = {
-                        // TODO: 打开更多操作。
-                    },
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.MoreVert,
-                        contentDescription = "更多",
-                        modifier = Modifier.size(18.dp),
-                    )
+                Box {
+                    CalendarCircleActionButton(
+                        onClick = onMoreClick,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = "更多",
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = isMoreMenuExpanded,
+                        onDismissRequest = onDismissMoreMenu,
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(if (item.isActive) "隐藏" else "取消隐藏") },
+                            onClick = onToggleActiveClick,
+                        )
+
+                        DropdownMenuItem(
+                            text = { Text("删除") },
+                            onClick = onDeleteClick,
+                        )
+                    }
                 }
             }
         }
@@ -594,7 +760,7 @@ private fun CalendarDateCell(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(3.dp),
+                .padding(2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
@@ -766,6 +932,13 @@ private fun PreviewCalendarScreenContent() {
             ),
             onAddClick = {},
             onDateClick = {},
+            onBangumiClick = {},
+            onDismissDetailDialog = {},
+            onMarkEpisodeDoneClick = { _, _ -> },
+            onMarkEpisodeUndoneClick = { _, _ -> },
+            onToggleBangumiActiveClick = {},
+            onDeleteBangumiClick = {},
+            onEditClick = {},
         )
     }
 }

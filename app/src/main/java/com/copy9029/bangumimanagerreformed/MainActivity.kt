@@ -33,7 +33,7 @@ import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddBatchScreen
 import com.copy9029.bangumimanagerreformed.ui.bangumi.edit.BangumiEditViewModel
 import com.copy9029.bangumimanagerreformed.ui.calendar.CalendarViewModel
-import com.copy9029.bangumimanagerreformed.ui.calendar.PageCalendarScreen
+import com.copy9029.bangumimanagerreformed.ui.calendar.CalendarScreen
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -91,9 +91,12 @@ fun BangumiManagerReformedApp() {
                 composable(BottomDestination.CALENDAR.route) {
                     val calendarViewModel: CalendarViewModel = hiltViewModel()
                     val addSheetViewModel: AddSheetViewModel = hiltViewModel()
-                    PageCalendarScreen(
+                    CalendarScreen(
                         calendarViewModel = calendarViewModel,
                         addSheetViewModel = addSheetViewModel,
+                        onEditClick = { bangumiId ->
+                            navController.navigate(Routes.bangumiEdit(bangumiId))
+                        },
                         onBatchClick = {
                             navController.navigate(Routes.BANGUMI_ADD_BATCH)
                         },

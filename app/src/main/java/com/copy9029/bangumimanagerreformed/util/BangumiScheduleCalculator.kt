@@ -2,6 +2,7 @@ package com.copy9029.bangumimanagerreformed.util
 
 import com.copy9029.bangumimanagerreformed.data.Bangumi
 import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
+import com.copy9029.bangumimanagerreformed.ui.calendar.CalendarBangumiItemUiState
 import java.time.LocalDate
 
 
@@ -121,4 +122,17 @@ fun Bangumi.calculateExpectedEndDate(
         episodeId = finalEpisodeId,
         schedules = schedules,
     )
+}
+
+
+fun calcBangumisByDateMap(
+    bangumis: List<Bangumi>,
+    schedules: List<BangumiSchedule>,
+    firstDay: LocalDate,
+    dayCount: Int,
+): Map<LocalDate, List<CalendarBangumiItemUiState>> {
+
+
+
+
 }
