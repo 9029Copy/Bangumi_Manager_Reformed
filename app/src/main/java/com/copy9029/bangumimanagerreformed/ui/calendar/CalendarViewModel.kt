@@ -22,6 +22,7 @@ data class CalendarBangumiItemUiState(
     val episodeId: Int,
     val title: String,
     val themeColorLong: Long,
+    val isDone: Boolean,
 )
 
 data class CalendarUiState(

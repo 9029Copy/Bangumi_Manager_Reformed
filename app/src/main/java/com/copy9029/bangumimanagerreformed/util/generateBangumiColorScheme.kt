@@ -7,11 +7,14 @@ import kotlin.math.pow
 
 
 data class BangumiColorScheme(
-    val border: Color,
-    val cardContainer: Color,
-    val buttonContainer: Color,
-    val primaryContent: Color,
-    val secondaryContent: Color,
+    val main: Color,
+    val indexBorder: Color,
+    val indexCardContainer: Color,
+    val indexButtonContainer: Color,
+    val indexPrimaryContent: Color,
+    val indexSecondaryContent: Color,
+    val calendarUnfinishedTagContainer: Color,
+    val calendarFinishedTagContainer: Color,
 )
 
 /**
@@ -80,12 +83,21 @@ fun generateBangumiColorScheme(
         foregroundRatio = 0.32, // here
     )
 
+    val doneBackground = blendArgb(
+        foreground = themeColorLong,
+        background = 0xFFFFFFFF,
+        foregroundRatio = 0.25,
+    )
+
     return BangumiColorScheme(
-        cardContainer = Color(background),
-        border = Color(border),
-        primaryContent = Color(primaryText),
-        secondaryContent = Color(secondaryText),
-        buttonContainer = Color(buttonContainer),
+        main = Color(themeColorLong),
+        indexCardContainer = Color(background),
+        indexBorder = Color(border),
+        indexPrimaryContent = Color(primaryText),
+        indexSecondaryContent = Color(secondaryText),
+        indexButtonContainer = Color(buttonContainer),
+        calendarUnfinishedTagContainer = Color(themeColorLong),
+        calendarFinishedTagContainer = Color(doneBackground),
     )
 }
 

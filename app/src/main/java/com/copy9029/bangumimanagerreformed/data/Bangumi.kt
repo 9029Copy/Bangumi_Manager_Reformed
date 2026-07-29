@@ -6,11 +6,18 @@ import androidx.room.PrimaryKey
 import java.time.LocalDate
 
 val themeColorByMonth = mapOf(
-    1 to 0xFFFFFFAAL,
-    4 to 0xFFB3FFB3L,
-    7 to 0xFF80FFFFL,
-    10 to 0xFFFF9191L,
+    1  to 0xFF598CD6L,
+    4  to 0xFFA188D8L,
+    7  to 0xFF8FCF69L,
+    10 to 0xFFF39252L,
 )
+
+// #FF598CD6   blue
+// #FFA188D8   purple
+// #FF8FCF69   green
+// #FFF39252   orange
+
+// #FFC0392B   red
 
 data class BangumiAddInfo(
     val seasonYear: Int,

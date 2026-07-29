@@ -1,6 +1,7 @@
 package com.copy9029.bangumimanagerreformed.ui.calendar
 
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -63,7 +63,16 @@ import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.IconButtonColors
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import com.copy9029.bangumimanagerreformed.R
+import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheet
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
@@ -246,8 +255,12 @@ private fun CalendarScreenContent(
                         )
 
                         if (uiState.isWeekSelected(weekStart)) {
-                            CalendarSelectedDateDetailsRow(
-                                // TODO
+                            val selectedDate = LocalDate.ofEpochDay(
+                                requireNotNull(uiState.selectedDateEpochDay)
+                            )
+                            CalendarSelectedDateDetails(
+                                bangumis = uiState.bangumisByDate[selectedDate].orEmpty(),
+                                onAddClick = onAddClick,
                             )
                         }
                     }
@@ -327,7 +340,7 @@ private fun DaysOfWeekHeader(
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(horizontal = 6.dp),
+            .padding(horizontal = 2.dp),
     ) {
         listOf("一", "二", "三", "四", "五", "六", "日").forEach { day ->
             Text(
@@ -355,7 +368,7 @@ private fun CalendarWeekRow(
             .fillMaxWidth()
             .heightIn(min = 100.dp)
             .height(IntrinsicSize.Min)
-            .padding(horizontal = 6.dp),
+            .padding(horizontal = 2.dp),
     ) {
         repeat(7) { dayOffset ->
             val date = weekStart.plusDays(dayOffset.toLong())
@@ -376,15 +389,184 @@ private fun CalendarWeekRow(
 }
 
 @Composable
-private fun CalendarSelectedDateDetailsRow(
-    // TODO
+private fun CalendarSelectedDateDetails(
+    bangumis: List<CalendarBangumiItemUiState>,
+    onAddClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        // TODO: 在此处添加所选日期全部事件的详细信息。
+        bangumis.forEach { bangumi ->
+            CalendarSelectedDateDetailCard(
+                item = bangumi,
+            )
+        }
+
+        Card(
+            onClick = onAddClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 30.dp),
+            shape = RoundedCornerShape(6.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "添加项目",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
     }
+}
+
+@Composable
+private fun CalendarSelectedDateDetailCard(
+    item: CalendarBangumiItemUiState,
+    modifier: Modifier = Modifier,
+) {
+    val colorScheme = generateBangumiColorScheme(item.themeColorLong)
+
+    Card(
+        onClick = {
+            // TODO: 打开 Calendar 详情
+        },
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(6.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 6.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                if (item.isDone) {
+                    IconButton(
+                        modifier = Modifier.size(32.dp),
+                        onClick = {
+                            // TODO
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = "已完成",
+                            modifier = Modifier.size(24.dp),
+                            tint = colorScheme.main,
+                        )
+                    }
+                } else {
+                    IconButton(
+                        modifier = Modifier.size(32.dp),
+                        onClick = {
+                            // TODO
+                        },
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.calendar_outline_circle),
+                            contentDescription = "未完成",
+                            modifier = Modifier.size(22.dp),
+                            tint = colorScheme.main,
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 4.dp, end = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    Text(
+                        text = item.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+
+                    Text(
+                        text = "第 ${item.episodeId} 集",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CalendarCircleActionButton(
+                    onClick = {
+                        // TODO: 编辑该项目。
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = "编辑",
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+
+                CalendarCircleActionButton(
+                    onClick = {
+                        // TODO: 打开更多操作。
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = "更多",
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalendarCircleActionButton(
+    onClick: () -> Unit,
+    borderColor: Color = MaterialTheme.colorScheme.outline,
+    colors: IconButtonColors = IconButtonDefaults.filledIconButtonColors(
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+    ),
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    OutlinedIconButton(
+        onClick = onClick,
+        modifier = modifier.size(30.dp),
+        border = BorderStroke(
+            width = 1.dp,
+            color = borderColor,
+        ),
+        colors = colors,
+        shape = CircleShape,
+        content = content,
+    )
 }
 
 @Composable
@@ -419,7 +601,7 @@ private fun CalendarDateCell(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f),
+                    .aspectRatio(1.2f),
                 contentAlignment = Alignment.Center,
             ) {
                 if (isToday) {
@@ -477,13 +659,17 @@ private fun CalendarBangumiTag(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = colorScheme.cardContainer,
+        color = if (item.isDone) {
+            colorScheme.calendarFinishedTagContainer
+        } else {
+            colorScheme.calendarUnfinishedTagContainer
+        },
         shape = RoundedCornerShape(3.dp),
     ) {
         Text(
-            text = item.title,
+            text = if (item.isDone) "✔${item.title}" else item.title,
             modifier = Modifier.padding(horizontal = 1.dp, vertical = 2.dp),
-            color = colorScheme.primaryContent,
+            color = Color.White,
             fontSize = 8.sp,
             lineHeight = 16.sp,
             maxLines = 1,
@@ -557,15 +743,23 @@ private fun PreviewCalendarScreenContent() {
                 ),
                 weekCount = 21,
                 initialWeekIndex = 10 - 1,
-                bangumisByDate = (0..8).associate { index ->
+                bangumisByDate = (0..20).associate { index ->
                     val date = today.plusDays(index.toLong() - 1L)
                     date to listOf(
                         CalendarBangumiItemUiState(
                             bangumiId = index + 1,
                             episodeId = index + 1,
-                            title = "示例动画动画动画",
-                            themeColorLong = 0xFF80FFFFL,
-                        )
+                            title = "示例动画动画动画动画动画动画动画动画动画动画动画动画",
+                            themeColorLong = themeColorByMonth[listOf(1,4,7,10)[index.rem(4)]]!!,
+                            isDone = false,
+                        ),
+                        CalendarBangumiItemUiState(
+                            bangumiId = index + 114,
+                            episodeId = index + 1,
+                            title = "示例动画动画动画动画动画动画动画动画动画动画动画动画",
+                            themeColorLong = themeColorByMonth[listOf(1,4,7,10)[index.rem(4)]]!!,
+                            isDone = true,
+                        ),
                     )
                 },
                 selectedDateEpochDay = today.toEpochDay() + 2,
@@ -575,4 +769,3 @@ private fun PreviewCalendarScreenContent() {
         )
     }
 }
-

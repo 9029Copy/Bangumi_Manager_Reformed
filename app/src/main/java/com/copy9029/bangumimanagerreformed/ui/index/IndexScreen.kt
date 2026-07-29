@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.copy9029.bangumimanagerreformed.R
+import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
 import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialog
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheet
@@ -381,9 +382,9 @@ private fun IndexScreenItem(
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 5.dp),
         shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, colorScheme.border),
+        border = BorderStroke(1.dp, colorScheme.indexBorder),
         colors = CardDefaults.cardColors(
-            containerColor = colorScheme.cardContainer,
+            containerColor = colorScheme.indexCardContainer,
         )
     ) {
         Row(
@@ -400,7 +401,7 @@ private fun IndexScreenItem(
             ) {
                 Text(
                     text = uiState.titleStr,
-                    color = colorScheme.primaryContent,
+                    color = colorScheme.indexPrimaryContent,
                     style = MaterialTheme.typography.titleSmall,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -408,7 +409,7 @@ private fun IndexScreenItem(
 
                 Text(
                     text = uiState.watchProgressStr,
-                    color = colorScheme.secondaryContent,
+                    color = colorScheme.indexSecondaryContent,
                     style = MaterialTheme.typography.labelSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -428,10 +429,10 @@ private fun IndexScreenItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                val buttonBorderColor = colorScheme.border
+                val buttonBorderColor = colorScheme.indexBorder
                 val buttonColors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = colorScheme.buttonContainer,
-                    contentColor = colorScheme.primaryContent,
+                    containerColor = colorScheme.indexButtonContainer,
+                    contentColor = colorScheme.indexPrimaryContent,
                 )
 
                 CircleActionButton(
@@ -509,8 +510,7 @@ private fun CircleActionButton(
 ) {
     OutlinedIconButton(
         onClick = onClick,
-        modifier = modifier
-            .size(30.dp),
+        modifier = modifier.size(30.dp),
         border = BorderStroke(
             width = 1.dp,
             color = borderColor,
@@ -533,7 +533,7 @@ private fun PreviewHere() {
                     BangumiIndexItemUiState(
                         titleStr = "Bangumi Title ${index + 1}".repeat(index + 1),
                         watchProgressStr = "周一 丨 已看完第 10 话 丨 更新到第 12 话",
-                        themeColorLong = listOf(0xFFFFFFFF, 0xFFFF0000, 0xFF0000FF, 0xFF00FF00, 0xFFFFFF00, 0xFFFF00FF, 0xFF00FFFF)[index.rem(6)],
+                        themeColorLong = themeColorByMonth[listOf(1,4,7,10)[index.rem(4)]]!!,
                         bangumiIdInt = index + 1,
                         isActive = true,
                     )
