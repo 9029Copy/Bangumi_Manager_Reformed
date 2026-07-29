@@ -123,16 +123,3 @@ fun Bangumi.calculateExpectedEndDate(
         schedules = schedules,
     )
 }
-
-
-fun calcBangumisByDateMap(
-    bangumis: List<Bangumi>,
-    schedules: List<BangumiSchedule>,
-    firstDay: LocalDate,
-    dayCount: Int,
-): Map<LocalDate, List<CalendarBangumiItemUiState>> {
-
-    // TODO
-    return emptyMap()
-
-}

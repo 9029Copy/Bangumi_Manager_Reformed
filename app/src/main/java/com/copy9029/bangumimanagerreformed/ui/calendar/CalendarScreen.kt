@@ -39,6 +39,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -168,6 +169,10 @@ private fun CalendarScreenContent(
         }
     }
 
+    LaunchedEffect(uiState.firstWeekStart, uiState.initialWeekIndex) {
+        listState.scrollToItem(uiState.initialWeekIndex)
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -180,7 +185,7 @@ private fun CalendarScreenContent(
                         onClick = {
                             coroutineScope.launch {
                                 listState.animateScrollToItem(
-                                    index = (uiState.todayWeekIndex() - WEEKS_PREFIX)
+                                    index = (uiState.todayWeekIndex() - uiState.weeksPrefix)
                                         .coerceAtLeast(0),
                                 )
                             }
@@ -349,7 +354,7 @@ private fun CalendarScreenContent(
                                 } else {
                                     coroutineScope.launch {
                                         listState.animateScrollToItem(
-                                            index = (selectedWeekIndex - WEEKS_PREFIX)
+                                            index = (selectedWeekIndex - uiState.weeksPrefix)
                                                 .coerceAtLeast(0),
                                         )
                                     }
@@ -926,14 +931,14 @@ private fun PreviewCalendarScreenContent() {
                         CalendarBangumiItemUiState(
                             bangumiId = index + 1,
                             episodeId = index + 1,
-                            title = "示例动画动画动画动画动画动画动画动画动画动画动画动画",
+                            title = "示例示例示例示例示例示例示例示例示例示例示例示例示例示例示例",
                             themeColorLong = themeColorByMonth[listOf(1,4,7,10)[index.rem(4)]]!!,
                             isDone = false,
                         ),
                         CalendarBangumiItemUiState(
                             bangumiId = index + 114,
                             episodeId = index + 1,
-                            title = "示例动画动画动画动画动画动画动画动画动画动画动画动画",
+                            title = "示例示例示例示例示例示例示例示例示例示例示例示例示例示例示例",
                             themeColorLong = themeColorByMonth[listOf(1,4,7,10)[index.rem(4)]]!!,
                             isDone = true,
                         ),

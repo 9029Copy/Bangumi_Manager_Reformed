@@ -8,21 +8,18 @@ class BangumiRepository @Inject constructor(
     private val bangumiDao: BangumiDao,
 ) {
 
-    suspend fun updateBangumi(bangumi: Bangumi) {
-        val storedBangumi = bangumiDao.getBangumiByIdOnce(bangumi.bangumiId)
-            ?: return
-
-        val totalEpisodesChanged = storedBangumi.totalEpisodes != bangumi.totalEpisodes
+    suspend fun updateBangumi(newBangumi: Bangumi, oldBangumi: Bangumi) {
+        val totalEpisodesChanged = oldBangumi.totalEpisodes != newBangumi.totalEpisodes
         val expectedEndDate = if (totalEpisodesChanged) {
-            val schedules = bangumiDao.getSchedulesByBangumiId(bangumi.bangumiId)
-            bangumi.calculateExpectedEndDate(schedules)
+            val schedules = bangumiDao.getSchedulesByBangumiId(newBangumi.bangumiId)
+            newBangumi.calculateExpectedEndDate(schedules)
         } else {
-            storedBangumi.expectedEndDate
+            oldBangumi.expectedEndDate
         }
 
-        val bangumiToUpdate = bangumi.copy(
-            lastBasicInfoModifiedAtMillis = if (storedBangumi.hasSameBasicInfoAs(bangumi)) {
-                storedBangumi.lastBasicInfoModifiedAtMillis
+        val bangumiToUpdate = newBangumi.copy(
+            lastBasicInfoModifiedAtMillis = if (oldBangumi.hasSameBasicInfoAs(newBangumi)) {
+                oldBangumi.lastBasicInfoModifiedAtMillis
             } else {
                 System.currentTimeMillis()
             },
@@ -72,12 +69,26 @@ class BangumiRepository @Inject constructor(
             if (newNum >= 0) {
                 if ((bangumi.totalEpisodes == null) || (newNum <= bangumi.totalEpisodes)) {
                     updateBangumi(
-                        bangumi.copy(latestWatchedEpisode = newNum)
+                        newBangumi = bangumi.copy(latestWatchedEpisode = newNum),
+                        oldBangumi = bangumi,
                     )
                 }
             }
         }
+    }
 
+    suspend fun watchedEpisodeSet(bangumiId: Int, newNum: Int) {
+        val bangumi = bangumiDao.getBangumiByIdOnce(bangumiId)
+        if (bangumi != null) {
+            if (newNum >= 0) {
+                if ((bangumi.totalEpisodes == null) || (newNum <= bangumi.totalEpisodes)) {
+                    updateBangumi(
+                        newBangumi = bangumi.copy(latestWatchedEpisode = newNum),
+                        oldBangumi = bangumi,
+                    )
+                }
+            }
+        }
     }
 
 //    fun getAllThemeColors(): Flow<List<ThemeColor>> {  // TODO: themeColor
@@ -119,7 +130,8 @@ class BangumiRepository @Inject constructor(
         if (bangumi != null) {
             val oldActive = bangumi.isActive
             updateBangumi(
-                bangumi.copy(isActive = !oldActive)
+                newBangumi = bangumi.copy(isActive = !oldActive),
+                oldBangumi = bangumi,
             )
         }
     }
