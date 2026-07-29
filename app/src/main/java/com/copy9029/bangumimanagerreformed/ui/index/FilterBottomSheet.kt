@@ -105,7 +105,7 @@ fun FilterBottomSheet(
                 }
             }
 
-            FilterSection2(title = "不活跃项") {
+            FilterSection2(title = "隐藏项目") {
                 InactiveTags.entries.forEach { tag ->
                     FilterChip(
                         selected = status.inactiveTag == tag,

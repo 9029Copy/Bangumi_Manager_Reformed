@@ -87,6 +87,7 @@ fun CalendarScreen(
     addSheetViewModel: AddSheetViewModel,
     onBatchClick: () -> Unit,
     onEditClick: (Int) -> Unit,
+    onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val uiState by calendarViewModel.uiState.collectAsStateWithLifecycle()
@@ -107,6 +108,7 @@ fun CalendarScreen(
         onToggleBangumiActiveClick = calendarViewModel::onToggleBangumiActiveClick,
         onDeleteBangumiClick = calendarViewModel::onDeleteBangumiClick,
         onEditClick = onEditClick,
+        onSettingsClick = onSettingsClick,
         modifier = modifier,
     )
 
@@ -142,6 +144,7 @@ private fun CalendarScreenContent(
     onToggleBangumiActiveClick: (Int) -> Unit,
     onDeleteBangumiClick: (Int) -> Unit,
     onEditClick: (Int) -> Unit,
+    onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -228,7 +231,15 @@ private fun CalendarScreenContent(
                                 },
                             )
 
-                            // TODO: 在此处添加更多日历菜单More选项。
+                            DropdownMenuItem(
+                                text = {
+                                    Text("设置")
+                                },
+                                onClick = {
+                                    isMoreMenuExpanded = false
+                                    onSettingsClick()
+                                },
+                            )
                         }
                     }
                 },
@@ -939,6 +950,7 @@ private fun PreviewCalendarScreenContent() {
             onToggleBangumiActiveClick = {},
             onDeleteBangumiClick = {},
             onEditClick = {},
+            onSettingsClick = {},
         )
     }
 }

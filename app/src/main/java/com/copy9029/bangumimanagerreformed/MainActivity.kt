@@ -34,6 +34,8 @@ import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddBatchScreen
 import com.copy9029.bangumimanagerreformed.ui.bangumi.edit.BangumiEditViewModel
 import com.copy9029.bangumimanagerreformed.ui.calendar.CalendarViewModel
 import com.copy9029.bangumimanagerreformed.ui.calendar.CalendarScreen
+import com.copy9029.bangumimanagerreformed.ui.settings.CalendarSettingsScreen
+import com.copy9029.bangumimanagerreformed.ui.settings.CalendarSettingsViewModel
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -100,6 +102,9 @@ fun BangumiManagerReformedApp() {
                         onBatchClick = {
                             navController.navigate(Routes.BANGUMI_ADD_BATCH)
                         },
+                        onSettingsClick = {
+                            navController.navigate(Routes.CALENDAR_SETTINGS)
+                        },
                     )
                 }
                 composable(BottomDestination.INDEX.route) {
@@ -124,6 +129,14 @@ fun BangumiManagerReformedApp() {
                     val addBatchViewModel: AddBatchViewModel = hiltViewModel()
                     BangumiAddBatchScreen(
                         viewModel = addBatchViewModel,
+                        onBack = navController::navigateUp,
+                    )
+                }
+
+                composable(Routes.CALENDAR_SETTINGS) {
+                    val settingsViewModel: CalendarSettingsViewModel = hiltViewModel()
+                    CalendarSettingsScreen(
+                        viewModel = settingsViewModel,
                         onBack = navController::navigateUp,
                     )
                 }
@@ -166,4 +179,5 @@ object Routes {
     }
 
     const val BANGUMI_ADD_BATCH = "bangumi_add_batch"
+    const val CALENDAR_SETTINGS = "calendar_settings"
 }
