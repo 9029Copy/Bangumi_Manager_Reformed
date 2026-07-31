@@ -9,11 +9,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -83,6 +83,14 @@ fun BangumiEditScreen(
         onWatchedEpisodeMinusOne = viewModel::onWatchedEpisodeMinusOne,
         onWatchedEpisodePlusOne = viewModel::onWatchedEpisodePlusOne,
         onSetWatchedToMaximum = viewModel::onSetWatchedToMaximum,
+        onAddEpisodeBroadcastRule = viewModel::onAddEpisodeBroadcastRule,
+        onDeleteEpisodeBroadcastRule = viewModel::onDeleteEpisodeBroadcastRule,
+        onEpisodeBroadcastRuleEpisodeChanged =
+            viewModel::onEpisodeBroadcastRuleEpisodeChanged,
+        onEpisodeBroadcastRuleTypeChanged =
+            viewModel::onEpisodeBroadcastRuleTypeChanged,
+        onEpisodeBroadcastRuleDelayWeeksChanged =
+            viewModel::onEpisodeBroadcastRuleDelayWeeksChanged,
         modifier = modifier,
     )
 }
@@ -133,6 +141,11 @@ fun BangumiEditContent(
     onWatchedEpisodeMinusOne: () -> Unit,
     onWatchedEpisodePlusOne: () -> Unit,
     onSetWatchedToMaximum: () -> Unit,
+    onAddEpisodeBroadcastRule: () -> Unit,
+    onDeleteEpisodeBroadcastRule: (Long) -> Unit,
+    onEpisodeBroadcastRuleEpisodeChanged: (Long, String) -> Unit,
+    onEpisodeBroadcastRuleTypeChanged: (Long, EpisodeBroadcastRuleType) -> Unit,
+    onEpisodeBroadcastRuleDelayWeeksChanged: (Long, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -148,195 +161,225 @@ fun BangumiEditContent(
             )
         },
     ) { padding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .padding(padding)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+                .fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            EditSectionTitle("基本信息")
-
-            OutlinedTextField(
-                value = uiState.title,
-                onValueChange = onTitleChanged,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("标题") },
-                singleLine = true,
-                isError = uiState.titleError != null,
-                supportingText = uiState.titleError?.let { error ->
-                    { Text(error) }
-                },
-            )
-
-            SeasonSelectSection(
-                startYear = uiState.seasonStartYear,
-                endYear = uiState.seasonEndYear,
-                selectedYear = uiState.seasonYear,
-                selectedMonth = uiState.seasonMonth,
-                onSeasonSelected = onSeasonChanged,
-                colorLong = uiState.themeColorLong,
-            )
-
-            EditFormRow(label = "我的评分") {
-                OutlinedTextField(
-                    value = uiState.myScoreInput,
-                    onValueChange = onMyScoreChanged,
+            item {
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("未评分") },
-                    suffix = { Text("/ 10.0") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Decimal,
-                    ),
-                    isError = uiState.myScoreError != null,
-                    supportingText = uiState.myScoreError?.let { error ->
-                        { Text(error) }
-                    },
-                )
-            }
-
-            EditFormRow(label = "是否隐藏") {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    Text(
-                        text = if (uiState.isActive) "正常显示" else "隐藏",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium,
+                    EditSectionTitle("基本信息")
+
+                    OutlinedTextField(
+                        value = uiState.title,
+                        onValueChange = onTitleChanged,
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("标题") },
+                        singleLine = true,
+                        isError = uiState.titleError != null,
+                        supportingText = uiState.titleError?.let { error ->
+                            { Text(error) }
+                        },
                     )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Switch(
-                        checked = !uiState.isActive,
-                        onCheckedChange = onHiddenChanged,
+
+                    SeasonSelectSection(
+                        startYear = uiState.seasonStartYear,
+                        endYear = uiState.seasonEndYear,
+                        selectedYear = uiState.seasonYear,
+                        selectedMonth = uiState.seasonMonth,
+                        onSeasonSelected = onSeasonChanged,
+                        colorLong = uiState.themeColorLong,
                     )
-                }
-            }
 
-            HorizontalDivider()
+                    EditFormRow(label = "我的评分") {
+                        OutlinedTextField(
+                            value = uiState.myScoreInput,
+                            onValueChange = onMyScoreChanged,
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("未评分") },
+                            suffix = { Text("/ 10.0") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Decimal,
+                            ),
+                            isError = uiState.myScoreError != null,
+                            supportingText = uiState.myScoreError?.let { error ->
+                                { Text(error) }
+                            },
+                        )
+                    }
 
-            EditSectionTitle("集数与观看进度")
-
-            EditFormRow(label = "总集数") {
-                OutlinedTextField(
-                    value = uiState.totalEpisodesInput,
-                    onValueChange = onTotalEpisodesChanged,
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("未定") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
-                    ),
-                    isError = uiState.totalEpisodesError != null,
-                    supportingText = if (
-                        uiState.totalEpisodesError != null ||
-                        uiState.totalEpisodesInput.isBlank()
-                    ) {
-                        {
+                    EditFormRow(label = "是否隐藏") {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             Text(
-                                text = uiState.totalEpisodesError ?: "当前为未定",
-                                color = if (uiState.totalEpisodesError != null) {
-                                    MaterialTheme.colorScheme.error
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
+                                text = if (uiState.isActive) "正常显示" else "隐藏",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Switch(
+                                checked = !uiState.isActive,
+                                onCheckedChange = onHiddenChanged,
                             )
                         }
-                    } else {
-                        null
-                    },
+                    }
+                }
+            }
+
+            item {
+                HorizontalDivider()
+            }
+
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    EditSectionTitle("集数与观看进度")
+
+                    EditFormRow(label = "总集数") {
+                        OutlinedTextField(
+                            value = uiState.totalEpisodesInput,
+                            onValueChange = onTotalEpisodesChanged,
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("未定") },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                            ),
+                            isError = uiState.totalEpisodesError != null,
+                            supportingText = if (
+                                uiState.totalEpisodesError != null ||
+                                uiState.totalEpisodesInput.isBlank()
+                            ) {
+                                {
+                                    Text(
+                                        text = uiState.totalEpisodesError ?: "当前为未定",
+                                        color = if (uiState.totalEpisodesError != null) {
+                                            MaterialTheme.colorScheme.error
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        },
+                                    )
+                                }
+                            } else {
+                                null
+                            },
+                        )
+                    }
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "已观看集数",
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            Text(
+                                text = "当前更新到第 ${uiState.latestAiredEpisode} 集",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            OutlinedButton(
+                                onClick = onSetWatchedToMinimum,
+                                modifier = Modifier.weight(1f),
+                                contentPadding = PaddingValues(horizontal = 4.dp),
+                            ) {
+                                Text("最小")
+                            }
+                            OutlinedButton(
+                                onClick = onWatchedEpisodeMinusOne,
+                                modifier = Modifier.weight(1f),
+                                contentPadding = PaddingValues(horizontal = 4.dp),
+                            ) {
+                                Text("−")
+                            }
+                            OutlinedTextField(
+                                value = uiState.latestWatchedEpisodeInput,
+                                onValueChange = onLatestWatchedEpisodeChanged,
+                                modifier = Modifier.weight(1.2f),
+                                singleLine = true,
+                                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                                    textAlign = TextAlign.Center,
+                                ),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number,
+                                ),
+                                isError = uiState.latestWatchedEpisodeError != null,
+                            )
+                            OutlinedButton(
+                                onClick = onWatchedEpisodePlusOne,
+                                modifier = Modifier.weight(1f),
+                                contentPadding = PaddingValues(horizontal = 4.dp),
+                            ) {
+                                Text("+")
+                            }
+                            OutlinedButton(
+                                onClick = onSetWatchedToMaximum,
+                                modifier = Modifier.weight(1f),
+                                contentPadding = PaddingValues(horizontal = 4.dp),
+                            ) {
+                                Text("最大")
+                            }
+                        }
+
+                        uiState.latestWatchedEpisodeError?.let { error ->
+                            Text(
+                                text = error,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                HorizontalDivider()
+            }
+
+            item {
+                EditSectionTitle("播出日期调整")
+                
+                BangumiScheduleRuleEditor(
+                    rules = uiState.episodeBroadcastRules,
+                    onAddRule = onAddEpisodeBroadcastRule,
+                    onDeleteRule = onDeleteEpisodeBroadcastRule,
+                    onEpisodeChanged = onEpisodeBroadcastRuleEpisodeChanged,
+                    onRuleTypeChanged = onEpisodeBroadcastRuleTypeChanged,
+                    onDelayWeeksChanged = onEpisodeBroadcastRuleDelayWeeksChanged,
                 )
             }
 
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Row(
+            item {
+                Button(
+                    onClick = onSubmit,
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = "已观看集数",
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                    Text(
-                        text = "当前更新到第 ${uiState.latestAiredEpisode} 集",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+                    Text("提交")
                 }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    OutlinedButton(
-                        onClick = onSetWatchedToMinimum,
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 4.dp),
-                    ) {
-                        Text("最小")
-                    }
-                    OutlinedButton(
-                        onClick = onWatchedEpisodeMinusOne,
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 4.dp),
-                    ) {
-                        Text("−")
-                    }
-                    OutlinedTextField(
-                        value = uiState.latestWatchedEpisodeInput,
-                        onValueChange = onLatestWatchedEpisodeChanged,
-                        modifier = Modifier.weight(1.2f),
-                        singleLine = true,
-                        textStyle = MaterialTheme.typography.bodyLarge.copy(
-                            textAlign = TextAlign.Center,
-                        ),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number,
-                        ),
-                        isError = uiState.latestWatchedEpisodeError != null,
-                    )
-                    OutlinedButton(
-                        onClick = onWatchedEpisodePlusOne,
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 4.dp),
-                    ) {
-                        Text("+")
-                    }
-                    OutlinedButton(
-                        onClick = onSetWatchedToMaximum,
-                        modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 4.dp),
-                    ) {
-                        Text("最大")
-                    }
-                }
-
-                uiState.latestWatchedEpisodeError?.let { error ->
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            }
-
-            HorizontalDivider()
-
-            BangumiScheduleEditSection()
-
-            Button(
-                onClick = onSubmit,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text("提交")
             }
         }
     }
@@ -379,12 +422,11 @@ private fun EditFormRow(
     }
 }
 
-@Composable
-private fun BangumiScheduleEditSection() {
-    // TODO: 第三部分——播出锚点编辑
-}
 
-@Preview(showBackground = true)
+@Preview(
+    showBackground = true,
+    heightDp = 1200,
+)
 @Composable
 private fun PreviewBangumiEditContent() {
     BangumiManagerReformedTheme(dynamicColor = false) {
@@ -401,6 +443,19 @@ private fun PreviewBangumiEditContent() {
                 totalEpisodesInput = "12",
                 latestWatchedEpisodeInput = "5",
                 latestAiredEpisode = 7,
+                episodeBroadcastRules = listOf(
+                    EpisodeBroadcastRuleUiState(
+                        rowId = 1,
+                        episodeInput = "5",
+                        ruleType = EpisodeBroadcastRuleType.DELAY,
+                        delayWeeksInput = "1",
+                    ),
+                    EpisodeBroadcastRuleUiState(
+                        rowId = 2,
+                        episodeInput = "8",
+                        ruleType = EpisodeBroadcastRuleType.SAME_DAY_AS_PREVIOUS,
+                    ),
+                ),
             ),
             onCancel = {},
             onSubmit = {},
@@ -414,11 +469,19 @@ private fun PreviewBangumiEditContent() {
             onWatchedEpisodeMinusOne = {},
             onWatchedEpisodePlusOne = {},
             onSetWatchedToMaximum = {},
+            onAddEpisodeBroadcastRule = {},
+            onDeleteEpisodeBroadcastRule = {},
+            onEpisodeBroadcastRuleEpisodeChanged = { _, _ -> },
+            onEpisodeBroadcastRuleTypeChanged = { _, _ -> },
+            onEpisodeBroadcastRuleDelayWeeksChanged = { _, _ -> },
         )
     }
 }
 
-@Preview(showBackground = true)
+@Preview(
+    showBackground = true,
+    heightDp = 1200,
+)
 @Composable
 private fun PreviewBangumiEditContent2() {
     BangumiManagerReformedTheme(dynamicColor = false) {
@@ -452,6 +515,11 @@ private fun PreviewBangumiEditContent2() {
             onWatchedEpisodeMinusOne = {},
             onWatchedEpisodePlusOne = {},
             onSetWatchedToMaximum = {},
+            onAddEpisodeBroadcastRule = {},
+            onDeleteEpisodeBroadcastRule = {},
+            onEpisodeBroadcastRuleEpisodeChanged = { _, _ -> },
+            onEpisodeBroadcastRuleTypeChanged = { _, _ -> },
+            onEpisodeBroadcastRuleDelayWeeksChanged = { _, _ -> },
         )
     }
 }

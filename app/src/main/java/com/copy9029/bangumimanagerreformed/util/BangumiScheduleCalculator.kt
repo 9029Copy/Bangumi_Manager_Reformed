@@ -2,8 +2,8 @@ package com.copy9029.bangumimanagerreformed.util
 
 import com.copy9029.bangumimanagerreformed.data.Bangumi
 import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
-import com.copy9029.bangumimanagerreformed.ui.calendar.CalendarBangumiItemUiState
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 
 fun buildBangumiWatchProgressText(
@@ -58,7 +58,7 @@ fun Bangumi.latestAiredEpisode(
 
     val currentAnchor = orderedSchedules[currentAnchorIndex]
     val nextAnchor = orderedSchedules.getOrNull(currentAnchorIndex + 1)
-    val weeksPassed = java.time.temporal.ChronoUnit.WEEKS.between(
+    val weeksPassed = ChronoUnit.WEEKS.between(
         currentAnchor.broadcastDate,
         today,
     ).toInt()

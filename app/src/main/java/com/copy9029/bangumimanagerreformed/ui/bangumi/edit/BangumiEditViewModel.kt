@@ -19,6 +19,21 @@ import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
 
+enum class EpisodeBroadcastRuleType {
+    DELAY,
+    SAME_DAY_AS_PREVIOUS,
+}
+
+data class EpisodeBroadcastRuleUiState(
+    val rowId: Long,    // begin with 1
+    val episodeInput: String = "",
+    val ruleType: EpisodeBroadcastRuleType? = null,
+    val delayWeeksInput: String = "1",
+    val episodeError: String? = null,
+    val ruleError: String? = null,
+    val delayWeeksError: String? = null,
+)
+
 data class BangumiEditUiState(
     val bangumiId: Int,
 
@@ -36,6 +51,9 @@ data class BangumiEditUiState(
     val latestWatchedEpisodeInput: String = "0",
     val latestAiredEpisode: Int = 0,
 
+    // 第三部分：分集播出规则
+    val episodeBroadcastRules: List<EpisodeBroadcastRuleUiState> = emptyList(),
+
     // 表单错误
     val titleError: String? = null,
     val myScoreError: String? = null,
@@ -45,7 +63,6 @@ data class BangumiEditUiState(
     val themeColorLong: Long
         get() = themeColorByMonth[seasonMonth] ?: 0xFFFFFFFFL
 
-    // TODO: 第三部分（播出锚点编辑）相关状态
 }
 
 
@@ -95,6 +112,11 @@ class BangumiEditViewModel @Inject constructor(
                     schedules = schedules,
                     today = today,
                 ),
+                titleError = null,
+                myScoreError = null,
+                totalEpisodesError = null,
+                latestWatchedEpisodeError = null,
+//                episodeBroadcastRules = // TODO: 根据Schedule推算Rules,
             )
         }
     }
@@ -209,6 +231,29 @@ class BangumiEditViewModel @Inject constructor(
         }
     }
 
+    fun onAddEpisodeBroadcastRule() {
+        // TODO: 新增一条集数与规则均为空的播出规则。
+    }
+
+    fun onDeleteEpisodeBroadcastRule(rowId: Long) {
+        // TODO: 删除指定播出规则。
+    }
+
+    fun onEpisodeBroadcastRuleEpisodeChanged(rowId: Long, value: String) {
+        // TODO: 校验并更新指定规则的正整数集数。
+    }
+
+    fun onEpisodeBroadcastRuleTypeChanged(
+        rowId: Long,
+        ruleType: EpisodeBroadcastRuleType,
+    ) {
+        // TODO: 更新规则类型，并处理停更周数输入状态。
+    }
+
+    fun onEpisodeBroadcastRuleDelayWeeksChanged(rowId: Long, value: String) {
+        // TODO: 校验并更新大于 0 的停更周数。
+    }
+
     suspend fun onSubmitClick(): String {
         val state = _uiState.value
             ?: return "项目尚未加载完成"
@@ -259,7 +304,10 @@ class BangumiEditViewModel @Inject constructor(
             isActive = state.isActive,
         )
 
-        repository.updateBangumi(updatedBangumi)
+        repository.updateBangumi(
+            newBangumi = updatedBangumi,
+            oldBangumi = bangumi,
+        )
         storedBangumi = updatedBangumi
 
         return SUBMIT_SUCCESS
