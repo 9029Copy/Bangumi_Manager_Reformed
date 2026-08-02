@@ -232,26 +232,106 @@ class BangumiEditViewModel @Inject constructor(
     }
 
     fun onAddEpisodeBroadcastRule() {
-        // TODO: 新增一条集数与规则均为空的播出规则。
+        // 使用当前最大 rowId 递增生成稳定标识，避免删除中间行后与既有行重复。
+        _uiState.update { state ->
+            state ?: return@update null
+            val nextRowId = (state.episodeBroadcastRules.maxOfOrNull {
+                it.rowId
+            } ?: 0L) + 1L
+
+            state.copy(
+                episodeBroadcastRules = state.episodeBroadcastRules +
+                    EpisodeBroadcastRuleUiState(rowId = nextRowId),
+            )
+        }
     }
 
     fun onDeleteEpisodeBroadcastRule(rowId: Long) {
-        // TODO: 删除指定播出规则。
+        // 删除时不校验其他行，只按当前顺序重新生成从 1 开始连续递增的 rowId。
+        _uiState.update { state ->
+            state?.copy(
+                episodeBroadcastRules = reindexRuleRows(
+                    state.episodeBroadcastRules.filterNot { it.rowId == rowId },
+                ),
+            )
+        }
     }
 
     fun onEpisodeBroadcastRuleEpisodeChanged(rowId: Long, value: String) {
-        // TODO: 校验并更新指定规则的正整数集数。
+        // 只校验正在修改的行，随后将有效集数升序排列；空行不会因其他行变化显示错误。
+        _uiState.update { state ->
+            state ?: return@update null
+            val updatedRules = state.episodeBroadcastRules.map { rule ->
+                if (rule.rowId == rowId) {
+                    rule.copy(episodeInput = value)
+                } else {
+                    rule
+                }
+            }
+
+            state.copy(
+                episodeBroadcastRules = sortAndReindexRuleRows(
+                    validateRuleEpisodes(
+                        rules = updatedRules,
+                        targetRowId = rowId,
+                    ),
+                ),
+            )
+        }
     }
 
     fun onEpisodeBroadcastRuleTypeChanged(
         rowId: Long,
         ruleType: EpisodeBroadcastRuleType,
     ) {
-        // TODO: 更新规则类型，并处理停更周数输入状态。
+        // 切换规则时清除类型错误；进入“停更”且周数为空时填入可编辑的默认值 1。
+        _uiState.update { state ->
+            state?.copy(
+                episodeBroadcastRules = state.episodeBroadcastRules.map { rule ->
+                    if (rule.rowId != rowId) {
+                        rule
+                    } else {
+                        val delayWeeksInput = if (
+                            ruleType == EpisodeBroadcastRuleType.DELAY &&
+                                rule.delayWeeksInput.isBlank()
+                        ) {
+                            "1"
+                        } else {
+                            rule.delayWeeksInput
+                        }
+
+                        rule.copy(
+                            ruleType = ruleType,
+                            delayWeeksInput = delayWeeksInput,
+                            ruleError = null,
+                            delayWeeksError = if (ruleType == EpisodeBroadcastRuleType.DELAY) {
+                                validateDelayWeeks(delayWeeksInput)
+                            } else {
+                                null
+                            },
+                        )
+                    }
+                },
+            )
+        }
     }
 
     fun onEpisodeBroadcastRuleDelayWeeksChanged(rowId: Long, value: String) {
-        // TODO: 校验并更新大于 0 的停更周数。
+        // 保留用户输入并立即校验，只有大于 0 且未溢出的整数才是有效停更周数。
+        _uiState.update { state ->
+            state?.copy(
+                episodeBroadcastRules = state.episodeBroadcastRules.map { rule ->
+                    if (rule.rowId == rowId) {
+                        rule.copy(
+                            delayWeeksInput = value,
+                            delayWeeksError = validateDelayWeeks(value),
+                        )
+                    } else {
+                        rule
+                    }
+                },
+            )
+        }
     }
 
     suspend fun onSubmitClick(): String {
@@ -268,6 +348,10 @@ class BangumiEditViewModel @Inject constructor(
             input = state.latestWatchedEpisodeInput,
             totalEpisodes = totalEpisodes,
         )
+        // 提交前对所有规则做完整校验，包括空集数、未选择类型和停更周数。
+        val validatedRules = validateRulesWhenSubmit(
+            state.episodeBroadcastRules,
+        )
 
         _uiState.update {
             it?.copy(
@@ -275,6 +359,7 @@ class BangumiEditViewModel @Inject constructor(
                 myScoreError = myScoreError,
                 totalEpisodesError = totalEpisodesError,
                 latestWatchedEpisodeError = latestWatchedEpisodeError,
+                episodeBroadcastRules = validatedRules,
             )
         }
 
@@ -282,7 +367,8 @@ class BangumiEditViewModel @Inject constructor(
             titleError != null ||
             myScoreError != null ||
             totalEpisodesError != null ||
-            latestWatchedEpisodeError != null
+            latestWatchedEpisodeError != null ||
+            validatedRules.any(EpisodeBroadcastRuleUiState::hasError)
         ) {
             return "修改失败：请检查输入内容"
         }
@@ -309,6 +395,9 @@ class BangumiEditViewModel @Inject constructor(
             oldBangumi = bangumi,
         )
         storedBangumi = updatedBangumi
+
+        // TODO: 按集数排序已校验规则，将停更/同日规则换算为锚点 Schedule，
+        //       再与数据库中的旧 Schedule 做增删改并刷新预计完结日期。
 
         return SUBMIT_SUCCESS
     }
@@ -369,6 +458,108 @@ class BangumiEditViewModel @Inject constructor(
 
         return null
     }
+
+    private fun validateRuleEpisodes(
+        rules: List<EpisodeBroadcastRuleUiState>,
+        targetRowId: Long,
+    ): List<EpisodeBroadcastRuleUiState> {
+        val targetRule = rules.firstOrNull { it.rowId == targetRowId }
+            ?: return rules
+        val episode = targetRule.episodeInput.toIntOrNull()
+        val isDuplicate = episode != null && episode > 0 && rules.any { rule ->
+            rule.rowId != targetRowId && rule.episodeInput.toIntOrNull() == episode
+        }
+        val targetError = when {
+            targetRule.episodeInput.isBlank() -> "请输入集数"
+            episode == null || episode <= 0 -> "集数必须是大于 0 的整数"
+            isDuplicate -> "集数不能重复"
+            else -> null
+        }
+
+        return rules.map { rule ->
+            if (rule.rowId == targetRowId) {
+                rule.copy(episodeError = targetError)
+            } else {
+                rule
+            }
+        }
+    }
+
+    private fun validateAllRuleEpisodes(
+        rules: List<EpisodeBroadcastRuleUiState>,
+    ): List<EpisodeBroadcastRuleUiState> {
+        val episodeCounts = rules
+            .mapNotNull { it.episodeInput.toIntOrNull() }
+            .filter { it > 0 }
+            .groupingBy { it }
+            .eachCount()
+
+        return rules.map { rule ->
+            val episode = rule.episodeInput.toIntOrNull()
+            val error = when {
+                rule.episodeInput.isBlank() -> "请输入集数"
+                episode == null || episode <= 0 -> "集数必须是大于 0 的整数"
+                episodeCounts[episode] != 1 -> "集数不能重复"
+                else -> null
+            }
+            rule.copy(episodeError = error)
+        }
+    }
+
+    private fun validateRulesWhenSubmit(
+        rules: List<EpisodeBroadcastRuleUiState>,
+    ): List<EpisodeBroadcastRuleUiState> {
+        return validateAllRuleEpisodes(rules).map { rule ->
+            rule.copy(
+                ruleError = if (rule.ruleType == null) {
+                    "请选择播出规则"
+                } else {
+                    null
+                },
+                delayWeeksError = if (
+                    rule.ruleType == EpisodeBroadcastRuleType.DELAY
+                ) {
+                    validateDelayWeeks(rule.delayWeeksInput)
+                } else {
+                    null
+                },
+            )
+        }
+    }
+
+    private fun validateDelayWeeks(input: String): String? {
+        val weeks = input.toIntOrNull()
+        return when {
+            input.isBlank() -> "请输入停更周数"
+            weeks == null || weeks <= 0 -> "停更周数必须是大于 0 的整数"
+            else -> null
+        }
+    }
+
+    private fun sortAndReindexRuleRows(
+        rules: List<EpisodeBroadcastRuleUiState>,
+    ): List<EpisodeBroadcastRuleUiState> {
+        val sortedRules = rules.sortedWith(
+            compareBy<EpisodeBroadcastRuleUiState> { rule ->
+                rule.episodeInput.toIntOrNull()?.takeIf { it > 0 } == null
+            }.thenBy { rule ->
+                rule.episodeInput.toIntOrNull()?.takeIf { it > 0 } ?: Int.MAX_VALUE
+            }.thenBy(EpisodeBroadcastRuleUiState::rowId),
+        )
+        return reindexRuleRows(sortedRules)
+    }
+
+    private fun reindexRuleRows(
+        rules: List<EpisodeBroadcastRuleUiState>,
+    ): List<EpisodeBroadcastRuleUiState> {
+        return rules.mapIndexed { index, rule ->
+            rule.copy(rowId = index + 1L)
+        }
+    }
+}
+
+private fun EpisodeBroadcastRuleUiState.hasError(): Boolean {
+    return episodeError != null || ruleError != null || delayWeeksError != null
 }
 
 private fun Int?.toScoreInput(): String {

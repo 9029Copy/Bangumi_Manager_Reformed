@@ -139,75 +139,106 @@ private fun ScheduleRuleRow(
     onDelayWeeksChanged: (String) -> Unit,
     onDelete: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(RULE_ROW_HEIGHT_DP.dp)
-            .padding(horizontal = ROW_HORIZONTAL_PADDING),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        OutlinedTextField(
-            value = rule.episodeInput,
-            onValueChange = onEpisodeChanged,
-            modifier = Modifier
-                .width(EPISODE_COLUMN_WIDTH)
-                .height(INPUT_HEIGHT),
-            placeholder = { Text(text = "请输入", fontSize = 12.sp)},
-            singleLine = true,
-            isError = rule.episodeError != null,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            textStyle = MaterialTheme.typography.bodyMedium.copy(
-                textAlign = TextAlign.Center,
-            ),
-        )
+    val errorMessages = listOfNotNull(
+        rule.episodeError?.let { "集数：$it" },
+        rule.ruleError?.let { "播出规则：$it" },
+        rule.delayWeeksError?.let { "停更周数：$it" },
+    )
 
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(RULE_ROW_HEIGHT_DP.dp)
+                .padding(horizontal = ROW_HORIZONTAL_PADDING),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ScheduleRuleTypeDropdown(
-                selectedType = rule.ruleType,
-                onRuleTypeSelected = onRuleTypeChanged,
-                isError = rule.ruleError != null,
-                modifier = Modifier.weight(1.2f),
+            OutlinedTextField(
+                value = rule.episodeInput,
+                onValueChange = onEpisodeChanged,
+                modifier = Modifier
+                    .width(EPISODE_COLUMN_WIDTH)
+                    .height(INPUT_HEIGHT),
+                placeholder = { Text(text = "请输入", fontSize = 12.sp) },
+                singleLine = true,
+                isError = rule.episodeError != null,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                    textAlign = TextAlign.Center,
+                ),
             )
 
-            if (rule.ruleType == EpisodeBroadcastRuleType.DELAY) {
-                OutlinedTextField(
-                    value = rule.delayWeeksInput,
-                    onValueChange = onDelayWeeksChanged,
-                    modifier = Modifier
-                        .height(INPUT_HEIGHT)
-                        .weight(1f),
-                    placeholder = { Text(text = "请输入", fontSize = 12.sp) },
-                    suffix = { Text("周") },
-                    singleLine = true,
-                    isError = rule.delayWeeksError != null,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
-                    ),
-                    textStyle = MaterialTheme.typography.bodyMedium,
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ScheduleRuleTypeDropdown(
+                    selectedType = rule.ruleType,
+                    onRuleTypeSelected = onRuleTypeChanged,
+                    isError = rule.ruleError != null,
+                    modifier = Modifier.weight(1.2f),
+                )
+
+                if (rule.ruleType == EpisodeBroadcastRuleType.DELAY) {
+                    OutlinedTextField(
+                        value = rule.delayWeeksInput,
+                        onValueChange = onDelayWeeksChanged,
+                        modifier = Modifier
+                            .height(INPUT_HEIGHT)
+                            .weight(1f),
+                        placeholder = { Text(text = "请输入", fontSize = 12.sp) },
+                        suffix = { Text("周") },
+                        singleLine = true,
+                        isError = rule.delayWeeksError != null,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                        ),
+                        textStyle = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.width(ACTION_COLUMN_WIDTH),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "删除该行",
                 )
             }
         }
 
-        IconButton(
-            onClick = onDelete,
-            modifier = Modifier.width(ACTION_COLUMN_WIDTH),
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Delete,
-                contentDescription = "删除该行",
-            )
+        if (errorMessages.isNotEmpty()) {
+            Column(
+                modifier = Modifier.padding(
+                    start = ROW_HORIZONTAL_PADDING,
+                    end = ACTION_COLUMN_WIDTH + ROW_HORIZONTAL_PADDING,
+                    top = 4.dp,
+                    bottom = 4.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                errorMessages.forEach { error ->
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
         }
-    }
 
-    HorizontalDivider(
-        modifier = Modifier.padding(horizontal = ROW_HORIZONTAL_PADDING, vertical = DIVIDER_VERTICAL_PADDING),
-        color = MaterialTheme.colorScheme.outlineVariant,
-    )
+        HorizontalDivider(
+            modifier = Modifier.padding(
+                horizontal = ROW_HORIZONTAL_PADDING,
+                vertical = DIVIDER_VERTICAL_PADDING,
+            ),
+            color = MaterialTheme.colorScheme.outlineVariant,
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
