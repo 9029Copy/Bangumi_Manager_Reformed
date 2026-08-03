@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.copy9029.bangumimanagerreformed.data.Bangumi
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
 import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
+import com.copy9029.bangumimanagerreformed.data.CalendarInactiveVisibilityDefaults
 import com.copy9029.bangumimanagerreformed.data.SettingsRepository
 import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialogUiState
 import com.copy9029.bangumimanagerreformed.ui.bangumi.toDetailDialogUiState
@@ -210,10 +211,19 @@ private fun calcBangumisByDateMap(
 
     val itemsByDate = mutableMapOf<LocalDate, MutableList<CalendarBangumiItemUiState>>()
 
-    val filteredBangumis = bangumis.filter { _ ->
-        // TODO: 根据 calendarInactiveVisibility、
-        //       calendarFinishedBangumiVisible 提前过滤无需展开日期的番剧。
-        true
+    val filteredBangumis = bangumis.filter { bangumi ->
+        val matchesInactiveVisibility = when (calendarInactiveVisibility) {
+            CalendarInactiveVisibilityDefaults.ACTIVE -> bangumi.isActive
+            CalendarInactiveVisibilityDefaults.ALL -> true
+            CalendarInactiveVisibilityDefaults.INACTIVE -> !bangumi.isActive
+            else -> bangumi.isActive
+        }
+        val isFinishedBangumi = bangumi.totalEpisodes?.let { totalEpisodes ->
+            totalEpisodes > 0 && bangumi.latestWatchedEpisode >= totalEpisodes
+        } == true
+
+        matchesInactiveVisibility &&
+            (calendarFinishedBangumiVisible || !isFinishedBangumi)
     }
 
     filteredBangumis.forEach { bangumi ->
@@ -299,11 +309,26 @@ private fun calcBangumisByDateMap(
         }
     }
 
-    return itemsByDate.mapValues { (_, items) ->
-        // 日期归属已经确定；这里的排序只影响同一天内部的显示顺序。
-        // TODO: 确定同日项目的排序规则。同时根据calendarFinishedEpisodeVisible筛选
-        items.toList()
+    val firstBroadcastDateByBangumiId = filteredBangumis.associate { bangumi ->
+        bangumi.bangumiId to bangumi.firstBroadcastDate
     }
+    val itemComparator = compareBy<CalendarBangumiItemUiState> { item ->
+        if (item.isDone) 0 else 1
+    }.thenByDescending { item ->
+        firstBroadcastDateByBangumiId.getValue(item.bangumiId)
+    }
+    // TODO: 在完成状态、首播日期之后，通过 thenBy/thenByDescending 追加排序选项。
+
+    return itemsByDate.mapNotNull { (date, items) ->
+        // 日期归属已经确定；这里的筛选和排序只处理同一天内部的展示内容。
+        val visibleItems = items.filter { item ->
+            calendarFinishedEpisodeVisible || !item.isDone
+        }
+        visibleItems
+            .takeIf { it.isNotEmpty() }
+            ?.sortedWith(itemComparator)
+            ?.let { sortedItems -> date to sortedItems }
+    }.toMap()
 }
 
 
