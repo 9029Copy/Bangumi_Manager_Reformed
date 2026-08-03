@@ -97,7 +97,7 @@ class BangumiEditViewModel @Inject constructor(
             val bangumi = repository.getBangumiById(bangumiId).first()
                 ?: return@launch
             storedBangumi = bangumi
-            val schedules = repository.getSchedulesByBangumiId(bangumiId)
+            val schedules = repository.getSchedulesByBangumiIdOnce(bangumiId)
             val today = LocalDate.now()
             val currentYear = today.year
             val defaultSeason = YearMonth.of(
@@ -453,25 +453,15 @@ class BangumiEditViewModel @Inject constructor(
             ),
             isActive = state.isActive,
         )
-        repository.updateBangumi(
-            newBangumi = updatedBangumi,
-            oldBangumi = bangumi,
-        )
-
         val updatedSchedules = validatedRules?.toScheduleList(
             bangumiId = bangumiId,
             firstBroadcastDate = state.firstBroadcastDate,
         )
-        updatedSchedules?.let {
-            repository.updateSchedules(
-                bangumiId = bangumiId,
-                schedules = updatedSchedules,
-            )
-        }
-
-
-        storedBangumi = repository.getBangumiById(bangumiId).first()
-            ?: updatedBangumi
+        storedBangumi = repository.updateBangumiAndSchedules(
+            newBangumi = updatedBangumi,
+            oldBangumi = bangumi,
+            schedules = updatedSchedules,
+        )
 
         return SUBMIT_SUCCESS
     }
