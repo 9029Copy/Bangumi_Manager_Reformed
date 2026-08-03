@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -65,21 +66,23 @@ fun BangumiScheduleRuleEditor(
             )
         } else {
             rules.forEach { rule ->
-                ScheduleRuleRow(
-                    rule = rule,
-                    onEpisodeChanged = {
-                        onEpisodeChanged(rule.rowId, it)
-                    },
-                    onRuleTypeChanged = {
-                        onRuleTypeChanged(rule.rowId, it)
-                    },
-                    onDelayWeeksChanged = {
-                        onDelayWeeksChanged(rule.rowId, it)
-                    },
-                    onDelete = {
-                        onDeleteRule(rule.rowId)
-                    },
-                )
+                key(rule.rowId) {
+                    ScheduleRuleRow(
+                        rule = rule,
+                        onEpisodeChanged = {
+                            onEpisodeChanged(rule.rowId, it)
+                        },
+                        onRuleTypeChanged = {
+                            onRuleTypeChanged(rule.rowId, it)
+                        },
+                        onDelayWeeksChanged = {
+                            onDelayWeeksChanged(rule.rowId, it)
+                        },
+                        onDelete = {
+                            onDeleteRule(rule.rowId)
+                        },
+                    )
+                }
             }
         }
 

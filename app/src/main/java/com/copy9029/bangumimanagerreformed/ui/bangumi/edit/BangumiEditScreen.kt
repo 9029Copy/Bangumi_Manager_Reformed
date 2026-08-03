@@ -394,8 +394,9 @@ fun BangumiEditContent(
                 Button(
                     onClick = onSubmit,
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = !uiState.isSubmitting,
                 ) {
-                    Text("提交")
+                    Text(if (uiState.isSubmitting) "提交中" else "提交")
                 }
             }
         }

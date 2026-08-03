@@ -10,12 +10,14 @@ import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
 import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
 import com.copy9029.bangumimanagerreformed.util.latestAiredEpisode
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
@@ -27,7 +29,7 @@ enum class EpisodeBroadcastRuleType {
 }
 
 data class EpisodeBroadcastRuleUiState(
-    val rowId: Long,    // begin with 1
+    val rowId: Long,    // Stable identifier within the editor lifecycle.
     val episodeInput: String = "",
     val ruleType: EpisodeBroadcastRuleType? = null,
     val delayWeeksInput: String = "1",
@@ -62,6 +64,7 @@ data class BangumiEditUiState(
     val myScoreError: String? = null,
     val totalEpisodesError: String? = null,
     val latestWatchedEpisodeError: String? = null,
+    val isSubmitting: Boolean = false,
 ) {
     val themeColorLong: Long
         get() = themeColorByMonth[seasonMonth] ?: 0xFFFFFFFFL
@@ -86,6 +89,8 @@ class BangumiEditViewModel @Inject constructor(
     val uiState: StateFlow<BangumiEditUiState?> = _uiState.asStateFlow()
 
     private var storedBangumi: Bangumi? = null
+    private val submitMutex = Mutex()
+    private var nextRuleRowId = 1L
 
     init {
         viewModelScope.launch {
@@ -99,6 +104,11 @@ class BangumiEditViewModel @Inject constructor(
                 bangumi.seasonYear,
                 bangumi.seasonMonth,
             )
+
+            val parsedRules = schedules.toRuleList(
+                firstBroadcastDate = bangumi.firstBroadcastDate,
+            )
+            nextRuleRowId = (parsedRules?.maxOfOrNull { it.rowId } ?: 0L) + 1L
 
             _uiState.value = BangumiEditUiState(
                 bangumiId = bangumi.bangumiId,
@@ -120,9 +130,7 @@ class BangumiEditViewModel @Inject constructor(
                 myScoreError = null,
                 totalEpisodesError = null,
                 latestWatchedEpisodeError = null,
-                episodeBroadcastRules = schedules.toRuleList(
-                    firstBroadcastDate = bangumi.firstBroadcastDate,
-                ),
+                episodeBroadcastRules = parsedRules,
             )
         }
     }
@@ -149,6 +157,7 @@ class BangumiEditViewModel @Inject constructor(
         _uiState.update { state ->
             state?.takeIf { it.episodeBroadcastRules != null }  // 解析rules失败时禁用开播日期修改
                 ?.copy(firstBroadcastDate = date)
+                ?.recalculateLatestAiredEpisode()
                 ?: state
         }
     }
@@ -173,7 +182,7 @@ class BangumiEditViewModel @Inject constructor(
             it?.copy(
                 totalEpisodesInput = value,
                 totalEpisodesError = null,
-            )
+            )?.recalculateLatestAiredEpisode()
         }
     }
 
@@ -246,33 +255,29 @@ class BangumiEditViewModel @Inject constructor(
     }
 
     fun onAddEpisodeBroadcastRule() {
-        // 使用当前最大 rowId 递增生成稳定标识，避免删除中间行后与既有行重复。
+        // 单调递增生成稳定标识，删除后也不复用旧 rowId。
         _uiState.update { state ->
             state ?: return@update null
             state.episodeBroadcastRules ?: return@update null
 
-            val nextRowId = (state.episodeBroadcastRules.maxOfOrNull {
-                it.rowId
-            } ?: 0L) + 1L
-
             state.copy(
                 episodeBroadcastRules = state.episodeBroadcastRules +
-                    EpisodeBroadcastRuleUiState(rowId = nextRowId),
+                    EpisodeBroadcastRuleUiState(rowId = nextRuleRowId++),
             )
         }
     }
 
     fun onDeleteEpisodeBroadcastRule(rowId: Long) {
-        // 删除时不校验其他行，只按当前顺序重新生成从 1 开始连续递增的 rowId。
+        // 删除时不校验其他行，并保留其他行的稳定标识。
         _uiState.update { state ->
             state ?: return@update null
             state.episodeBroadcastRules ?: return@update null
 
             state.copy(
-                episodeBroadcastRules = reindexRuleRows(
-                    state.episodeBroadcastRules.filterNot { it.rowId == rowId },
-                ),
-            )
+                episodeBroadcastRules = state.episodeBroadcastRules.filterNot {
+                    it.rowId == rowId
+                },
+            ).recalculateLatestAiredEpisode()
         }
     }
 
@@ -291,7 +296,7 @@ class BangumiEditViewModel @Inject constructor(
             }
 
             state.copy(
-                episodeBroadcastRules = sortAndReindexRuleRows(
+                episodeBroadcastRules = sortRuleRows(
                     validateRuleEpisodes(
                         rules = updatedRules,
                         targetRowId = rowId,
@@ -300,7 +305,7 @@ class BangumiEditViewModel @Inject constructor(
                             ?.takeIf { it > 0 },
                     ),
                 ),
-            )
+            ).recalculateLatestAiredEpisode()
         }
     }
 
@@ -339,7 +344,7 @@ class BangumiEditViewModel @Inject constructor(
                         )
                     }
                 },
-            )
+            ).recalculateLatestAiredEpisode()
         }
     }
 
@@ -360,11 +365,27 @@ class BangumiEditViewModel @Inject constructor(
                         rule
                     }
                 },
-            )
+            ).recalculateLatestAiredEpisode()
         }
     }
 
     suspend fun onSubmitClick(): String {
+        if (!submitMutex.tryLock()) return "修改正在提交，请稍候"
+
+        _uiState.update { it?.copy(isSubmitting = true) }
+        return try {
+            submitChanges()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (_: Exception) {
+            "修改失败：保存时发生错误，请稍后重试"
+        } finally {
+            _uiState.update { it?.copy(isSubmitting = false) }
+            submitMutex.unlock()
+        }
+    }
+
+    private suspend fun submitChanges(): String {
         val state = _uiState.value
             ?: return "项目尚未加载完成"
         val bangumi = storedBangumi
@@ -449,7 +470,8 @@ class BangumiEditViewModel @Inject constructor(
         }
 
 
-        storedBangumi = updatedBangumi
+        storedBangumi = repository.getBangumiById(bangumiId).first()
+            ?: updatedBangumi
 
         return SUBMIT_SUCCESS
     }
@@ -598,25 +620,51 @@ class BangumiEditViewModel @Inject constructor(
         }
     }
 
-    private fun sortAndReindexRuleRows(
+    private fun sortRuleRows(
         rules: List<EpisodeBroadcastRuleUiState>,
     ): List<EpisodeBroadcastRuleUiState> {
-        val sortedRules = rules.sortedWith(
+        return rules.sortedWith(
             compareBy<EpisodeBroadcastRuleUiState> { rule ->
                 rule.episodeInput.toIntOrNull()?.takeIf { it > 0 } == null
             }.thenBy { rule ->
                 rule.episodeInput.toIntOrNull()?.takeIf { it > 0 } ?: Int.MAX_VALUE
             }.thenBy(EpisodeBroadcastRuleUiState::rowId),
         )
-        return reindexRuleRows(sortedRules)
     }
 
-    private fun reindexRuleRows(
-        rules: List<EpisodeBroadcastRuleUiState>,
-    ): List<EpisodeBroadcastRuleUiState> {
-        return rules.mapIndexed { index, rule ->
-            rule.copy(rowId = index + 1L)
+    private fun BangumiEditUiState.recalculateLatestAiredEpisode(): BangumiEditUiState {
+        val bangumi = storedBangumi ?: return this
+        val rules = episodeBroadcastRules ?: return this
+        val totalEpisodes = when {
+            totalEpisodesInput.isBlank() -> null
+            else -> totalEpisodesInput.toIntOrNull()
+                ?.takeIf { it > 0 }
+                ?: return this
         }
+        val validatedRules = validateRulesWhenSubmit(
+            rules = rules,
+            totalEpisodes = totalEpisodes,
+        )
+        if (validatedRules.any(EpisodeBroadcastRuleUiState::hasError)) return this
+
+        val schedules = try {
+            validatedRules.toScheduleList(
+                bangumiId = bangumiId,
+                firstBroadcastDate = firstBroadcastDate,
+            )
+        } catch (_: RuntimeException) {
+            return this
+        }
+
+        return copy(
+            latestAiredEpisode = bangumi.copy(
+                firstBroadcastDate = firstBroadcastDate,
+                totalEpisodes = totalEpisodes,
+            ).latestAiredEpisode(
+                schedules = schedules,
+                today = LocalDate.now(),
+            ),
+        )
     }
 }
 
