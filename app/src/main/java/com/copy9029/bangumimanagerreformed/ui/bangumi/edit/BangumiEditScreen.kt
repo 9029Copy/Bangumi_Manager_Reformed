@@ -210,6 +210,7 @@ fun BangumiEditContent(
                     FirstBroadcastDateEditRow(
                         date = uiState.firstBroadcastDate,
                         onDateSelected = onFirstBroadcastDateChanged,
+                        enabled = uiState.episodeBroadcastRules != null,
                     )
 
                     EditFormRow(label = "我的评分") {
@@ -443,6 +444,7 @@ private fun EditFormRow(
 private fun FirstBroadcastDateEditRow(
     date: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
+    enabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
@@ -454,6 +456,7 @@ private fun FirstBroadcastDateEditRow(
         OutlinedButton(
             onClick = { showDatePicker = true },
             modifier = Modifier.fillMaxWidth(),
+            enabled = enabled,
         ) {
             Text(date.toString())
         }

@@ -120,7 +120,9 @@ class BangumiEditViewModel @Inject constructor(
                 myScoreError = null,
                 totalEpisodesError = null,
                 latestWatchedEpisodeError = null,
-                episodeBroadcastRules = schedules.toRuleList(),
+                episodeBroadcastRules = schedules.toRuleList(
+                    firstBroadcastDate = bangumi.firstBroadcastDate,
+                ),
             )
         }
     }
@@ -144,8 +146,10 @@ class BangumiEditViewModel @Inject constructor(
     }
 
     fun onFirstBroadcastDateChanged(date: LocalDate) {
-        _uiState.update {
-            it?.copy(firstBroadcastDate = date)
+        _uiState.update { state ->
+            state?.takeIf { it.episodeBroadcastRules != null }  // 解析rules失败时禁用开播日期修改
+                ?.copy(firstBroadcastDate = date)
+                ?: state
         }
     }
 
@@ -291,6 +295,9 @@ class BangumiEditViewModel @Inject constructor(
                     validateRuleEpisodes(
                         rules = updatedRules,
                         targetRowId = rowId,
+                        totalEpisodes = state.totalEpisodesInput
+                            .toIntOrNull()
+                            ?.takeIf { it > 0 },
                     ),
                 ),
             )
@@ -375,6 +382,7 @@ class BangumiEditViewModel @Inject constructor(
         val validatedRules = state.episodeBroadcastRules?.let {
             validateRulesWhenSubmit(
                 state.episodeBroadcastRules,
+                totalEpisodes = totalEpisodes,
             )
         }
 
@@ -398,6 +406,13 @@ class BangumiEditViewModel @Inject constructor(
             // TODO：若今后允许锚点的直接编辑，此处应当添加校验
         ) {
             return "修改失败：请检查输入内容"
+        }
+
+        if (
+            validatedRules == null &&
+            state.firstBroadcastDate != bangumi.firstBroadcastDate
+        ) {
+            return "修改失败：日期锚点解析失败，无法修改开播日期"
         }
 
         val updatedBangumi = bangumi.copy(
@@ -499,6 +514,7 @@ class BangumiEditViewModel @Inject constructor(
     private fun validateRuleEpisodes(
         rules: List<EpisodeBroadcastRuleUiState>,
         targetRowId: Long,
+        totalEpisodes: Int?,
     ): List<EpisodeBroadcastRuleUiState> {
         val targetRule = rules.firstOrNull { it.rowId == targetRowId }
             ?: return rules
@@ -510,6 +526,7 @@ class BangumiEditViewModel @Inject constructor(
             targetRule.episodeInput.isBlank() -> "请输入集数"
             episode == null || episode <= 0 -> "集数必须是大于 0 的整数"
             episode == 1 -> "第 1 集没有上一集，无法设置播出规则"
+            totalEpisodes != null && episode > totalEpisodes -> "集数不能大于总集数"
             isDuplicate -> "集数不能重复"
             else -> null
         }
@@ -525,6 +542,7 @@ class BangumiEditViewModel @Inject constructor(
 
     private fun validateAllRuleEpisodes(
         rules: List<EpisodeBroadcastRuleUiState>,
+        totalEpisodes: Int?,
     ): List<EpisodeBroadcastRuleUiState> {
         val episodeCounts = rules
             .mapNotNull { it.episodeInput.toIntOrNull() }
@@ -538,6 +556,7 @@ class BangumiEditViewModel @Inject constructor(
                 rule.episodeInput.isBlank() -> "请输入集数"
                 episode == null || episode <= 0 -> "集数必须是大于 0 的整数"
                 episode == 1 -> "第 1 集没有上一集，无法设置播出规则"
+                totalEpisodes != null && episode > totalEpisodes -> "集数不能大于总集数"
                 episodeCounts[episode] != 1 -> "集数不能重复"
                 else -> null
             }
@@ -547,8 +566,12 @@ class BangumiEditViewModel @Inject constructor(
 
     private fun validateRulesWhenSubmit(
         rules: List<EpisodeBroadcastRuleUiState>,
+        totalEpisodes: Int?,
     ): List<EpisodeBroadcastRuleUiState> {
-        return validateAllRuleEpisodes(rules).map { rule ->
+        return validateAllRuleEpisodes(
+            rules = rules,
+            totalEpisodes = totalEpisodes,
+        ).map { rule ->
             rule.copy(
                 ruleError = if (rule.ruleType == null) {
                     "请选择播出规则"
@@ -612,13 +635,16 @@ private fun Int?.toScoreInput(): String {
 /**
  * 根据当前（数据库中）的Schedules推算RuleList，若推算失败则返回null
  */
-private fun List<BangumiSchedule>.toRuleList(): List<EpisodeBroadcastRuleUiState>? {
+private fun List<BangumiSchedule>.toRuleList(
+    firstBroadcastDate: LocalDate,
+): List<EpisodeBroadcastRuleUiState>? {
     if (isEmpty()) return null
 
     val orderedSchedules = sortedBy(BangumiSchedule::episodeId)
     val firstSchedule = orderedSchedules.first()
     if (
         firstSchedule.episodeId != 1 ||
+        firstSchedule.broadcastDate != firstBroadcastDate ||
         orderedSchedules.any { it.bangumiId != firstSchedule.bangumiId } ||
         orderedSchedules.zipWithNext().any { (previous, current) ->
             previous.episodeId == current.episodeId
