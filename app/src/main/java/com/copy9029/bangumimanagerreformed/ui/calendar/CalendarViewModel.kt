@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 data class CalendarBangumiItemUiState(
@@ -93,7 +94,7 @@ class CalendarViewModel @Inject constructor(
         val bangumisByDate = calcBangumisByDateMap(
             bangumis = bangumis,
             schedules = schedules,
-            firstDay = firstWeekStart,
+            firstDayInclusive = firstWeekStart,
             dayCount = weekCount * 7,
             calendarInactiveVisibility = settings.calendarInactiveVisibility,
             calendarFinishedEpisodeVisible = settings.calendarFinishedEpisodeVisible,
@@ -185,19 +186,124 @@ class CalendarViewModel @Inject constructor(
 }
 
 
+/**
+ * 将番剧及其日期锚点展开为 CalendarScreen 可以直接按日期读取的稀疏映射。
+ *
+ * Schedule 不是逐集记录，而是“从某一集开始恢复每周播出”的锚点。因此计算时会把
+ * 相邻锚点之间视为一个独立分段，再只生成落在当前日历窗口内的集数。
+ */
 private fun calcBangumisByDateMap(
     bangumis: List<Bangumi>,
     schedules: List<BangumiSchedule>,
-    firstDay: LocalDate,
+    firstDayInclusive: LocalDate,
     dayCount: Int,
 
     calendarInactiveVisibility: Int,
     calendarFinishedEpisodeVisible: Boolean,
     calendarFinishedBangumiVisible: Boolean,
 ): Map<LocalDate, List<CalendarBangumiItemUiState>> {
+    if (dayCount <= 0) return emptyMap()
 
-    // TODO：注意筛选/排序
-    return emptyMap()
+    val lastDayExclusive = firstDayInclusive.plusDays(dayCount.toLong())
+
+    val schedulesByBangumiId = schedules.groupBy(BangumiSchedule::bangumiId)
+
+    val itemsByDate = mutableMapOf<LocalDate, MutableList<CalendarBangumiItemUiState>>()
+
+    val filteredBangumis = bangumis.filter { _ ->
+        // TODO: 根据 calendarInactiveVisibility、
+        //       calendarFinishedBangumiVisible 提前过滤无需展开日期的番剧。
+        true
+    }
+
+    filteredBangumis.forEach { bangumi ->
+        // 锚点按集数升序排列；每个锚点负责直到下一锚点前一集的播出计算。
+        // 例如锚点位于第 1、5 集时，第一个锚点分段只负责第 1 至第 4 集。
+        val orderedSchedules = schedulesByBangumiId[bangumi.bangumiId]
+            .orEmpty()
+            // 非正数集数没有日历含义；正常情况下数据库不会产生这种锚点。
+            .filter { it.episodeId > 0 }
+            .sortedBy(BangumiSchedule::episodeId)
+        // 没有有效锚点时，无法推导这部番剧任意一集的播出日期。
+        if (orderedSchedules.isEmpty()) return@forEach
+
+        // 总集数未知时，仅由日历窗口限制生成数量；已知时不能生成最终集之后的项目。
+        val finalEpisodeId = bangumi.totalEpisodes ?: Int.MAX_VALUE
+        if (finalEpisodeId <= 0) return@forEach
+
+        orderedSchedules.forEachIndexed { anchorIndex, anchor ->
+            // 超过最终集的锚点不会影响这部番剧的日历结果。
+            if (anchor.episodeId > finalEpisodeId) return@forEachIndexed
+
+            // 当前分段不包含下一锚点本身，避免同一集被两个锚点重复计算。
+            val nextAnchorEpisodeId = orderedSchedules
+                .getOrNull(anchorIndex + 1)
+                ?.episodeId
+            val segmentLastEpisodeId = minOf(
+                finalEpisodeId,
+                nextAnchorEpisodeId?.minus(1) ?: Int.MAX_VALUE,
+            )
+            // 防御异常或重复锚点；正常的严格升序数据不会进入这个分支。
+            if (segmentLastEpisodeId < anchor.episodeId) return@forEachIndexed
+
+            // 直接跳到不早于 firstDay 的第一周，避免从多年前的锚点逐周遍历。
+            val daysUntilFirstDay = ChronoUnit.DAYS.between(
+                anchor.broadcastDate,
+                firstDayInclusive,
+            )
+            val weeksToFirstCandidate = if (daysUntilFirstDay <= 0L) {
+                0L
+            } else {
+                // 正数天数除以 7 时向上取整，保证候选日期不会仍位于窗口之前。
+                (daysUntilFirstDay + 6L) / 7L
+            }
+            // 在正常周播分段中，跳过多少周就等价于跳过多少集。
+            val firstCandidateEpisodeId = anchor.episodeId.toLong() +
+                weeksToFirstCandidate
+            if (
+                firstCandidateEpisodeId > segmentLastEpisodeId.toLong() ||
+                    firstCandidateEpisodeId > Int.MAX_VALUE.toLong()
+            ) {
+                // 候选集越过当前分段，或无法安全转换为实体使用的 Int 集数。
+                return@forEachIndexed
+            }
+
+            // 在当前锚点分段内，每增加一集就向后移动一周。
+            var episodeId = firstCandidateEpisodeId.toInt()
+            var broadcastDate = anchor.broadcastDate.plusWeeks(weeksToFirstCandidate)
+            while (
+                episodeId <= segmentLastEpisodeId &&
+                broadcastDate.isBefore(lastDayExclusive)
+            ) {
+                if (!broadcastDate.isBefore(firstDayInclusive)) {
+                    // 同日多更会将同一番剧的多个集数加入同一个日期列表。
+                    itemsByDate.getOrPut(broadcastDate) { mutableListOf() }
+                        .add(
+                            CalendarBangumiItemUiState(
+                                bangumiId = bangumi.bangumiId,
+                                episodeId = episodeId,
+                                title = bangumi.title,
+                                themeColorLong = bangumi.themeColorLong,
+                                // 观看进度按“已经连续看完到第几集”解释。
+                                isDone = episodeId <= bangumi.latestWatchedEpisode,
+                                isActive = bangumi.isActive,
+                            )
+                        )
+                }
+
+                // 避免 Int.MAX_VALUE 加一溢出；一般只会在总集数未知时触及。
+                if (episodeId == Int.MAX_VALUE) break
+                episodeId += 1
+                broadcastDate = broadcastDate.plusWeeks(1L)
+            }
+        }
+    }
+
+    return itemsByDate.mapValues { (_, items) ->
+        // 日期归属已经确定；这里的排序只影响同一天内部的显示顺序。
+        // TODO: 确定同日项目的排序规则。同时根据calendarFinishedEpisodeVisible筛选
+        items.toList()
+    }
 }
 
 
