@@ -62,6 +62,48 @@ class BangumiRepository @Inject constructor(
         return bangumiDao.getSchedulesByBangumiId(bangumiId)
     }
 
+    suspend fun updateSchedules(
+        bangumiId: Int,
+        schedules: List<BangumiSchedule>,
+    ) {
+        require(schedules.isNotEmpty()) {
+            "Schedule 列表必须包含第 1 集锚点"
+        }
+        require(schedules.all { it.bangumiId == bangumiId }) {
+            "Schedule 列表中存在不属于目标番剧的锚点"
+        }
+        require(schedules.all { it.episodeId > 0 }) {
+            "Schedule 集数必须是大于 0 的整数"
+        }
+        require(schedules.any { it.episodeId == 1 }) {
+            "Schedule 列表必须包含第 1 集锚点"
+        }
+        require(schedules.map(BangumiSchedule::episodeId).distinct().size == schedules.size) {
+            "Schedule 集数不能重复"
+        }
+
+        val storedSchedules = bangumiDao.getSchedulesByBangumiId(bangumiId)
+        val storedByEpisode = storedSchedules.associateBy(BangumiSchedule::episodeId)
+        val updatedByEpisode = schedules.associateBy(BangumiSchedule::episodeId)
+        val removedEpisodeIds = storedByEpisode.keys - updatedByEpisode.keys
+        val changedSchedules = schedules.filter { schedule ->
+            storedByEpisode[schedule.episodeId] != schedule
+        }
+
+        if (removedEpisodeIds.isEmpty() && changedSchedules.isEmpty()) return
+
+        changedSchedules.forEach { schedule ->
+            bangumiDao.insertSchedule(schedule)
+        }
+        removedEpisodeIds.forEach { episodeId ->
+            bangumiDao.deleteSchedule(
+                bangumiId = bangumiId,
+                episodeId = episodeId,
+            )
+        }
+        refreshExpectedEndDate(bangumiId)
+    }
+
     suspend fun watchedEpisodeAdd(bangumiId: Int, num: Int) {
         val bangumi = bangumiDao.getBangumiByIdOnce(bangumiId)
         if (bangumi != null) {
@@ -165,6 +207,7 @@ private fun Bangumi.hasSameBasicInfoAs(other: Bangumi): Boolean {
             seasonMonth == other.seasonMonth &&
             myScore == other.myScore &&
             themeColorLong == other.themeColorLong &&
+            firstBroadcastDate == other.firstBroadcastDate &&
             totalEpisodes == other.totalEpisodes &&
             isActive == other.isActive
 }

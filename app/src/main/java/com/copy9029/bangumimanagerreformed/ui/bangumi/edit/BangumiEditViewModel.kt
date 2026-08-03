@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.copy9029.bangumimanagerreformed.Routes
 import com.copy9029.bangumimanagerreformed.data.Bangumi
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
+import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
 import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
 import com.copy9029.bangumimanagerreformed.util.latestAiredEpisode
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 enum class EpisodeBroadcastRuleType {
@@ -43,6 +45,7 @@ data class BangumiEditUiState(
     val seasonMonth: Int,
     val seasonStartYear: Int,
     val seasonEndYear: Int,
+    val firstBroadcastDate: LocalDate,
     val myScoreInput: String = "",
     val isActive: Boolean = true,
 
@@ -52,7 +55,7 @@ data class BangumiEditUiState(
     val latestAiredEpisode: Int = 0,
 
     // 第三部分：分集播出规则
-    val episodeBroadcastRules: List<EpisodeBroadcastRuleUiState> = emptyList(),
+    val episodeBroadcastRules: List<EpisodeBroadcastRuleUiState>? = emptyList(),
 
     // 表单错误
     val titleError: String? = null,
@@ -104,6 +107,7 @@ class BangumiEditViewModel @Inject constructor(
                 seasonMonth = defaultSeason.monthValue,
                 seasonStartYear = minOf(defaultSeason.year, currentYear) - 5,
                 seasonEndYear = maxOf(defaultSeason.year, currentYear) + 2,
+                firstBroadcastDate = bangumi.firstBroadcastDate,
                 myScoreInput = bangumi.myScore.toScoreInput(),
                 isActive = bangumi.isActive,
                 totalEpisodesInput = bangumi.totalEpisodes?.toString().orEmpty(),
@@ -116,7 +120,7 @@ class BangumiEditViewModel @Inject constructor(
                 myScoreError = null,
                 totalEpisodesError = null,
                 latestWatchedEpisodeError = null,
-//                episodeBroadcastRules = // TODO: 根据Schedule推算Rules,
+                episodeBroadcastRules = schedules.toRuleList(),
             )
         }
     }
@@ -136,6 +140,12 @@ class BangumiEditViewModel @Inject constructor(
                 seasonYear = year,
                 seasonMonth = month,
             )
+        }
+    }
+
+    fun onFirstBroadcastDateChanged(date: LocalDate) {
+        _uiState.update {
+            it?.copy(firstBroadcastDate = date)
         }
     }
 
@@ -235,6 +245,8 @@ class BangumiEditViewModel @Inject constructor(
         // 使用当前最大 rowId 递增生成稳定标识，避免删除中间行后与既有行重复。
         _uiState.update { state ->
             state ?: return@update null
+            state.episodeBroadcastRules ?: return@update null
+
             val nextRowId = (state.episodeBroadcastRules.maxOfOrNull {
                 it.rowId
             } ?: 0L) + 1L
@@ -249,7 +261,10 @@ class BangumiEditViewModel @Inject constructor(
     fun onDeleteEpisodeBroadcastRule(rowId: Long) {
         // 删除时不校验其他行，只按当前顺序重新生成从 1 开始连续递增的 rowId。
         _uiState.update { state ->
-            state?.copy(
+            state ?: return@update null
+            state.episodeBroadcastRules ?: return@update null
+
+            state.copy(
                 episodeBroadcastRules = reindexRuleRows(
                     state.episodeBroadcastRules.filterNot { it.rowId == rowId },
                 ),
@@ -261,6 +276,8 @@ class BangumiEditViewModel @Inject constructor(
         // 只校验正在修改的行，随后将有效集数升序排列；空行不会因其他行变化显示错误。
         _uiState.update { state ->
             state ?: return@update null
+            state.episodeBroadcastRules ?: return@update null
+
             val updatedRules = state.episodeBroadcastRules.map { rule ->
                 if (rule.rowId == rowId) {
                     rule.copy(episodeInput = value)
@@ -286,7 +303,10 @@ class BangumiEditViewModel @Inject constructor(
     ) {
         // 切换规则时清除类型错误；进入“停更”且周数为空时填入可编辑的默认值 1。
         _uiState.update { state ->
-            state?.copy(
+            state ?: return@update null
+            state.episodeBroadcastRules ?: return@update null
+
+            state.copy(
                 episodeBroadcastRules = state.episodeBroadcastRules.map { rule ->
                     if (rule.rowId != rowId) {
                         rule
@@ -319,7 +339,10 @@ class BangumiEditViewModel @Inject constructor(
     fun onEpisodeBroadcastRuleDelayWeeksChanged(rowId: Long, value: String) {
         // 保留用户输入并立即校验，只有大于 0 且未溢出的整数才是有效停更周数。
         _uiState.update { state ->
-            state?.copy(
+            state ?: return@update null
+            state.episodeBroadcastRules ?: return@update null
+
+            state.copy(
                 episodeBroadcastRules = state.episodeBroadcastRules.map { rule ->
                     if (rule.rowId == rowId) {
                         rule.copy(
@@ -349,9 +372,11 @@ class BangumiEditViewModel @Inject constructor(
             totalEpisodes = totalEpisodes,
         )
         // 提交前对所有规则做完整校验，包括空集数、未选择类型和停更周数。
-        val validatedRules = validateRulesWhenSubmit(
-            state.episodeBroadcastRules,
-        )
+        val validatedRules = state.episodeBroadcastRules?.let {
+            validateRulesWhenSubmit(
+                state.episodeBroadcastRules,
+            )
+        }
 
         _uiState.update {
             it?.copy(
@@ -368,7 +393,9 @@ class BangumiEditViewModel @Inject constructor(
             myScoreError != null ||
             totalEpisodesError != null ||
             latestWatchedEpisodeError != null ||
-            validatedRules.any(EpisodeBroadcastRuleUiState::hasError)
+            validatedRules?.any(EpisodeBroadcastRuleUiState::hasError) == true
+            // 最早通过Schedules解析Rules失败时，validatedRules为null，最终不更新Schedules，也不报错
+            // TODO：若今后允许锚点的直接编辑，此处应当添加校验
         ) {
             return "修改失败：请检查输入内容"
         }
@@ -383,21 +410,31 @@ class BangumiEditViewModel @Inject constructor(
                 ?.movePointRight(1)
                 ?.intValueExact(),
             themeColorLong = state.themeColorLong,
+            firstBroadcastDate = state.firstBroadcastDate,
             totalEpisodes = totalEpisodes,
             latestWatchedEpisode = requireNotNull(
                 state.latestWatchedEpisodeInput.toIntOrNull()
             ),
             isActive = state.isActive,
         )
-
         repository.updateBangumi(
             newBangumi = updatedBangumi,
             oldBangumi = bangumi,
         )
-        storedBangumi = updatedBangumi
 
-        // TODO: 按集数排序已校验规则，将停更/同日规则换算为锚点 Schedule，
-        //       再与数据库中的旧 Schedule 做增删改并刷新预计完结日期。
+        val updatedSchedules = validatedRules?.toScheduleList(
+            bangumiId = bangumiId,
+            firstBroadcastDate = state.firstBroadcastDate,
+        )
+        updatedSchedules?.let {
+            repository.updateSchedules(
+                bangumiId = bangumiId,
+                schedules = updatedSchedules,
+            )
+        }
+
+
+        storedBangumi = updatedBangumi
 
         return SUBMIT_SUCCESS
     }
@@ -466,12 +503,13 @@ class BangumiEditViewModel @Inject constructor(
         val targetRule = rules.firstOrNull { it.rowId == targetRowId }
             ?: return rules
         val episode = targetRule.episodeInput.toIntOrNull()
-        val isDuplicate = episode != null && episode > 0 && rules.any { rule ->
+        val isDuplicate = episode != null && episode > 1 && rules.any { rule ->
             rule.rowId != targetRowId && rule.episodeInput.toIntOrNull() == episode
         }
         val targetError = when {
             targetRule.episodeInput.isBlank() -> "请输入集数"
             episode == null || episode <= 0 -> "集数必须是大于 0 的整数"
+            episode == 1 -> "第 1 集没有上一集，无法设置播出规则"
             isDuplicate -> "集数不能重复"
             else -> null
         }
@@ -490,7 +528,7 @@ class BangumiEditViewModel @Inject constructor(
     ): List<EpisodeBroadcastRuleUiState> {
         val episodeCounts = rules
             .mapNotNull { it.episodeInput.toIntOrNull() }
-            .filter { it > 0 }
+            .filter { it > 1 }
             .groupingBy { it }
             .eachCount()
 
@@ -499,6 +537,7 @@ class BangumiEditViewModel @Inject constructor(
             val error = when {
                 rule.episodeInput.isBlank() -> "请输入集数"
                 episode == null || episode <= 0 -> "集数必须是大于 0 的整数"
+                episode == 1 -> "第 1 集没有上一集，无法设置播出规则"
                 episodeCounts[episode] != 1 -> "集数不能重复"
                 else -> null
             }
@@ -567,4 +606,101 @@ private fun Int?.toScoreInput(): String {
         this == null -> ""
         else -> (this / 10.0).toString()
     }
+}
+
+
+/**
+ * 根据当前（数据库中）的Schedules推算RuleList，若推算失败则返回null
+ */
+private fun List<BangumiSchedule>.toRuleList(): List<EpisodeBroadcastRuleUiState>? {
+    if (isEmpty()) return null
+
+    val orderedSchedules = sortedBy(BangumiSchedule::episodeId)
+    val firstSchedule = orderedSchedules.first()
+    if (
+        firstSchedule.episodeId != 1 ||
+        orderedSchedules.any { it.bangumiId != firstSchedule.bangumiId } ||
+        orderedSchedules.zipWithNext().any { (previous, current) ->
+            previous.episodeId == current.episodeId
+        }
+    ) {
+        return null
+    }
+
+    val rules = mutableListOf<EpisodeBroadcastRuleUiState>()
+    orderedSchedules.zipWithNext().forEach { (previous, current) ->
+        val normalBroadcastDate = previous.broadcastDate.plusWeeks(
+            (current.episodeId - previous.episodeId).toLong()
+        )
+        val offsetDays = ChronoUnit.DAYS.between(
+            normalBroadcastDate,
+            current.broadcastDate,
+        )
+        if (offsetDays % 7L != 0L) return null
+
+        val offsetWeeks = offsetDays / 7L
+        val rule = when {
+            offsetWeeks == 0L -> null
+            offsetWeeks == -1L -> EpisodeBroadcastRuleUiState(
+                rowId = rules.size + 1L,
+                episodeInput = current.episodeId.toString(),
+                ruleType = EpisodeBroadcastRuleType.SAME_DAY_AS_PREVIOUS,
+            )
+            offsetWeeks in 1L..Int.MAX_VALUE.toLong() -> EpisodeBroadcastRuleUiState(
+                rowId = rules.size + 1L,
+                episodeInput = current.episodeId.toString(),
+                ruleType = EpisodeBroadcastRuleType.DELAY,
+                delayWeeksInput = offsetWeeks.toString(),
+            )
+            else -> return null
+        }
+
+        rule?.let(rules::add)
+    }
+
+    return rules
+}
+
+/**
+ * 根据编辑后的RuleList推算Schedules（并用于更新数据库）
+ */
+private fun List<EpisodeBroadcastRuleUiState>.toScheduleList(
+    bangumiId: Int,
+    firstBroadcastDate: LocalDate,
+): List<BangumiSchedule> {
+    val schedules = mutableListOf(
+        BangumiSchedule(
+            bangumiId = bangumiId,
+            episodeId = 1,
+            broadcastDate = firstBroadcastDate,
+        )
+    )
+
+    sortedBy { rule -> requireNotNull(rule.episodeInput.toIntOrNull()) }
+        .forEach { rule ->
+            val episodeId = requireNotNull(rule.episodeInput.toIntOrNull())
+            require(episodeId > 1) {
+                "播出规则只能应用于第 2 集及之后的集数"
+            }
+
+            val previousAnchor = schedules.last()
+            val normalBroadcastDate = previousAnchor.broadcastDate.plusWeeks(
+                (episodeId - previousAnchor.episodeId).toLong()
+            )
+            val broadcastDate = when (requireNotNull(rule.ruleType)) {
+                EpisodeBroadcastRuleType.DELAY -> normalBroadcastDate.plusWeeks(
+                    requireNotNull(rule.delayWeeksInput.toLongOrNull())
+                )
+                EpisodeBroadcastRuleType.SAME_DAY_AS_PREVIOUS ->
+                    normalBroadcastDate.minusWeeks(1L)
+            }
+
+            schedules += BangumiSchedule(
+                bangumiId = bangumiId,
+                episodeId = episodeId,
+                broadcastDate = broadcastDate,
+            )
+        }
+
+    return schedules
 }
