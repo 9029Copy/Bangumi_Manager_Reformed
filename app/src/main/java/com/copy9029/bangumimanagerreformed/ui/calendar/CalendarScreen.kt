@@ -75,6 +75,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
+import com.copy9029.bangumimanagerreformed.ui.MondayFirstCalendarLocale
 import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialog
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheet
@@ -197,7 +198,7 @@ private fun CalendarScreenContent(
                             text = "今",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     IconButton(onClick = onAddClick) {
@@ -205,7 +206,7 @@ private fun CalendarScreenContent(
                             imageVector = Icons.Filled.Add,
                             contentDescription = "添加项目",
                             modifier = Modifier.size(32.dp),
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     Box {
@@ -218,7 +219,7 @@ private fun CalendarScreenContent(
                                 imageVector = Icons.Filled.MoreVert,
                                 contentDescription = "更多",
                                 modifier = Modifier.size(32.dp),
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
 
@@ -322,65 +323,67 @@ private fun CalendarScreenContent(
     }
 
     if (isDatePickerVisible) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = LocalDate.now()
-                .atStartOfDay(ZoneOffset.UTC)
-                .toInstant()
-                .toEpochMilli(),
-        )
+        MondayFirstCalendarLocale {
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = LocalDate.now()
+                    .atStartOfDay(ZoneOffset.UTC)
+                    .toInstant()
+                    .toEpochMilli(),
+            )
 
-        DatePickerDialog(
-            onDismissRequest = {
-                isDatePickerVisible = false
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis
-                            ?.let { millis ->
-                                Instant.ofEpochMilli(millis)
-                                    .atZone(ZoneOffset.UTC)
-                                    .toLocalDate()
-                            }
-                            ?.let { selectedDate ->
-                                val selectedWeekIndex = uiState.weekIndexFor(
-                                    selectedDate
-                                )
+            DatePickerDialog(
+                onDismissRequest = {
+                    isDatePickerVisible = false
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            datePickerState.selectedDateMillis
+                                ?.let { millis ->
+                                    Instant.ofEpochMilli(millis)
+                                        .atZone(ZoneOffset.UTC)
+                                        .toLocalDate()
+                                }
+                                ?.let { selectedDate ->
+                                    val selectedWeekIndex = uiState.weekIndexFor(
+                                        selectedDate
+                                    )
 
-                                if (selectedWeekIndex == null) {
-                                    Toast.makeText(
-                                        context,
-                                        "日期超出可显示范围",
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
-                                } else {
-                                    onDateSelected(selectedDate)
-                                    coroutineScope.launch {
-                                        listState.animateScrollToItem(
-                                            index = (selectedWeekIndex - uiState.weeksPrefix)
-                                                .coerceAtLeast(0),
-                                        )
+                                    if (selectedWeekIndex == null) {
+                                        Toast.makeText(
+                                            context,
+                                            "日期超出可显示范围",
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    } else {
+                                        onDateSelected(selectedDate)
+                                        coroutineScope.launch {
+                                            listState.animateScrollToItem(
+                                                index = (selectedWeekIndex - uiState.weeksPrefix)
+                                                    .coerceAtLeast(0),
+                                            )
+                                        }
                                     }
                                 }
-                            }
 
-                        isDatePickerVisible = false
-                    },
-                ) {
-                    Text("确定")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        isDatePickerVisible = false
-                    },
-                ) {
-                    Text("取消")
-                }
-            },
-        ) {
-            DatePicker(state = datePickerState)
+                            isDatePickerVisible = false
+                        },
+                    ) {
+                        Text("确定")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            isDatePickerVisible = false
+                        },
+                    ) {
+                        Text("取消")
+                    }
+                },
+            ) {
+                DatePicker(state = datePickerState)
+            }
         }
     }
 }
