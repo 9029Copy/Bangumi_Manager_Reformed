@@ -86,7 +86,7 @@ fun generateBangumiColorScheme(
     val doneBackground = blendArgb(
         foreground = themeColorLong,
         background = 0xFFFFFFFF,
-        foregroundRatio = 0.25,
+        foregroundRatio = 0.33,
     )
 
     return BangumiColorScheme(

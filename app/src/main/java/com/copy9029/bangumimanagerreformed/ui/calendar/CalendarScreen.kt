@@ -195,7 +195,6 @@ private fun CalendarScreenContent(
                         Text(
                             text = "今",
                             fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -803,7 +802,7 @@ private fun CalendarDateCell(
                 if (isToday) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(30.dp)
                             .background(
                                 color = MaterialTheme.colorScheme.primary,
                                 shape = CircleShape,
@@ -815,25 +814,26 @@ private fun CalendarDateCell(
                             color = MaterialTheme.colorScheme.onPrimary,
                             style = MaterialTheme.typography.labelLarge,
                             fontFamily = FontFamily.SansSerif,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Medium,
                             textAlign = TextAlign.Center,
                         )
                     }
+                } else if (date.dayOfMonth == 1) {
+                    Text(
+                        text = date.monthValue.toChineseMonthText(),
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontFamily = FontFamily.SansSerif,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                    )
                 } else {
                     Text(
-                        text = if (date.dayOfMonth == 1) {
-                            date.monthValue.toChineseMonthText()
-                        } else {
-                            date.dayOfMonth.toString()
-                        },
+                        text = date.dayOfMonth.toString(),
                         color = MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.labelLarge,
                         fontFamily = FontFamily.SansSerif,
-                        fontWeight = if (date.dayOfMonth == 1) {
-                            FontWeight.Bold
-                        } else {
-                            FontWeight.Medium
-                        },
+                        fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -864,7 +864,7 @@ private fun CalendarBangumiTag(
     ) {
         Text(
             text = if (item.isDone) "✔${item.title}" else item.title,
-            modifier = Modifier.padding(horizontal = 1.dp, vertical = 2.dp),
+            modifier = Modifier.padding(horizontal = 1.dp, vertical = 1.dp),
             color = Color.White,
             fontSize = 8.sp,
             lineHeight = 16.sp,

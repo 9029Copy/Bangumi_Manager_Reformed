@@ -165,9 +165,9 @@ enum class BottomDestination(
     val icon: Int,
     val route: String,
 ) {
-    CALENDAR("Calendar", R.drawable.app_dest_calendar, "calendar"),
-    INDEX("Index", R.drawable.app_dest_index, "index"),
-    PROFILE("Profile", R.drawable.app_dest_profile, "profile"),
+    CALENDAR("日历", R.drawable.app_dest_calendar, "calendar"),
+    INDEX("列表", R.drawable.app_dest_index, "index"),
+    PROFILE("个人", R.drawable.app_dest_profile, "profile"),
 }
 
 object Routes {
