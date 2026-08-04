@@ -153,6 +153,10 @@ class CalendarViewModel @Inject constructor(
         }
     }
 
+    fun onDateSelected(date: LocalDate) {
+        _selectedDateEpochDay.value = date.toEpochDay()
+    }
+
     fun onBangumiClick(bangumiId: Int) {
         _selectedBangumiId.value = bangumiId
     }

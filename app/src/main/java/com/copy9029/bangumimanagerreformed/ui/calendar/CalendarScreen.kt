@@ -102,6 +102,7 @@ fun CalendarScreen(
             isAddSheetVisible = true
         },
         onDateClick = calendarViewModel::onDateClick,
+        onDateSelected = calendarViewModel::onDateSelected,
         onBangumiClick = calendarViewModel::onBangumiClick,
         onDismissDetailDialog = calendarViewModel::onDismissDetailDialog,
         onMarkEpisodeDoneClick = calendarViewModel::onMarkEpisodeDoneClick,
@@ -138,6 +139,7 @@ private fun CalendarScreenContent(
     uiState: CalendarUiState,
     onAddClick: () -> Unit,
     onDateClick: (LocalDate) -> Unit,
+    onDateSelected: (LocalDate) -> Unit,
     onBangumiClick: (Int) -> Unit,
     onDismissDetailDialog: () -> Unit,
     onMarkEpisodeDoneClick: (Int, Int) -> Unit,
@@ -352,6 +354,7 @@ private fun CalendarScreenContent(
                                         Toast.LENGTH_SHORT,
                                     ).show()
                                 } else {
+                                    onDateSelected(selectedDate)
                                     coroutineScope.launch {
                                         listState.animateScrollToItem(
                                             index = (selectedWeekIndex - uiState.weeksPrefix)
@@ -948,6 +951,7 @@ private fun PreviewCalendarScreenContent() {
             ),
             onAddClick = {},
             onDateClick = {},
+            onDateSelected = {},
             onBangumiClick = {},
             onDismissDetailDialog = {},
             onMarkEpisodeDoneClick = { _, _ -> },

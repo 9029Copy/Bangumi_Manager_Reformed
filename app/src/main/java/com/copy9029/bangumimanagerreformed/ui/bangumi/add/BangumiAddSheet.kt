@@ -60,7 +60,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
+import java.time.ZoneOffset
 
 
 @Composable
@@ -429,14 +429,14 @@ private fun <T> SeasonDropdown(
 }
 
 private fun LocalDate.toEpochMillis(): Long {
-    return atStartOfDay(ZoneId.systemDefault())
+    return atStartOfDay(ZoneOffset.UTC)
         .toInstant()
         .toEpochMilli()
 }
 
 private fun Long.toLocalDate(): LocalDate {
     return Instant.ofEpochMilli(this)
-        .atZone(ZoneId.systemDefault())
+        .atZone(ZoneOffset.UTC)
         .toLocalDate()
 }
 
