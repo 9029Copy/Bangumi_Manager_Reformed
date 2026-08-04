@@ -74,7 +74,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
-import com.copy9029.bangumimanagerreformed.ui.MondayFirstCalendarLocale
 import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialog
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheet
@@ -196,6 +195,7 @@ private fun CalendarScreenContent(
                             text = "今",
                             fontSize = 20.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                     IconButton(
@@ -330,67 +330,65 @@ private fun CalendarScreenContent(
     }
 
     if (isDatePickerVisible) {
-        MondayFirstCalendarLocale {
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = LocalDate.now()
-                    .atStartOfDay(ZoneOffset.UTC)
-                    .toInstant()
-                    .toEpochMilli(),
-            )
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = LocalDate.now()
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant()
+                .toEpochMilli(),
+        )
 
-            DatePickerDialog(
-                onDismissRequest = {
-                    isDatePickerVisible = false
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            datePickerState.selectedDateMillis
-                                ?.let { millis ->
-                                    Instant.ofEpochMilli(millis)
-                                        .atZone(ZoneOffset.UTC)
-                                        .toLocalDate()
-                                }
-                                ?.let { selectedDate ->
-                                    val selectedWeekIndex = uiState.weekIndexFor(
-                                        selectedDate
-                                    )
+        DatePickerDialog(
+            onDismissRequest = {
+                isDatePickerVisible = false
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis
+                            ?.let { millis ->
+                                Instant.ofEpochMilli(millis)
+                                    .atZone(ZoneOffset.UTC)
+                                    .toLocalDate()
+                            }
+                            ?.let { selectedDate ->
+                                val selectedWeekIndex = uiState.weekIndexFor(
+                                    selectedDate
+                                )
 
-                                    if (selectedWeekIndex == null) {
-                                        Toast.makeText(
-                                            context,
-                                            "日期超出可显示范围",
-                                            Toast.LENGTH_SHORT,
-                                        ).show()
-                                    } else {
-                                        onDateSelected(selectedDate)
-                                        coroutineScope.launch {
-                                            listState.animateScrollToItem(
-                                                index = (selectedWeekIndex - uiState.weeksPrefix)
-                                                    .coerceAtLeast(0),
-                                            )
-                                        }
+                                if (selectedWeekIndex == null) {
+                                    Toast.makeText(
+                                        context,
+                                        "日期超出可显示范围",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                } else {
+                                    onDateSelected(selectedDate)
+                                    coroutineScope.launch {
+                                        listState.animateScrollToItem(
+                                            index = (selectedWeekIndex - uiState.weeksPrefix)
+                                                .coerceAtLeast(0),
+                                        )
                                     }
                                 }
+                            }
 
-                            isDatePickerVisible = false
-                        },
-                    ) {
-                        Text("确定")
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = {
-                            isDatePickerVisible = false
-                        },
-                    ) {
-                        Text("取消")
-                    }
-                },
-            ) {
-                DatePicker(state = datePickerState)
-            }
+                        isDatePickerVisible = false
+                    },
+                ) {
+                    Text("确定")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        isDatePickerVisible = false
+                    },
+                ) {
+                    Text("取消")
+                }
+            },
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 }

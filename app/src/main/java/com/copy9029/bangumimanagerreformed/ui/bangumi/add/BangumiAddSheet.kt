@@ -57,7 +57,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.copy9029.bangumimanagerreformed.ui.MondayFirstCalendarLocale
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import java.time.Instant
 import java.time.LocalDate
@@ -333,35 +332,33 @@ fun FirstBroadcastDateField(
 
 
     if (showDatePicker) {
-        MondayFirstCalendarLocale {
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = date.toEpochMillis(),
-            )
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = date.toEpochMillis(),
+        )
 
-            DatePickerDialog(
-                onDismissRequest = { showDatePicker = false },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            datePickerState.selectedDateMillis
-                                ?.toLocalDate()
-                                ?.let(onDateSelected)
-                            showDatePicker = false
-                        },
-                    ) {
-                        Text("确定")
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = { showDatePicker = false },
-                    ) {
-                        Text("取消")
-                    }
-                },
-            ) {
-                DatePicker(state = datePickerState)
-            }
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis
+                            ?.toLocalDate()
+                            ?.let(onDateSelected)
+                        showDatePicker = false
+                    },
+                ) {
+                    Text("确定")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDatePicker = false },
+                ) {
+                    Text("取消")
+                }
+            },
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 }
