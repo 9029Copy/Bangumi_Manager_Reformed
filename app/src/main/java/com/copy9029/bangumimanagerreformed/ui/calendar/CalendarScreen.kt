@@ -73,6 +73,7 @@ import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import com.copy9029.bangumimanagerreformed.R
+import com.copy9029.bangumimanagerreformed.data.INACTIVE_COLOR_LONG
 import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
 import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialog
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
@@ -178,7 +179,10 @@ private fun CalendarScreenContent(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("${displayedMonth.year} 年 ${displayedMonth.monthValue} 月")
+                    Text(
+                        text = "${displayedMonth.year} 年 ${displayedMonth.monthValue} 月",
+                        fontSize = 20.sp,
+                    )
                 },
                 actions = {
                     TextButton(
@@ -849,7 +853,9 @@ private fun CalendarBangumiTag(
     item: CalendarBangumiItemUiState,
     modifier: Modifier = Modifier,
 ) {
-    val colorScheme = generateBangumiColorScheme(item.themeColorLong)
+    val colorScheme = generateBangumiColorScheme(   // TODO: theme Color
+        if (item.isActive) item.themeColorLong else INACTIVE_COLOR_LONG
+    )
 
     Surface(
         modifier = modifier.fillMaxWidth(),

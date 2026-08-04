@@ -11,6 +11,7 @@ val themeColorByMonth = mapOf(
     7  to 0xFF8FCF69L,
     10 to 0xFFF39252L,
 )
+const val INACTIVE_COLOR_LONG = 0xFFADADADL
 
 // #FF598CD6   blue
 // #FFA188D8   purple

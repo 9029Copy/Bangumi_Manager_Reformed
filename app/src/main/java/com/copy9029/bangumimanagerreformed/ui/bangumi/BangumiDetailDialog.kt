@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.copy9029.bangumimanagerreformed.data.Bangumi
 import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
+import com.copy9029.bangumimanagerreformed.data.INACTIVE_COLOR_LONG
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import com.copy9029.bangumimanagerreformed.util.latestAiredEpisode
 import com.copy9029.bangumimanagerreformed.util.buildBangumiWatchProgressText
@@ -48,6 +49,7 @@ data class BangumiDetailDialogUiState(
     val themeColorLong: Long,
     val scoreStr: String,            // "10.0"/"未知"
     val firstBroadcastDateStr: String,
+    val isActive: Boolean,
     val inProjectIDInt: Int,
 )
 
@@ -80,6 +82,7 @@ fun Bangumi.toDetailDialogUiState(
         themeColorLong = themeColorLong,
         scoreStr = myScore?.let { (it / 10.0).toString() } ?: "未知",
         firstBroadcastDateStr = firstBroadcastDate.toString(),
+        isActive = isActive,
         inProjectIDInt = bangumiId,
     )
 }
@@ -152,18 +155,23 @@ fun BangumiDetailDialog(
                     value = uiState.seasonStr,
                 )
 
+                DetailInfoRow(
+                    label = "首播日期",
+                    value = uiState.firstBroadcastDateStr,
+                )
+
                 ColorInfoRow(
-                    value = uiState.themeColorLong,
+                    value = if (uiState.isActive) uiState.themeColorLong else INACTIVE_COLOR_LONG,
+                )
+
+                DetailInfoRow(
+                    label = "是否隐藏",
+                    value = if (uiState.isActive) "正常显示" else "已隐藏"
                 )
 
                 DetailInfoRow(
                     label = "评分",
                     value = uiState.scoreStr,
-                )
-
-                DetailInfoRow(
-                    label = "首播日期",
-                    value = uiState.firstBroadcastDateStr,
                 )
 
                 DetailInfoRow(
@@ -269,6 +277,7 @@ private fun PreviewHere() {
                 themeColorLong = 0xFFFF0000,
                 scoreStr = "未知",
                 firstBroadcastDateStr = "2026-07-01",
+                isActive = true,
                 inProjectIDInt = 114,
             ),
 

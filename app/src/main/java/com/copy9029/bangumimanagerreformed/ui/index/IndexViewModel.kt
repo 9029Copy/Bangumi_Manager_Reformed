@@ -34,7 +34,10 @@ data class IndexUiState(
 
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-)
+) {
+    val filteredItemCount: Int
+        get() = bangumiList.size
+}
 
 data class BangumiIndexItemUiState(
     val titleStr: String,

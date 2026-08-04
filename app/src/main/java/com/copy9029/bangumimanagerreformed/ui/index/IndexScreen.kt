@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.copy9029.bangumimanagerreformed.R
+import com.copy9029.bangumimanagerreformed.data.INACTIVE_COLOR_LONG
 import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
 import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialog
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
@@ -178,7 +179,10 @@ private fun IndexScreenContent(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "列表", fontSize = 20.sp)
+                    Text(
+                        text = "当前 · 共 ${uiState.filteredItemCount} 项",
+                        fontSize = 20.sp,
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -373,7 +377,7 @@ private fun IndexScreenItem(
     modifier: Modifier = Modifier,
 ) {
     val colorScheme = generateBangumiColorScheme(   // TODO: theme Color
-        if (isActive) uiState.themeColorLong else 0xFFE0E0E0
+        if (isActive) uiState.themeColorLong else INACTIVE_COLOR_LONG
     )
 
     Card(
