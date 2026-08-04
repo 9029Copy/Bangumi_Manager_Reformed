@@ -161,7 +161,7 @@ class IndexViewModel @Inject constructor(
         }
     }
 
-    fun onTopMoreClick() {
+    fun onTopSettingsClick() {
         // TODO
     }
 

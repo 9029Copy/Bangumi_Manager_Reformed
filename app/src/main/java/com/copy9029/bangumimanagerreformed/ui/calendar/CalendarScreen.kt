@@ -3,6 +3,7 @@ package com.copy9029.bangumimanagerreformed.ui.calendar
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,14 +65,17 @@ import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.INACTIVE_COLOR_LONG
 import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
@@ -158,9 +162,6 @@ private fun CalendarScreenContent(
         )
     }
     val coroutineScope = rememberCoroutineScope()
-    var isMoreMenuExpanded by rememberSaveable {
-        mutableStateOf(false)
-    }
     var isDatePickerVisible by rememberSaveable {
         mutableStateOf(false)
     }
@@ -179,10 +180,28 @@ private fun CalendarScreenContent(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "${displayedMonth.year} 年 ${displayedMonth.monthValue} 月",
-                        fontSize = 20.sp,
-                    )
+                    Row(
+                        modifier = Modifier
+                            .heightIn(min = 48.dp)
+                            .clickable(
+                                onClickLabel = "跳转到日期",
+                                role = Role.Button,
+                                onClick = {
+                                    isDatePickerVisible = true
+                                },
+                            ),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "${displayedMonth.year} 年 ${displayedMonth.monthValue} 月",
+                            fontSize = 20.sp,
+                        )
+                        Icon(
+                            imageVector = Icons.Filled.ArrowDropDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
                 },
                 actions = {
                     TextButton(
@@ -218,46 +237,13 @@ private fun CalendarScreenContent(
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Box {
-                        IconButton(
-                            onClick = {
-                                isMoreMenuExpanded = true
-                            },
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.MoreVert,
-                                contentDescription = "更多",
-                                modifier = Modifier.size(32.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-
-                        DropdownMenu(
-                            expanded = isMoreMenuExpanded,
-                            onDismissRequest = {
-                                isMoreMenuExpanded = false
-                            },
-                        ) {
-                            DropdownMenuItem(
-                                text = {
-                                    Text("跳转到日期")
-                                },
-                                onClick = {
-                                    isMoreMenuExpanded = false
-                                    isDatePickerVisible = true
-                                },
-                            )
-
-                            DropdownMenuItem(
-                                text = {
-                                    Text("设置")
-                                },
-                                onClick = {
-                                    isMoreMenuExpanded = false
-                                    onSettingsClick()
-                                },
-                            )
-                        }
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = "设置",
+                            modifier = Modifier.size(26.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -120,7 +121,7 @@ fun IndexScreen(
         onTopAddClick = {
             isAddSheetVisible = true
         },
-        onTopMoreClick = indexViewModel::onTopMoreClick,
+        onTopSettingsClick = indexViewModel::onTopSettingsClick,
     )
 
     if (isAddSheetVisible) {
@@ -161,7 +162,7 @@ private fun IndexScreenContent(
     onDismissDetailDialog: () -> Unit,
 
     onTopAddClick: () -> Unit,
-    onTopMoreClick: () -> Unit,
+    onTopSettingsClick: () -> Unit,
 ) {
     var expandedMoreMenuBangumiId by rememberSaveable {
         mutableStateOf<Int?>(null)
@@ -194,17 +195,18 @@ private fun IndexScreenContent(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Add,
-                            contentDescription = "Add bangumis",
+                            contentDescription = "添加项目",
                             modifier = Modifier.size(32.dp),
                         )
                     }
                     IconButton(
-                        onClick = onTopMoreClick
+                        onClick = onTopSettingsClick
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.MoreVert,
-                            contentDescription = "More (Screen)",
-                            modifier = Modifier.size(32.dp),
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = "设置",
+                            modifier = Modifier.size(26.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 },
@@ -558,7 +560,7 @@ private fun PreviewHere() {
             onDismissFilterSheet = {},
             onDismissDetailDialog = {},
             onTopAddClick = {},
-            onTopMoreClick = {},
+            onTopSettingsClick = {},
         )
     }
 }
