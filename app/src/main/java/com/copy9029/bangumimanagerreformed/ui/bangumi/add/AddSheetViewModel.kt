@@ -50,8 +50,14 @@ class AddSheetViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<BangumiAddSheetUiState?>(null)
     val uiState: StateFlow<BangumiAddSheetUiState?> = _uiState.asStateFlow()
 
-    fun initializeIfNeeded(defaultFirstBroadcastDate: LocalDate) {
-        if (_uiState.value != null) return
+    fun initializeForOpen(defaultFirstBroadcastDate: LocalDate) {
+        val existingState = _uiState.value
+        if (existingState != null) {
+            _uiState.value = existingState.copy(
+                firstBroadcastDate = defaultFirstBroadcastDate,
+            )
+            return
+        }
 
         val defaultSeason = calcNearestSeason(LocalDate.now())
 

@@ -73,7 +73,7 @@ fun BangumiAddSheet(
     modifier: Modifier = Modifier,
 ) {
     LaunchedEffect(defaultFirstBroadcastDate) {
-        viewModel.initializeIfNeeded(defaultFirstBroadcastDate)
+        viewModel.initializeForOpen(defaultFirstBroadcastDate)
     }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

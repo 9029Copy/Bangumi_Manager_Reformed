@@ -16,8 +16,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -39,7 +39,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -93,14 +92,14 @@ fun CalendarScreen(
     modifier: Modifier = Modifier,
 ) {
     val uiState by calendarViewModel.uiState.collectAsStateWithLifecycle()
-    var isAddSheetVisible by rememberSaveable {
-        mutableStateOf(false)
+    var addSheetDefaultDateEpochDay by rememberSaveable {
+        mutableStateOf<Long?>(null)
     }
 
     CalendarScreenContent(
         uiState = uiState,
-        onAddClick = {
-            isAddSheetVisible = true
+        onAddClick = { defaultDate ->
+            addSheetDefaultDateEpochDay = defaultDate.toEpochDay()
         },
         onDateClick = calendarViewModel::onDateClick,
         onDateSelected = calendarViewModel::onDateSelected,
@@ -115,19 +114,15 @@ fun CalendarScreen(
         modifier = modifier,
     )
 
-    if (isAddSheetVisible) {
+    addSheetDefaultDateEpochDay?.let { defaultDateEpochDay ->
         BangumiAddSheet(
             viewModel = addSheetViewModel,
-            defaultFirstBroadcastDate = if (uiState.selectedDateEpochDay == null) {
-                LocalDate.now()
-            } else {
-                LocalDate.ofEpochDay(uiState.selectedDateEpochDay!!)
-            },
+            defaultFirstBroadcastDate = LocalDate.ofEpochDay(defaultDateEpochDay),
             onDismissRequest = {
-                isAddSheetVisible = false
+                addSheetDefaultDateEpochDay = null
             },
             onBatchClick = {
-                isAddSheetVisible = false
+                addSheetDefaultDateEpochDay = null
                 onBatchClick()
             },
         )
@@ -138,7 +133,7 @@ fun CalendarScreen(
 @Composable
 private fun CalendarScreenContent(
     uiState: CalendarUiState,
-    onAddClick: () -> Unit,
+    onAddClick: (LocalDate) -> Unit,
     onDateClick: (LocalDate) -> Unit,
     onDateSelected: (LocalDate) -> Unit,
     onBangumiClick: (Int) -> Unit,
@@ -152,9 +147,16 @@ private fun CalendarScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val listState = rememberLazyListState(
-        initialFirstVisibleItemIndex = uiState.initialWeekIndex,
-    )
+    val listState = rememberSaveable(
+        uiState.firstWeekStart.toEpochDay(),
+        uiState.weekCount,
+        uiState.initialWeekIndex,
+        saver = LazyListState.Saver,
+    ) {
+        LazyListState(
+            firstVisibleItemIndex = uiState.initialWeekIndex,
+        )
+    }
     val coroutineScope = rememberCoroutineScope()
     var isMoreMenuExpanded by rememberSaveable {
         mutableStateOf(false)
@@ -170,10 +172,6 @@ private fun CalendarScreenContent(
                     .plusDays(3),
             )
         }
-    }
-
-    LaunchedEffect(uiState.firstWeekStart, uiState.initialWeekIndex) {
-        listState.scrollToItem(uiState.initialWeekIndex)
     }
 
     Scaffold(
@@ -201,7 +199,15 @@ private fun CalendarScreenContent(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    IconButton(onClick = onAddClick) {
+                    IconButton(
+                        onClick = {
+                            if (uiState.selectedDateEpochDay == null) {
+                                onAddClick(LocalDate.now())
+                            } else {
+                                onAddClick(LocalDate.ofEpochDay(uiState.selectedDateEpochDay))
+                            }
+                        },
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.Add,
                             contentDescription = "添加项目",
@@ -296,7 +302,9 @@ private fun CalendarScreenContent(
                             )
                             CalendarSelectedDateDetails(
                                 bangumis = uiState.bangumisByDate[selectedDate].orEmpty(),
-                                onAddClick = onAddClick,
+                                onAddClick = {
+                                    onAddClick(selectedDate)
+                                },
                                 onBangumiClick = onBangumiClick,
                                 onMarkEpisodeDoneClick = onMarkEpisodeDoneClick,
                                 onMarkEpisodeUndoneClick = onMarkEpisodeUndoneClick,
