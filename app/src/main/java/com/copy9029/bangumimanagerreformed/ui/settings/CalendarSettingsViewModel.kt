@@ -66,7 +66,7 @@ class CalendarSettingsViewModel @Inject constructor(
         }
     }
 
-    private companion object {
+    companion object {
         const val MIN_WEEK_COUNT = 52
         const val MAX_WEEK_COUNT = 52 * 50
 

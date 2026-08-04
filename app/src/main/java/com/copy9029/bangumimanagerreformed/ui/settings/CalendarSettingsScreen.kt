@@ -167,7 +167,10 @@ private fun CalendarSettingsScreenContent(
                     title = "当前周之前",
                     supportingText = "日历向过去加载的周数",
                     value = uiState.calendarWeeksBeforeCurrent,
-                    valueRange = 52..2600,
+                    valueRange = IntRange(
+                        start = CalendarSettingsViewModel.MIN_WEEK_COUNT,
+                        endInclusive = CalendarSettingsViewModel.MAX_WEEK_COUNT
+                    ),
                     onValueChange = onWeeksBeforeCurrentChanged,
                 )
             }
@@ -176,7 +179,10 @@ private fun CalendarSettingsScreenContent(
                     title = "当前周之后",
                     supportingText = "日历向未来加载的周数",
                     value = uiState.calendarWeeksAfterCurrent,
-                    valueRange = 52..2600,
+                    valueRange = IntRange(
+                        start = CalendarSettingsViewModel.MIN_WEEK_COUNT,
+                        endInclusive = CalendarSettingsViewModel.MAX_WEEK_COUNT
+                    ),
                     onValueChange = onWeeksAfterCurrentChanged,
                 )
             }
