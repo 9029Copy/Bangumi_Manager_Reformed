@@ -25,8 +25,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -39,7 +37,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,10 +54,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.copy9029.bangumimanagerreformed.ui.MyDatePickerDialog
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
 
 
 @Composable
@@ -332,34 +328,13 @@ fun FirstBroadcastDateField(
 
 
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = date.toEpochMillis(),
+        MyDatePickerDialog(
+            initialDate = date,
+            onDateSelected = onDateSelected,
+            onDismissRequest = {
+                showDatePicker = false
+            },
         )
-
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis
-                            ?.toLocalDate()
-                            ?.let(onDateSelected)
-                        showDatePicker = false
-                    },
-                ) {
-                    Text("确定")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showDatePicker = false },
-                ) {
-                    Text("取消")
-                }
-            },
-        ) {
-            DatePicker(state = datePickerState)
-        }
     }
 }
 
@@ -427,21 +402,6 @@ private fun <T> SeasonDropdown(
         }
     }
 }
-
-private fun LocalDate.toEpochMillis(): Long {
-    return atStartOfDay(ZoneOffset.UTC)
-        .toInstant()
-        .toEpochMilli()
-}
-
-private fun Long.toLocalDate(): LocalDate {
-    return Instant.ofEpochMilli(this)
-        .atZone(ZoneOffset.UTC)
-        .toLocalDate()
-}
-
-
-
 
 
 @Preview

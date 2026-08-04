@@ -21,10 +21,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.copy9029.bangumimanagerreformed.ui.MyDatePickerDialog
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -358,39 +357,13 @@ private fun BatchFirstBroadcastDateCell(
     }
 
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = date
-                .atStartOfDay(ZoneOffset.UTC)
-                .toInstant()
-                .toEpochMilli(),
+        MyDatePickerDialog(
+            initialDate = date,
+            onDateSelected = onDateSelected,
+            onDismissRequest = {
+                showDatePicker = false
+            },
         )
-
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis
-                            ?.let { millis ->
-                                Instant.ofEpochMilli(millis)
-                                    .atZone(ZoneOffset.UTC)
-                                    .toLocalDate()
-                            }
-                            ?.let(onDateSelected)
-                        showDatePicker = false
-                    },
-                ) {
-                    Text("确定")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("取消")
-                }
-            },
-        ) {
-            DatePicker(state = datePickerState)
-        }
     }
 }
 

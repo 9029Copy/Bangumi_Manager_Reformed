@@ -24,8 +24,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,7 +36,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -60,8 +57,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.Instant
-import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -79,6 +74,7 @@ import androidx.compose.ui.semantics.Role
 import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.INACTIVE_COLOR_LONG
 import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
+import com.copy9029.bangumimanagerreformed.ui.MyDatePickerDialog
 import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialog
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheet
@@ -320,66 +316,31 @@ private fun CalendarScreenContent(
     }
 
     if (isDatePickerVisible) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = LocalDate.now()
-                .atStartOfDay(ZoneOffset.UTC)
-                .toInstant()
-                .toEpochMilli(),
-        )
+        MyDatePickerDialog(
+            initialDate = LocalDate.now(),
+            onDateSelected = { selectedDate ->
+                val selectedWeekIndex = uiState.weekIndexFor(selectedDate)
 
-        DatePickerDialog(
+                if (selectedWeekIndex == null) {
+                    Toast.makeText(
+                        context,
+                        "日期超出可显示范围",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                } else {
+                    onDateSelected(selectedDate)
+                    coroutineScope.launch {
+                        listState.animateScrollToItem(
+                            index = (selectedWeekIndex - uiState.weeksPrefix)
+                                .coerceAtLeast(0),
+                        )
+                    }
+                }
+            },
             onDismissRequest = {
                 isDatePickerVisible = false
             },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis
-                            ?.let { millis ->
-                                Instant.ofEpochMilli(millis)
-                                    .atZone(ZoneOffset.UTC)
-                                    .toLocalDate()
-                            }
-                            ?.let { selectedDate ->
-                                val selectedWeekIndex = uiState.weekIndexFor(
-                                    selectedDate
-                                )
-
-                                if (selectedWeekIndex == null) {
-                                    Toast.makeText(
-                                        context,
-                                        "日期超出可显示范围",
-                                        Toast.LENGTH_SHORT,
-                                    ).show()
-                                } else {
-                                    onDateSelected(selectedDate)
-                                    coroutineScope.launch {
-                                        listState.animateScrollToItem(
-                                            index = (selectedWeekIndex - uiState.weeksPrefix)
-                                                .coerceAtLeast(0),
-                                        )
-                                    }
-                                }
-                            }
-
-                        isDatePickerVisible = false
-                    },
-                ) {
-                    Text("确定")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        isDatePickerVisible = false
-                    },
-                ) {
-                    Text("取消")
-                }
-            },
-        ) {
-            DatePicker(state = datePickerState)
-        }
+        )
     }
 }
 

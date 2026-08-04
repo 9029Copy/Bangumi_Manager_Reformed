@@ -16,8 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +26,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,12 +40,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.copy9029.bangumimanagerreformed.ui.MyDatePickerDialog
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.SeasonSelectSection
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import kotlinx.coroutines.launch
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
 
 @Composable
 fun BangumiEditScreen(
@@ -464,39 +460,13 @@ private fun FirstBroadcastDateEditRow(
     }
 
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = date
-                .atStartOfDay(ZoneOffset.UTC)
-                .toInstant()
-                .toEpochMilli(),
+        MyDatePickerDialog(
+            initialDate = date,
+            onDateSelected = onDateSelected,
+            onDismissRequest = {
+                showDatePicker = false
+            },
         )
-
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let { millis ->
-                            onDateSelected(
-                                Instant.ofEpochMilli(millis)
-                                    .atZone(ZoneOffset.UTC)
-                                    .toLocalDate()
-                            )
-                        }
-                        showDatePicker = false
-                    },
-                ) {
-                    Text("确定")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("取消")
-                }
-            },
-        ) {
-            DatePicker(state = datePickerState)
-        }
     }
 }
 
