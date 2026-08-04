@@ -87,7 +87,7 @@ fun BangumiManagerReformedApp() {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = BottomDestination.INDEX.route, // 初始页面
+                startDestination = BottomDestination.CALENDAR.route, // 初始页面
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable(BottomDestination.CALENDAR.route) {
