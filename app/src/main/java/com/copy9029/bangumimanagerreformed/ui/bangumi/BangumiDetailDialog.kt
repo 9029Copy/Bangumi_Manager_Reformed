@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,9 +29,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogWindowProvider
 import com.copy9029.bangumimanagerreformed.data.Bangumi
 import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
 import com.copy9029.bangumimanagerreformed.data.INACTIVE_COLOR_LONG
@@ -43,7 +46,6 @@ import java.time.LocalDate
 
 data class BangumiDetailDialogUiState(
     val titleStr: String,
-    val dayOfWeekStr: String,        // "每周x"
     val seasonStr: String,           // "yyyy 年 mm 月"
     val watchProgressStr: String,    // "已看完第 x 话 丨 共/更新到第 y 话"
     val themeColorLong: Long,
@@ -68,9 +70,6 @@ fun Bangumi.toDetailDialogUiState(
 
     return BangumiDetailDialogUiState(
         titleStr = title,
-        dayOfWeekStr = "每周${listOf(
-            "", "一", "二", "三", "四", "五", "六", "日"
-        )[firstBroadcastDate.dayOfWeek.value]}",
         seasonStr = "$seasonYear 年 $seasonMonth 月",
         watchProgressStr = buildBangumiWatchProgressText(
             dayOfWeekInt = latestAiredDate?.dayOfWeek?.value ?: firstBroadcastDate.dayOfWeek.value,
@@ -145,7 +144,6 @@ fun BangumiDetailDialog(
                 modifier = modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text(uiState.dayOfWeekStr)
                 Text(uiState.watchProgressStr)
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -271,9 +269,8 @@ private fun PreviewHere() {
         BangumiDetailDialog(
             uiState = BangumiDetailDialogUiState(
                 titleStr = "标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题",
-                dayOfWeekStr = "每周一",
                 seasonStr = "2026 年 07 月",
-                watchProgressStr = "已看完第 0 话 丨 更新到第 2 话",
+                watchProgressStr = "周一 丨 已看完第 0 话 丨 更新到第 2 话",
                 themeColorLong = 0xFFFF0000,
                 scoreStr = "未知",
                 firstBroadcastDateStr = "2026-07-01",

@@ -37,6 +37,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -95,6 +96,17 @@ fun CalendarScreen(
     var addSheetDefaultDateEpochDay by rememberSaveable {
         mutableStateOf<Long?>(null)
     }
+    var pendingEditBangumiId by rememberSaveable {
+        mutableStateOf<Int?>(null)
+    }
+
+    LaunchedEffect(uiState.bangumiDetailSelected, pendingEditBangumiId) {
+        val bangumiId = pendingEditBangumiId ?: return@LaunchedEffect
+        if (uiState.bangumiDetailSelected == null) {
+            pendingEditBangumiId = null
+            onEditClick(bangumiId)
+        }
+    }
 
     CalendarScreenContent(
         uiState = uiState,
@@ -109,7 +121,10 @@ fun CalendarScreen(
         onMarkEpisodeUndoneClick = calendarViewModel::onMarkEpisodeUndoneClick,
         onToggleBangumiActiveClick = calendarViewModel::onToggleBangumiActiveClick,
         onDeleteBangumiClick = calendarViewModel::onDeleteBangumiClick,
-        onEditClick = onEditClick,
+        onEditClick = { bangumiId ->
+            pendingEditBangumiId = bangumiId
+            calendarViewModel.onDismissDetailDialog()
+        },
         onSettingsClick = onSettingsClick,
         modifier = modifier,
     )
@@ -309,7 +324,6 @@ private fun CalendarScreenContent(
             uiState = detail,
             onDismissRequest = onDismissDetailDialog,
             onEditClick = {
-                onDismissDetailDialog()
                 onEditClick(detail.inProjectIDInt)
             },
         )

@@ -36,7 +36,7 @@ fun buildBangumiWatchProgressText(
             "共 $totalEpisodes 话"
         }
     } else {
-        "${startDate.month} 月 ${startDate.dayOfMonth} 日开播"
+        "${startDate.monthValue} 月 ${startDate.dayOfMonth} 日开播"
     }
 
     return "$str0 丨 $str1 丨 $str2"

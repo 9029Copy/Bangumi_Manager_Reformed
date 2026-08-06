@@ -37,6 +37,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -101,6 +102,17 @@ fun IndexScreen(
     var isAddSheetVisible by rememberSaveable {
         mutableStateOf(false)
     }
+    var pendingEditBangumiId by rememberSaveable {
+        mutableStateOf<Int?>(null)
+    }
+
+    LaunchedEffect(uiState.bangumiDetailSelected, pendingEditBangumiId) {
+        val bangumiId = pendingEditBangumiId ?: return@LaunchedEffect
+        if (uiState.bangumiDetailSelected == null) {
+            pendingEditBangumiId = null
+            onEditClick(bangumiId)
+        }
+    }
 
     IndexScreenContent(
         uiState = uiState,
@@ -111,7 +123,10 @@ fun IndexScreen(
         onOpenMoreFilters = indexViewModel::onOpenFilterSheet,
         onBangumiClick = indexViewModel::onBangumiClick,
         onAdd1BangumiClick = indexViewModel::onAdd1BangumiClick,
-        onEditClick = onEditClick,
+        onEditClick = { bangumiId ->
+            pendingEditBangumiId = bangumiId
+            indexViewModel.onDismissDetailDialog()
+        },
         onMinus1BangumiClick = indexViewModel::onMinus1BangumiClick,
         onSetBangumiActiveClick = indexViewModel::onSetBangumiActiveClick,
         onDeleteBangumiClick = indexViewModel::onDeleteBangumiClick,
@@ -280,7 +295,6 @@ private fun IndexScreenContent(
                     uiState = detail,
                     onDismissRequest = onDismissDetailDialog,
                     onEditClick = {
-                        onDismissDetailDialog()
                         onEditClick(detail.inProjectIDInt)
                     },
                 )

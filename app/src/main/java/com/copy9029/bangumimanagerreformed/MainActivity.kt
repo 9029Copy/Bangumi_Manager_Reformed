@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -104,8 +106,18 @@ fun BangumiManagerReformedApp() {
             navController = navController,
             startDestination = BottomDestination.CALENDAR.route, // 初始页面
             modifier = Modifier.fillMaxSize(),
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
         ) {
-            composable(BottomDestination.CALENDAR.route) {
+            composable(
+                route = BottomDestination.CALENDAR.route,
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+                popEnterTransition = { EnterTransition.None },
+                popExitTransition = { ExitTransition.None },
+            ) {
                 val calendarViewModel: CalendarViewModel = hiltViewModel()
                 val addSheetViewModel: AddSheetViewModel = hiltViewModel()
                 CalendarScreen(
@@ -122,7 +134,13 @@ fun BangumiManagerReformedApp() {
                     },
                 )
             }
-            composable(BottomDestination.INDEX.route) {
+            composable(
+                route = BottomDestination.INDEX.route,
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+                popEnterTransition = { EnterTransition.None },
+                popExitTransition = { ExitTransition.None },
+            ) {
                 val indexViewModel: IndexViewModel = hiltViewModel()
                 val addSheetViewModel: AddSheetViewModel = hiltViewModel()
                 IndexScreen(
@@ -136,11 +154,23 @@ fun BangumiManagerReformedApp() {
                     }
                 )
             }
-            composable(BottomDestination.PROFILE.route) {
+            composable(
+                route = BottomDestination.PROFILE.route,
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+                popEnterTransition = { EnterTransition.None },
+                popExitTransition = { ExitTransition.None },
+            ) {
 //                    ProfileScreen()
             }
 
-            composable(Routes.BANGUMI_ADD_BATCH) {
+            composable(
+                route = Routes.BANGUMI_ADD_BATCH,
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+                popEnterTransition = { EnterTransition.None },
+                popExitTransition = { ExitTransition.None },
+            ) {
                 val addBatchViewModel: AddBatchViewModel = hiltViewModel()
                 BangumiAddBatchScreen(
                     viewModel = addBatchViewModel,
@@ -148,7 +178,13 @@ fun BangumiManagerReformedApp() {
                 )
             }
 
-            composable(Routes.CALENDAR_SETTINGS) {
+            composable(
+                route = Routes.CALENDAR_SETTINGS,
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+                popEnterTransition = { EnterTransition.None },
+                popExitTransition = { ExitTransition.None },
+            ) {
                 val settingsViewModel: CalendarSettingsViewModel = hiltViewModel()
                 CalendarSettingsScreen(
                     viewModel = settingsViewModel,
@@ -163,6 +199,10 @@ fun BangumiManagerReformedApp() {
                         type = NavType.IntType
                     }
                 ),
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+                popEnterTransition = { EnterTransition.None },
+                popExitTransition = { ExitTransition.None },
             ) {
                 val editViewModel: BangumiEditViewModel = hiltViewModel()
                 BangumiEditScreen(
