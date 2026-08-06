@@ -1,4 +1,4 @@
-package com.copy9029.bangumimanagerreformed.ui.navigation
+package com.copy9029.bangumimanagerreformed
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -23,7 +23,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddBatchViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddBatchScreen
