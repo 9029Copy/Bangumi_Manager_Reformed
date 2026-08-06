@@ -1,7 +1,6 @@
 package com.copy9029.bangumimanagerreformed.ui.bangumi.add
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.copy9029.bangumimanagerreformed.data.BangumiAddInfo
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
 import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
@@ -12,7 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -24,6 +23,7 @@ data class AddBatchUiState(
     val endYear: Int,
     val items: List<BatchAddItemUiState> = emptyList(),
     val pendingDeleteItemId: Long? = null,
+    val isSubmitting: Boolean = false,
 ) {
     val themeColorLong: Long
         get() = themeColorByMonth[seasonMonth] ?: 0xFFFFFFFFL
@@ -171,8 +171,11 @@ class AddBatchViewModel @Inject constructor(
         }
     }
 
-    fun onSubmitAllClick(): String {
+    suspend fun onSubmitAllClick(): String {
         val state = _uiState.value
+        if (state.isSubmitting) {
+            return "F正在提交，请稍候"
+        }
 
         val validatedItems = state.items.map { item ->
             if (item.title.isBlank()) {
@@ -203,7 +206,11 @@ class AddBatchViewModel @Inject constructor(
             )
         }
 
-        viewModelScope.launch {
+        _uiState.update {
+            it.copy(isSubmitting = true)
+        }
+
+        return try {
             repository.addNewBangumisBatch(infos)
 
             _uiState.update {
@@ -211,10 +218,20 @@ class AddBatchViewModel @Inject constructor(
                     formattedText = "",
                     items = emptyList(),
                     pendingDeleteItemId = null,
+                    isSubmitting = false,
                 )
             }
+            "T成功添加 ${infos.size} 个项目！"
+        } catch (exception: CancellationException) {
+            _uiState.update {
+                it.copy(isSubmitting = false)
+            }
+            throw exception
+        } catch (exception: Exception) {
+            _uiState.update {
+                it.copy(isSubmitting = false)
+            }
+            "F添加失败：${exception.message ?: "数据库写入失败"}"
         }
-
-        return "T成功添加 ${infos.size} 个项目！"
     }
 }

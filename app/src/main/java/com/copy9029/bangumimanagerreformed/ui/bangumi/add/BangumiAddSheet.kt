@@ -37,6 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.copy9029.bangumimanagerreformed.ui.components.MyDatePickerDialog
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 
@@ -69,6 +71,7 @@ fun BangumiAddSheet(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val thisContext = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     uiState?.let { state ->
         BangumiAddSheetContent(
@@ -79,11 +82,21 @@ fun BangumiAddSheet(
             onBatchClick = onBatchClick,
             onDismissRequest = onDismissRequest,
             onConfirmClick = {
-                if (viewModel.onConfirmClick(defaultFirstBroadcastDate)) {
-                    onDismissRequest()
-                    Toast.makeText(thisContext, "添加成功", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(thisContext, "添加失败", Toast.LENGTH_SHORT).show()
+                coroutineScope.launch {
+                    if (viewModel.onConfirmClick(defaultFirstBroadcastDate)) {
+                        Toast.makeText(
+                            thisContext,
+                            "添加成功",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                        onDismissRequest()
+                    } else {
+                        Toast.makeText(
+                            thisContext,
+                            "添加失败",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }
                 }
             },
             modifier = modifier,
@@ -106,7 +119,11 @@ fun BangumiAddSheetContent(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = {
+            if (!uiState.isSubmitting) {
+                onDismissRequest()
+            }
+        },
         sheetState = sheetState,
         modifier = modifier,
     ) {
@@ -124,7 +141,10 @@ fun BangumiAddSheetContent(
             ) {
                 Text(text = "添加项目", fontSize = 20.sp)
 
-                TextButton(onClick = onBatchClick) {
+                TextButton(
+                    onClick = onBatchClick,
+                    enabled = !uiState.isSubmitting,
+                ) {
                     Text(text = "批量添加", fontSize = 16.sp)
                 }
             }
@@ -187,11 +207,17 @@ fun BangumiAddSheetContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
             ) {
-                TextButton(onClick = onDismissRequest) {
+                TextButton(
+                    onClick = onDismissRequest,
+                    enabled = !uiState.isSubmitting,
+                ) {
                     Text("取消")
                 }
 
-                TextButton(onClick = onConfirmClick) {
+                TextButton(
+                    onClick = onConfirmClick,
+                    enabled = !uiState.isSubmitting,
+                ) {
                     Text("提交")
                 }
             }

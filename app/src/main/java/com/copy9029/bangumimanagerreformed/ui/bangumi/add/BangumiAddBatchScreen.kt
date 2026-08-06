@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.copy9029.bangumimanagerreformed.ui.components.MyDatePickerDialog
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,17 +35,28 @@ fun BangumiAddBatchScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     BangumiAddBatchScreenContent(
         uiState = uiState,
         onBack = onBack,
         onSubmitAllClick = {
-            val msg = viewModel.onSubmitAllClick()
-            if (msg[0] == 'T') {
-                Toast.makeText(context, msg.substring(startIndex = 1), Toast.LENGTH_SHORT).show()
-                onBack()
-            } else {
-                Toast.makeText(context, msg.substring(startIndex = 1), Toast.LENGTH_SHORT).show()
+            coroutineScope.launch {
+                val msg = viewModel.onSubmitAllClick()
+                if (msg[0] == 'T') {
+                    Toast.makeText(
+                        context,
+                        msg.substring(startIndex = 1),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                    onBack()
+                } else {
+                    Toast.makeText(
+                        context,
+                        msg.substring(startIndex = 1),
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }
             }
         },
         onSeasonChanged = viewModel::onSeasonChanged,
@@ -89,7 +101,10 @@ fun BangumiAddBatchScreenContent(
                     }
                 },
                 actions = {
-                    TextButton(onClick = onSubmitAllClick) {
+                    TextButton(
+                        onClick = onSubmitAllClick,
+                        enabled = !uiState.isSubmitting,
+                    ) {
                         Text("提交")
                     }
                 },

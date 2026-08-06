@@ -140,6 +140,20 @@ class BangumiRepository @Inject constructor(
 //    }
 
     suspend fun addNewBangumi(info: BangumiAddInfo) {
+        database.withTransaction {
+            addNewBangumiInTransaction(info)
+        }
+    }
+
+    suspend fun addNewBangumisBatch(infos: List<BangumiAddInfo>) {
+        database.withTransaction {
+            infos.forEach { info ->
+                addNewBangumiInTransaction(info)
+            }
+        }
+    }
+
+    private suspend fun addNewBangumiInTransaction(info: BangumiAddInfo) {
         val bangumi = Bangumi(
             title = info.title,
             seasonYear = info.seasonYear,
@@ -161,12 +175,6 @@ class BangumiRepository @Inject constructor(
             broadcastDate = info.firstBroadcastDate
         )
         insertOrUpdateSchedule(schedule)
-    }
-
-    suspend fun addNewBangumisBatch(infos: List<BangumiAddInfo>) {
-        infos.forEach { info ->
-            addNewBangumi(info)
-        }
     }
 
     suspend fun toggleBangumiActive(bangumiId: Int) {

@@ -1,17 +1,16 @@
 package com.copy9029.bangumimanagerreformed.ui.bangumi.add
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.copy9029.bangumimanagerreformed.data.BangumiAddInfo
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
 import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
 import com.copy9029.bangumimanagerreformed.util.calcNearestSeason
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -23,6 +22,7 @@ data class BangumiAddSheetUiState(
     val startYear: Int,
     val endYear: Int,
     val titleError: String? = null,
+    val isSubmitting: Boolean = false,
 ) {
     val themeColorLong: Long
         get() = themeColorByMonth[seasonMonth] ?: 0xFFFFFFFFL
@@ -93,14 +93,20 @@ class AddSheetViewModel @Inject constructor(
         }
     }
 
-    fun onConfirmClick(defaultFirstBroadcastDate: LocalDate): Boolean {
+    suspend fun onConfirmClick(defaultFirstBroadcastDate: LocalDate): Boolean {
+        if (_uiState.value?.isSubmitting == true) {
+            return false
+        }
         if (!validateBeforeSubmit()) {
             return false
         }
 
         val addInfo = requireNotNull(_uiState.value).toAddInfo()
+        _uiState.update { state ->
+            state?.copy(isSubmitting = true)
+        }
 
-        viewModelScope.launch {
+        return try {
             repository.addNewBangumi(addInfo)
 
             _uiState.update { state ->
@@ -108,11 +114,21 @@ class AddSheetViewModel @Inject constructor(
                     title = "",
                     firstBroadcastDate = defaultFirstBroadcastDate,
                     titleError = null,
+                    isSubmitting = false,
                 )
             }
+            true
+        } catch (exception: CancellationException) {
+            _uiState.update { state ->
+                state?.copy(isSubmitting = false)
+            }
+            throw exception
+        } catch (_: Exception) {
+            _uiState.update { state ->
+                state?.copy(isSubmitting = false)
+            }
+            false
         }
-
-        return true
     }
 
     private fun validateBeforeSubmit(): Boolean {
