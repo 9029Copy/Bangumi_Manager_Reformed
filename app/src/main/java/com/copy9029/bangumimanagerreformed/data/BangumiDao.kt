@@ -50,6 +50,34 @@ interface BangumiDao {
     @Update
     suspend fun updateBangumi(bangumi: Bangumi)
 
+    @Query("""
+        UPDATE bangumi_items
+        SET latestWatchedEpisode = latestWatchedEpisode + :delta
+        WHERE bangumiId = :bangumiId
+          AND latestWatchedEpisode + :delta >= 0
+          AND (
+              totalEpisodes IS NULL
+              OR latestWatchedEpisode + :delta <= totalEpisodes
+          )
+    """)
+    suspend fun addWatchedEpisode(bangumiId: Int, delta: Int): Int
+
+    @Query("""
+        UPDATE bangumi_items
+        SET latestWatchedEpisode = :episode
+        WHERE bangumiId = :bangumiId
+          AND :episode >= 0
+          AND (totalEpisodes IS NULL OR :episode <= totalEpisodes)
+    """)
+    suspend fun setWatchedEpisode(bangumiId: Int, episode: Int): Int
+
+    @Query("""
+        UPDATE bangumi_items
+        SET isActive = NOT isActive
+        WHERE bangumiId = :bangumiId
+    """)
+    suspend fun toggleBangumiActive(bangumiId: Int): Int
+
     @Query("DELETE FROM bangumi_items WHERE bangumiId = :bangumiId")
     suspend fun deleteBangumiById(bangumiId: Int)
 

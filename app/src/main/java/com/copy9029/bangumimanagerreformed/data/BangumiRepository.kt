@@ -3,12 +3,17 @@ package com.copy9029.bangumimanagerreformed.data
 import androidx.room.withTransaction
 import com.copy9029.bangumimanagerreformed.util.calculateExpectedEndDate
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class BangumiRepository @Inject constructor(
     private val database: AppDatabase,
     private val bangumiDao: BangumiDao,
 ) {
+    private val watchedEpisodeSetMutex = Mutex()
 
     suspend fun updateBangumi(newBangumi: Bangumi, oldBangumi: Bangumi) {
         val totalEpisodesChanged = oldBangumi.totalEpisodes != newBangumi.totalEpisodes
@@ -107,31 +112,12 @@ class BangumiRepository @Inject constructor(
     }
 
     suspend fun watchedEpisodeAdd(bangumiId: Int, num: Int) {
-        val bangumi = bangumiDao.getBangumiByIdOnce(bangumiId)
-        if (bangumi != null) {
-            val newNum = bangumi.latestWatchedEpisode + num
-            if (newNum >= 0) {
-                if ((bangumi.totalEpisodes == null) || (newNum <= bangumi.totalEpisodes)) {
-                    updateBangumi(
-                        newBangumi = bangumi.copy(latestWatchedEpisode = newNum),
-                        oldBangumi = bangumi,
-                    )
-                }
-            }
-        }
+        bangumiDao.addWatchedEpisode(bangumiId, num)
     }
 
     suspend fun watchedEpisodeSet(bangumiId: Int, newNum: Int) {
-        val bangumi = bangumiDao.getBangumiByIdOnce(bangumiId)
-        if (bangumi != null) {
-            if (newNum >= 0) {
-                if ((bangumi.totalEpisodes == null) || (newNum <= bangumi.totalEpisodes)) {
-                    updateBangumi(
-                        newBangumi = bangumi.copy(latestWatchedEpisode = newNum),
-                        oldBangumi = bangumi,
-                    )
-                }
-            }
+        watchedEpisodeSetMutex.withLock {
+            bangumiDao.setWatchedEpisode(bangumiId, newNum)
         }
     }
 
@@ -178,14 +164,7 @@ class BangumiRepository @Inject constructor(
     }
 
     suspend fun toggleBangumiActive(bangumiId: Int) {
-        val bangumi = bangumiDao.getBangumiByIdOnce(bangumiId)
-        if (bangumi != null) {
-            val oldActive = bangumi.isActive
-            updateBangumi(
-                newBangumi = bangumi.copy(isActive = !oldActive),
-                oldBangumi = bangumi,
-            )
-        }
+        bangumiDao.toggleBangumiActive(bangumiId)
     }
 
     suspend fun deleteBangumi(bangumiId: Int) {
