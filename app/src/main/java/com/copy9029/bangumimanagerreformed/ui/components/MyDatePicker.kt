@@ -1,4 +1,4 @@
-package com.copy9029.bangumimanagerreformed.ui
+package com.copy9029.bangumimanagerreformed.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -11,21 +11,28 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -36,8 +43,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import com.copy9029.bangumimanagerreformed.ui.components.wheel_picker.CurrentIndex
+import com.copy9029.bangumimanagerreformed.ui.components.wheel_picker.FVerticalWheelPicker
+import com.copy9029.bangumimanagerreformed.ui.components.wheel_picker.rememberFWheelPickerState
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import java.time.LocalDate
+import java.time.Year
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
 
@@ -60,6 +72,9 @@ fun MyDatePickerDialog(
     }
     var displayedMonthOffset by rememberSaveable(initialEpochDay) {
         mutableLongStateOf(YearMonth.from(initialDate).toMonthOffset())
+    }
+    var isYearMonthPickerVisible by rememberSaveable {
+        mutableStateOf(false)
     }
     val displayedMonth = remember(displayedMonthOffset) {
         monthOffsetOrigin.plusMonths(displayedMonthOffset)
@@ -90,6 +105,9 @@ fun MyDatePickerDialog(
                     onNextMonthClick = {
                         displayedMonthOffset++
                     },
+                    onYearMonthClick = {
+                        isYearMonthPickerVisible = true
+                    },
                 )
                 WeekdayHeader()
                 MonthGrid(
@@ -117,6 +135,19 @@ fun MyDatePickerDialog(
             }
         },
     )
+
+    if (isYearMonthPickerVisible) {
+        YearMonthPickerDialog(
+            initialMonth = displayedMonth,
+            onMonthSelected = { month ->
+                displayedMonthOffset = month.toMonthOffset()
+                isYearMonthPickerVisible = false
+            },
+            onDismissRequest = {
+                isYearMonthPickerVisible = false
+            },
+        )
+    }
 }
 
 @Composable
@@ -124,17 +155,33 @@ private fun MonthNavigationRow(
     month: YearMonth,
     onPreviousMonthClick: () -> Unit,
     onNextMonthClick: () -> Unit,
+    onYearMonthClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = "${month.year} 年 ${month.monthValue} 月",
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleMedium,
-        )
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(6.dp))
+                .clickable(
+                    onClickLabel = "选择年月",
+                    onClick = onYearMonthClick,
+                )
+                .padding(horizontal = 4.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "${month.year} 年 ${month.monthValue} 月",
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Icon(
+                imageVector = Icons.Filled.ArrowDropDown,
+                contentDescription = null,
+            )
+        }
         IconButton(onClick = onPreviousMonthClick) {
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
@@ -146,6 +193,120 @@ private fun MonthNavigationRow(
                 imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
                 contentDescription = "下个月",
             )
+        }
+    }
+}
+
+@Composable
+private fun YearMonthPickerDialog(
+    initialMonth: YearMonth,
+    onMonthSelected: (YearMonth) -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    val initialYear = initialMonth.year.coerceIn(MinimumPickerYear, MaximumPickerYear)
+    var selectedYear by rememberSaveable(initialMonth) {
+        mutableIntStateOf(initialYear)
+    }
+    var selectedMonth by rememberSaveable(initialMonth) {
+        mutableIntStateOf(initialMonth.monthValue)
+    }
+    val yearPickerState = rememberFWheelPickerState(
+        initialIndex = initialYear - MinimumPickerYear,
+    )
+    val monthPickerState = rememberFWheelPickerState(
+        initialIndex = initialMonth.monthValue - 1,
+    )
+
+    yearPickerState.CurrentIndex { index ->
+        if (index in 0 until YearPickerItemCount) {
+            selectedYear = MinimumPickerYear + index
+        }
+    }
+    monthPickerState.CurrentIndex { index ->
+        if (index in 0 until MonthsPerYear) {
+            selectedMonth = index + 1
+        }
+    }
+
+    Dialog(onDismissRequest = onDismissRequest) {
+        Surface(
+            modifier = Modifier
+                .widthIn(max = 320.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            tonalElevation = 6.dp,
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(
+                    text = "选择年月",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(YearMonthPickerHeight),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    FVerticalWheelPicker(
+                        modifier = Modifier.weight(1f),
+                        count = YearPickerItemCount,
+                        state = yearPickerState,
+                        key = { index -> MinimumPickerYear + index },
+                        itemHeight = WheelPickerItemHeight,
+                        unfocusedCount = WheelPickerUnfocusedCount,
+                    ) { index ->
+                        Text(
+                            text = "${MinimumPickerYear + index} 年",
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+
+                    FVerticalWheelPicker(
+                        modifier = Modifier.weight(1f),
+                        count = MonthsPerYear,
+                        state = monthPickerState,
+                        key = { index -> index + 1 },
+                        itemHeight = WheelPickerItemHeight,
+                        unfocusedCount = WheelPickerUnfocusedCount,
+                    ) { index ->
+                        Text(
+                            text = "${index + 1} 月",
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    TextButton(onClick = onDismissRequest) {
+                        Text("取消")
+                    }
+                    TextButton(
+                        onClick = {
+                            val year = yearPickerState.currentIndexSnapshot
+                                .takeIf { it in 0 until YearPickerItemCount }
+                                ?.let { MinimumPickerYear + it }
+                                ?: selectedYear
+                            val month = monthPickerState.currentIndexSnapshot
+                                .takeIf { it in 0 until MonthsPerYear }
+                                ?.let { it + 1 }
+                                ?: selectedMonth
+                            onMonthSelected(YearMonth.of(year, month))
+                        },
+                    ) {
+                        Text("确定")
+                    }
+                }
+            }
         }
     }
 }
@@ -270,6 +431,14 @@ private val mondayFirstWeekdayLabels = listOf("一", "二", "三", "四", "五",
 private val monthOffsetOrigin: YearMonth = YearMonth.of(1970, 1)
 private const val DaysPerWeek = 7
 private const val CalendarRowCount = 6
+private const val MinimumPickerYear = 1970
+private const val MaximumPickerYear = 4000
+private const val YearPickerItemCount = MaximumPickerYear - MinimumPickerYear + 1
+private const val MonthsPerYear = 12
+private const val WheelPickerUnfocusedCount = 2
+private val WheelPickerItemHeight = 40.dp
+private val YearMonthPickerHeight =
+    WheelPickerItemHeight * (WheelPickerUnfocusedCount * 2 + 1)
 
 @Preview(showBackground = true)
 @Composable

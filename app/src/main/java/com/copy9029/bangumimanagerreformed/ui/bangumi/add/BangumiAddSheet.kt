@@ -54,7 +54,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.copy9029.bangumimanagerreformed.ui.MyDatePickerDialog
+import com.copy9029.bangumimanagerreformed.ui.components.MyDatePickerDialog
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import java.time.LocalDate
 
