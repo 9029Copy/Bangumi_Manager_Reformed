@@ -6,19 +6,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -29,9 +25,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -50,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,8 +74,6 @@ fun BangumiAddSheet(
         BangumiAddSheetContent(
             uiState = state,
             onSeasonChanged = viewModel::onSeasonChanged,
-            onFormattedTextChanged = viewModel::onFormattedTextChanged,
-            onParseClick = viewModel::onParseFormattedText,
             onTitleChanged = viewModel::onTitleChanged,
             onFirstBroadcastDateChanged = viewModel::onFirstBroadcastDateChanged,
             onBatchClick = onBatchClick,
@@ -103,8 +96,6 @@ fun BangumiAddSheet(
 fun BangumiAddSheetContent(
     uiState: BangumiAddSheetUiState,
     onSeasonChanged: (year: Int, month: Int) -> Unit,
-    onFormattedTextChanged: (String) -> Unit,
-    onParseClick: () -> Unit,
     onTitleChanged: (String) -> Unit,
     onFirstBroadcastDateChanged: (LocalDate) -> Unit,
     onBatchClick: () -> Unit,
@@ -148,68 +139,49 @@ fun BangumiAddSheetContent(
                 colorLong = uiState.themeColorLong
             )
 
-            // 格式化文本部分
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                OutlinedTextField(
-                    value = uiState.formattedText,
-                    onValueChange = onFormattedTextChanged,
-                    label = { Text("格式化文本") },
-                    modifier = Modifier.weight(1f),
-                    minLines = 2,
-                    maxLines = 7,
+                Text(
+                    text = "标题",
+                    modifier = Modifier.width(80.dp),
+                    fontSize = 16.sp,
                 )
 
-                TextButton(onClick = onParseClick) {
-                    Text(text = "解析")
-                }
-            }
-
-            // 分割线
-            HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(),
-                thickness = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant,
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-//                verticalAlignment = Alignment.Stretch,
-            ) {
-                // 项目标题部分
                 OutlinedTextField(
                     value = uiState.title,
                     onValueChange = onTitleChanged,
-                    label = { Text("标题") },
-                    textStyle = TextStyle.Default.copy(fontSize = 14.sp),
-                    modifier = Modifier.weight(1.8f),
-                    minLines = 1,
-                    maxLines = 6,
+                    modifier = Modifier.weight(1f),
+                    textStyle = TextStyle.Default.copy(fontSize = 16.sp),
+                    minLines = 2,
                     isError = uiState.titleError != null,
+                    supportingText = uiState.titleError?.let { error ->
+                        { Text(error) }
+                    },
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "开播日期",
+                    modifier = Modifier.width(80.dp),
+                    fontSize = 16.sp,
                 )
 
-                // 开播日期部分
                 FirstBroadcastDateField(
                     date = uiState.firstBroadcastDate,
                     onDateSelected = onFirstBroadcastDateChanged,
-                    modifier = Modifier.widthIn(min = 140.dp).weight(1f).fillMaxHeight(),
-                )
-            }
-            uiState.titleError?.let { error ->
-                Text(
-                    text = error,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(1f),
                 )
             }
 
-
-
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -308,11 +280,13 @@ fun FirstBroadcastDateField(
     ) {
         OutlinedTextField(
             value = date.toString(),
-            textStyle = TextStyle.Default.copy(fontSize = 12.sp),
+            textStyle = TextStyle.Default.copy(
+                fontSize = 16.sp,
+                textAlign = TextAlign.Center
+            ),
             onValueChange = {},
-            label = { Text("开播日期") },
             readOnly = true,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxWidth(),
             singleLine = true,
 
         )
@@ -412,15 +386,12 @@ private fun PreviewHere() {
             uiState = BangumiAddSheetUiState(
                 seasonYear = 2026,
                 seasonMonth = 1,
-                formattedText = "踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩\n有有有有有有有有有",
                 title = "踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩踩",
                 firstBroadcastDate = LocalDate.of(2026, 7, 19),
                 startYear = 2021,
                 endYear = 2028,
             ),
             onSeasonChanged = { _, _ -> },
-            onFormattedTextChanged = {},
-            onParseClick = {},
             onTitleChanged = {},
             onFirstBroadcastDateChanged = {},
             onBatchClick = {},
