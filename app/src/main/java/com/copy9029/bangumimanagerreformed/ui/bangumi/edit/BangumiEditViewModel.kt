@@ -3,7 +3,7 @@ package com.copy9029.bangumimanagerreformed.ui.bangumi.edit
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.copy9029.bangumimanagerreformed.Routes
+import com.copy9029.bangumimanagerreformed.ui.navigation.Routes
 import com.copy9029.bangumimanagerreformed.data.Bangumi
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
 import com.copy9029.bangumimanagerreformed.data.BangumiSchedule

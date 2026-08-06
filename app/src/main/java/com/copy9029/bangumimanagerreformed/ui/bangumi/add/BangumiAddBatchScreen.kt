@@ -9,7 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -85,12 +85,12 @@ fun BangumiAddBatchScreenContent(
                 title = { Text("批量添加") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.Filled.Close, contentDescription = "返回")
                     }
                 },
                 actions = {
                     TextButton(onClick = onSubmitAllClick) {
-                        Text("提交全部")
+                        Text("提交")
                     }
                 },
             )

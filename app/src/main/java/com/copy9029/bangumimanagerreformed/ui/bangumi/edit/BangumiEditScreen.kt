@@ -14,10 +14,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -112,9 +115,20 @@ private fun BangumiEditLoadingContent(
         topBar = {
             TopAppBar(
                 title = { Text("编辑项目") },
+                navigationIcon = {
+                    IconButton(onClick = onCancel) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "返回",
+                        )
+                    }
+                },
                 actions = {
-                    TextButton(onClick = onCancel) {
-                        Text("取消")
+                    TextButton(
+                        onClick = {},
+                        enabled = false,
+                    ) {
+                        Text("提交")
                     }
                 },
             )
@@ -160,9 +174,20 @@ fun BangumiEditContent(
         topBar = {
             TopAppBar(
                 title = { Text("编辑项目") },
+                navigationIcon = {
+                    IconButton(onClick = onCancel) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "返回",
+                        )
+                    }
+                },
                 actions = {
-                    TextButton(onClick = onCancel) {
-                        Text("取消")
+                    TextButton(
+                        onClick = onSubmit,
+                        enabled = !uiState.isSubmitting,
+                    ) {
+                        Text("提交")
                     }
                 },
             )
@@ -387,14 +412,9 @@ fun BangumiEditContent(
             }
 
             item {
-                Button(
-                    onClick = onSubmit,
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !uiState.isSubmitting,
-                ) {
-                    Text(if (uiState.isSubmitting) "提交中" else "提交")
-                }
+                Spacer(modifier = Modifier.height(40.dp))
             }
+
         }
     }
 }
