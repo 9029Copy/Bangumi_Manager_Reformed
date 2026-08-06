@@ -203,7 +203,7 @@ private fun CalendarScreenContent(
                     TextButton(
                         onClick = {
                             coroutineScope.launch {
-                                listState.animateScrollToItem(
+                                listState.scrollToItem(
                                     index = (uiState.todayWeekIndex() - uiState.weeksPrefix)
                                         .coerceAtLeast(0),
                                 )
@@ -820,6 +820,7 @@ private fun CalendarBangumiTag(
             fontSize = 8.sp,
             lineHeight = 16.sp,
             maxLines = 1,
+            softWrap = false,
             overflow = TextOverflow.Clip,
             textAlign = TextAlign.Center,
         )
