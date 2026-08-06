@@ -5,11 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -50,13 +52,27 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun BangumiManagerReformedApp() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    val isTopLevelDestination = BottomDestination.entries.any { destination ->
+        currentDestination?.hierarchy?.any { it.route == destination.route } == true
+    }
+    val defaultNavigationSuiteType =
+        NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(
+            currentWindowAdaptiveInfo()
+        )
 
     NavigationSuiteScaffold(
+        modifier = Modifier.fillMaxSize(),
+        layoutType = if (isTopLevelDestination) {
+            defaultNavigationSuiteType
+        } else {
+            NavigationSuiteType.None
+        },
         navigationSuiteItems = {
             BottomDestination.entries.forEach { dest ->
                 item(
@@ -84,77 +100,75 @@ fun BangumiManagerReformedApp() {
             }
         }
     ) {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            NavHost(
-                navController = navController,
-                startDestination = BottomDestination.CALENDAR.route, // 初始页面
-                modifier = Modifier.padding(innerPadding)
-            ) {
-                composable(BottomDestination.CALENDAR.route) {
-                    val calendarViewModel: CalendarViewModel = hiltViewModel()
-                    val addSheetViewModel: AddSheetViewModel = hiltViewModel()
-                    CalendarScreen(
-                        calendarViewModel = calendarViewModel,
-                        addSheetViewModel = addSheetViewModel,
-                        onEditClick = { bangumiId ->
-                            navController.navigate(Routes.bangumiEdit(bangumiId))
-                        },
-                        onBatchClick = {
-                            navController.navigate(Routes.BANGUMI_ADD_BATCH)
-                        },
-                        onSettingsClick = {
-                            navController.navigate(Routes.CALENDAR_SETTINGS)
-                        },
-                    )
-                }
-                composable(BottomDestination.INDEX.route) {
-                    val indexViewModel: IndexViewModel = hiltViewModel()
-                    val addSheetViewModel: AddSheetViewModel = hiltViewModel()
-                    IndexScreen(
-                        indexViewModel = indexViewModel,
-                        addSheetViewModel = addSheetViewModel,
-                        onEditClick = { bangumiId ->
-                            navController.navigate(Routes.bangumiEdit(bangumiId))
-                        },
-                        onBatchClick = {
-                            navController.navigate(Routes.BANGUMI_ADD_BATCH)
-                        }
-                    )
-                }
-                composable(BottomDestination.PROFILE.route) {
+        NavHost(
+            navController = navController,
+            startDestination = BottomDestination.CALENDAR.route, // 初始页面
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            composable(BottomDestination.CALENDAR.route) {
+                val calendarViewModel: CalendarViewModel = hiltViewModel()
+                val addSheetViewModel: AddSheetViewModel = hiltViewModel()
+                CalendarScreen(
+                    calendarViewModel = calendarViewModel,
+                    addSheetViewModel = addSheetViewModel,
+                    onEditClick = { bangumiId ->
+                        navController.navigate(Routes.bangumiEdit(bangumiId))
+                    },
+                    onBatchClick = {
+                        navController.navigate(Routes.BANGUMI_ADD_BATCH)
+                    },
+                    onSettingsClick = {
+                        navController.navigate(Routes.CALENDAR_SETTINGS)
+                    },
+                )
+            }
+            composable(BottomDestination.INDEX.route) {
+                val indexViewModel: IndexViewModel = hiltViewModel()
+                val addSheetViewModel: AddSheetViewModel = hiltViewModel()
+                IndexScreen(
+                    indexViewModel = indexViewModel,
+                    addSheetViewModel = addSheetViewModel,
+                    onEditClick = { bangumiId ->
+                        navController.navigate(Routes.bangumiEdit(bangumiId))
+                    },
+                    onBatchClick = {
+                        navController.navigate(Routes.BANGUMI_ADD_BATCH)
+                    }
+                )
+            }
+            composable(BottomDestination.PROFILE.route) {
 //                    ProfileScreen()
-                }
+            }
 
-                composable(Routes.BANGUMI_ADD_BATCH) {
-                    val addBatchViewModel: AddBatchViewModel = hiltViewModel()
-                    BangumiAddBatchScreen(
-                        viewModel = addBatchViewModel,
-                        onBack = navController::navigateUp,
-                    )
-                }
+            composable(Routes.BANGUMI_ADD_BATCH) {
+                val addBatchViewModel: AddBatchViewModel = hiltViewModel()
+                BangumiAddBatchScreen(
+                    viewModel = addBatchViewModel,
+                    onBack = navController::navigateUp,
+                )
+            }
 
-                composable(Routes.CALENDAR_SETTINGS) {
-                    val settingsViewModel: CalendarSettingsViewModel = hiltViewModel()
-                    CalendarSettingsScreen(
-                        viewModel = settingsViewModel,
-                        onBack = navController::navigateUp,
-                    )
-                }
+            composable(Routes.CALENDAR_SETTINGS) {
+                val settingsViewModel: CalendarSettingsViewModel = hiltViewModel()
+                CalendarSettingsScreen(
+                    viewModel = settingsViewModel,
+                    onBack = navController::navigateUp,
+                )
+            }
 
-                composable(
-                    route = Routes.BANGUMI_EDIT,
-                    arguments = listOf(
-                        navArgument(Routes.BANGUMI_ID_ARGUMENT) {
-                            type = NavType.IntType
-                        }
-                    ),
-                ) {
-                    val editViewModel: BangumiEditViewModel = hiltViewModel()
-                    BangumiEditScreen(
-                        viewModel = editViewModel,
-                        onBack = navController::navigateUp,
-                    )
-                }
+            composable(
+                route = Routes.BANGUMI_EDIT,
+                arguments = listOf(
+                    navArgument(Routes.BANGUMI_ID_ARGUMENT) {
+                        type = NavType.IntType
+                    }
+                ),
+            ) {
+                val editViewModel: BangumiEditViewModel = hiltViewModel()
+                BangumiEditScreen(
+                    viewModel = editViewModel,
+                    onBack = navController::navigateUp,
+                )
             }
         }
     }
