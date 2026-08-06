@@ -6,17 +6,12 @@ import androidx.room.PrimaryKey
 import java.time.LocalDate
 
 val themeColorByMonth = mapOf(
-    1  to 0xFF598CD6L,
-    4  to 0xFFA188D8L,
-    7  to 0xFF8FCF69L,
-    10 to 0xFFF39252L,
+    1  to 0xFF598CD6L,  // blue
+    4  to 0xFFA188D8L,  // purple
+    7  to 0xFF82C956L,  // green
+    10 to 0xFFF39252L,  // orange
 )
-const val INACTIVE_COLOR_LONG = 0xFFADADADL
-
-// #FF598CD6   blue
-// #FFA188D8   purple
-// #FF8FCF69   green
-// #FFF39252   orange
+const val INACTIVE_COLOR_LONG = 0xFFADADADL     // grey
 
 // #FFC0392B   red
 

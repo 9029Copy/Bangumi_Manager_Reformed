@@ -317,7 +317,7 @@ private fun calcBangumisByDateMap(
         bangumi.bangumiId to bangumi.firstBroadcastDate
     }
     val itemComparator = compareBy<CalendarBangumiItemUiState> { item ->
-        if (item.isDone) 0 else 1
+        if (item.isDone) 1 else 0
     }.thenByDescending { item ->
         firstBroadcastDateByBangumiId.getValue(item.bangumiId)
     }
