@@ -754,7 +754,7 @@ private fun CalendarDateCell(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(2.dp),
+                .padding(1.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
@@ -798,7 +798,7 @@ private fun CalendarDateCell(
                                 .background(color = MaterialTheme.colorScheme.primary)
                         )
 
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
 
                         Text(
                             text = date.monthValue.toChineseMonthText(),
