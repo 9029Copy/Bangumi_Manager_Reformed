@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -63,6 +62,7 @@ import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheet
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import com.copy9029.bangumimanagerreformed.util.generateBangumiColorScheme
 import kotlinx.coroutines.launch
+import my.nanihadesuka.compose.LazyColumnScrollbar
 import java.time.LocalDate
 
 
@@ -272,41 +272,48 @@ private fun IndexScreenContent(
                 onOpenMoreFilters = onOpenMoreFilters,
             )
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+            LazyColumnScrollbar(
                 state = listState,
-                contentPadding = PaddingValues(1.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
             ) {
-                items(
-                    items = uiState.bangumiList,
-                    key = { it.bangumiIdInt }
-                ) { item ->
-                    IndexScreenItem(
-                        uiState = item,
-                        onClick = { onBangumiClick(item.bangumiIdInt) },
-                        onAdd1Click = { onAdd1BangumiClick(item.bangumiIdInt) },
-                        onEditClick = onEditClick,
-                        isMoreMenuExpanded = expandedMoreMenuBangumiId == item.bangumiIdInt,
-                        onMoreClick = {
-                            expandedMoreMenuBangumiId = item.bangumiIdInt
-                        },
-                        onDismissMoreMenu = {
-                            expandedMoreMenuBangumiId = null
-                        },
-                        onMinus1Click = {
-                            expandedMoreMenuBangumiId = null
-                            onMinus1BangumiClick(item.bangumiIdInt)
-                        },
-                        isActive = item.isActive,
-                        onSetActiveClick = {
-                            expandedMoreMenuBangumiId = null
-                            pendingSetActiveBangumiId = item
-                        },
-                        onDeleteClick = {
-                            expandedMoreMenuBangumiId = null
-                            pendingDeleteBangumiId = item
-                        },
-                    )
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = listState,
+                    contentPadding = PaddingValues(1.dp),
+                ) {
+                    items(
+                        items = uiState.bangumiList,
+                        key = { it.bangumiIdInt },
+                    ) { item ->
+                        IndexScreenItem(
+                            uiState = item,
+                            onClick = { onBangumiClick(item.bangumiIdInt) },
+                            onAdd1Click = { onAdd1BangumiClick(item.bangumiIdInt) },
+                            onEditClick = onEditClick,
+                            isMoreMenuExpanded = expandedMoreMenuBangumiId == item.bangumiIdInt,
+                            onMoreClick = {
+                                expandedMoreMenuBangumiId = item.bangumiIdInt
+                            },
+                            onDismissMoreMenu = {
+                                expandedMoreMenuBangumiId = null
+                            },
+                            onMinus1Click = {
+                                expandedMoreMenuBangumiId = null
+                                onMinus1BangumiClick(item.bangumiIdInt)
+                            },
+                            isActive = item.isActive,
+                            onSetActiveClick = {
+                                expandedMoreMenuBangumiId = null
+                                pendingSetActiveBangumiId = item
+                            },
+                            onDeleteClick = {
+                                expandedMoreMenuBangumiId = null
+                                pendingDeleteBangumiId = item
+                            },
+                        )
+                    }
                 }
             }
 

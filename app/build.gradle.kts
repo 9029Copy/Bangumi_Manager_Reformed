@@ -80,7 +80,10 @@ dependencies {
 
     implementation("androidx.datastore:datastore-preferences:1.2.1")
 
+
     implementation("com.github.skydoves:colorpicker-compose:1.1.2")
+
+    implementation("com.github.nanihadesuka:LazyColumnScrollbar:2.2.0")
 
 }
 

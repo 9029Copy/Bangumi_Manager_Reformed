@@ -16,9 +16,13 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven("https://jitpack.io") {
+            content {
+                includeGroup("com.github.nanihadesuka")
+            }
+        }
     }
 }
 
 rootProject.name = "Bangumi Manager Reformed"
 include(":app")
- 
