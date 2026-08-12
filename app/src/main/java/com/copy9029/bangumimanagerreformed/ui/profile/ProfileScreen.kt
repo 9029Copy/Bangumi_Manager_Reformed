@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,15 +18,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.AccountBox
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -58,6 +61,8 @@ fun ProfileScreen(
         uiState = uiState,
         onTopActionClick = viewModel::onTopActionClick,
         onThemeModeClick = viewModel::onThemeModeClick,
+        onThemeModeDialogDismiss = viewModel::onThemeModeDialogDismiss,
+        onThemeModeSelected = viewModel::onThemeModeSelected,
         onDefault01ColorClick = viewModel::onDefault01ColorClick,
         onDefault04ColorClick = viewModel::onDefault04ColorClick,
         onDefault07ColorClick = viewModel::onDefault07ColorClick,
@@ -72,6 +77,8 @@ private fun ProfileScreenContent(
     uiState: ProfileUiState,
     onTopActionClick: () -> Unit,
     onThemeModeClick: () -> Unit,
+    onThemeModeDialogDismiss: () -> Unit,
+    onThemeModeSelected: (AppThemeMode) -> Unit,
     onDefault01ColorClick: () -> Unit,
     onDefault04ColorClick: () -> Unit,
     onDefault07ColorClick: () -> Unit,
@@ -180,6 +187,57 @@ private fun ProfileScreenContent(
             }
         }
     }
+
+    if (uiState.isThemeModeDialogVisible) {
+        ThemeModeDialog(
+            selectedMode = uiState.appThemeMode,
+            onModeSelected = onThemeModeSelected,
+            onDismissRequest = onThemeModeDialogDismiss,
+        )
+    }
+}
+
+@Composable
+private fun ThemeModeDialog(
+    selectedMode: AppThemeMode,
+    onModeSelected: (AppThemeMode) -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("外观模式") },
+        text = {
+            Column(
+//                modifier = Modifier.,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                AppThemeMode.entries.forEach { mode ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onModeSelected(mode) },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        RadioButton(
+                            selected = mode == selectedMode,
+                            onClick = null,
+                        )
+                        Text(
+                            text = mode.displayText,
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text("取消")
+            }
+        },
+    )
 }
 
 @Composable
@@ -284,7 +342,7 @@ private val AppThemeMode.displayText: String
     get() = when (this) {
         AppThemeMode.FOLLOW_SYSTEM -> "跟随系统"
         AppThemeMode.LIGHT -> "浅色"
-        AppThemeMode.DARK -> "深色"
+        AppThemeMode.DARK -> "深色（待完善）"
     }
 
 @Suppress("DEPRECATION")
@@ -305,9 +363,12 @@ private fun ProfileScreenPreview() {
                 default04ColorLong = SettingsRepository.DEFAULT_04_COLOR_LONG,
                 default07ColorLong = SettingsRepository.DEFAULT_07_COLOR_LONG,
                 default10ColorLong = SettingsRepository.DEFAULT_10_COLOR_LONG,
+                isThemeModeDialogVisible = true,
             ),
             onTopActionClick = {},
             onThemeModeClick = {},
+            onThemeModeDialogDismiss = {},
+            onThemeModeSelected = {},
             onDefault01ColorClick = {},
             onDefault04ColorClick = {},
             onDefault07ColorClick = {},

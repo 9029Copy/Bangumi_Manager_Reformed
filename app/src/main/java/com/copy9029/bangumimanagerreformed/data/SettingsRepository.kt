@@ -27,9 +27,9 @@ data class CalendarSettings(
 )
 
 enum class AppThemeMode(val storedValue: String) {
-    FOLLOW_SYSTEM("follow_system"),
     LIGHT("light"),
-    DARK("dark");
+    DARK("dark"),
+    FOLLOW_SYSTEM("follow_system");
 
     companion object {
         fun fromStoredValue(value: String): AppThemeMode? {

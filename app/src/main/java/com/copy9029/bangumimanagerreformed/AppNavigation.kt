@@ -32,6 +32,8 @@ import com.copy9029.bangumimanagerreformed.ui.calendar.CalendarScreen
 import com.copy9029.bangumimanagerreformed.ui.calendar.CalendarViewModel
 import com.copy9029.bangumimanagerreformed.ui.index.IndexScreen
 import com.copy9029.bangumimanagerreformed.ui.index.IndexViewModel
+import com.copy9029.bangumimanagerreformed.ui.profile.ProfileScreen
+import com.copy9029.bangumimanagerreformed.ui.profile.ProfileViewModel
 import com.copy9029.bangumimanagerreformed.ui.settings.CalendarSettingsScreen
 import com.copy9029.bangumimanagerreformed.ui.settings.CalendarSettingsViewModel
 
@@ -143,7 +145,10 @@ fun AppNavigation() {
                 popEnterTransition = { EnterTransition.None },
                 popExitTransition = { ExitTransition.None },
             ) {
-//                ProfileScreen()
+                val profileViewModel: ProfileViewModel = hiltViewModel()
+                ProfileScreen(
+                    viewModel = profileViewModel,
+                )
             }
 
             composable(
