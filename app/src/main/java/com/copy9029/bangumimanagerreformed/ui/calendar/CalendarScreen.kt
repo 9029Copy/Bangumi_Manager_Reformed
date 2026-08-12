@@ -76,7 +76,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.INACTIVE_COLOR_LONG
-import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
+import com.copy9029.bangumimanagerreformed.data.SettingsRepository
 import com.copy9029.bangumimanagerreformed.ui.components.MyDatePickerDialog
 import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialog
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
@@ -931,14 +931,24 @@ private fun PreviewCalendarScreenContent() {
                             bangumiId = index + 1,
                             episodeId = index + 1,
                             title = "示例示例示例示例示例示例示例示例示例示例示例示例示例示例示例",
-                            themeColorLong = themeColorByMonth[listOf(1,4,7,10)[index.rem(4)]]!!,
+                            themeColorLong = listOf(
+                                SettingsRepository.DEFAULT_01_COLOR_LONG,
+                                SettingsRepository.DEFAULT_04_COLOR_LONG,
+                                SettingsRepository.DEFAULT_07_COLOR_LONG,
+                                SettingsRepository.DEFAULT_10_COLOR_LONG,
+                            )[index.rem(4)],
                             isDone = false,
                         ),
                         CalendarBangumiItemUiState(
                             bangumiId = index + 114,
                             episodeId = index + 1,
                             title = "示例示例示例示例示例示例示例示例示例示例示例示例示例示例示例",
-                            themeColorLong = themeColorByMonth[listOf(1,4,7,10)[index.rem(4)]]!!,
+                            themeColorLong = listOf(
+                                SettingsRepository.DEFAULT_01_COLOR_LONG,
+                                SettingsRepository.DEFAULT_04_COLOR_LONG,
+                                SettingsRepository.DEFAULT_07_COLOR_LONG,
+                                SettingsRepository.DEFAULT_10_COLOR_LONG,
+                            )[index.rem(4)],
                             isDone = true,
                         ),
                     )

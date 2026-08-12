@@ -1,16 +1,20 @@
 package com.copy9029.bangumimanagerreformed.ui.bangumi.add
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.copy9029.bangumimanagerreformed.data.BangumiAddInfo
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
-import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
+import com.copy9029.bangumimanagerreformed.data.GlobalSettings
+import com.copy9029.bangumimanagerreformed.data.SettingsRepository
 import com.copy9029.bangumimanagerreformed.util.calcNearestSeason
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -23,15 +27,12 @@ data class BangumiAddSheetUiState(
     val endYear: Int,
     val titleError: String? = null,
     val isSubmitting: Boolean = false,
+    val themeColorLong: Long = 0xFFFFFFFFL,
 ) {
-    val themeColorLong: Long
-        get() = themeColorByMonth[seasonMonth] ?: 0xFFFFFFFFL
-
     fun toAddInfo(): BangumiAddInfo {
         return BangumiAddInfo(
             seasonYear = seasonYear,
             seasonMonth = seasonMonth,
-            themeColorLong = themeColorLong,
             title = title.trim(),
             firstBroadcastDate = firstBroadcastDate,
         )
@@ -43,9 +44,24 @@ data class BangumiAddSheetUiState(
 @HiltViewModel
 class AddSheetViewModel @Inject constructor(
     private val repository: BangumiRepository,
+    private val settingsRepository: SettingsRepository,
 ): ViewModel() {
+    private var globalSettings = GlobalSettings()
     private val _uiState = MutableStateFlow<BangumiAddSheetUiState?>(null)
     val uiState: StateFlow<BangumiAddSheetUiState?> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            settingsRepository.globalSettings.collect { settings ->
+                globalSettings = settings
+                _uiState.update { state ->
+                    state?.copy(
+                        themeColorLong = settings.colorForSeasonMonth(state.seasonMonth),
+                    )
+                }
+            }
+        }
+    }
 
     fun initializeForOpen(defaultFirstBroadcastDate: LocalDate) {
         val existingState = _uiState.value
@@ -64,6 +80,7 @@ class AddSheetViewModel @Inject constructor(
             firstBroadcastDate = defaultFirstBroadcastDate,
             startYear = defaultSeason.year - 5,
             endYear = defaultSeason.year + 2,
+            themeColorLong = globalSettings.colorForSeasonMonth(defaultSeason.monthValue),
         )
     }
 
@@ -72,6 +89,7 @@ class AddSheetViewModel @Inject constructor(
             state?.copy(
                 seasonYear = year,
                 seasonMonth = month,
+                themeColorLong = globalSettings.colorForSeasonMonth(month),
             )
         }
     }

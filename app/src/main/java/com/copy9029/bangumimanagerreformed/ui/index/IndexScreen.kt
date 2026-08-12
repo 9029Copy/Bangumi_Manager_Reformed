@@ -53,7 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.INACTIVE_COLOR_LONG
-import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
+import com.copy9029.bangumimanagerreformed.data.SettingsRepository
 import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialog
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheet
@@ -553,7 +553,12 @@ private fun PreviewHere() {
                     BangumiIndexItemUiState(
                         titleStr = "Bangumi Title ${index + 1}".repeat(index + 1),
                         watchProgressStr = "周一 丨 已看完第 10 话 丨 更新到第 12 话",
-                        themeColorLong = themeColorByMonth[listOf(1,4,7,10)[index.rem(4)]]!!,
+                        themeColorLong = listOf(
+                            SettingsRepository.DEFAULT_01_COLOR_LONG,
+                            SettingsRepository.DEFAULT_04_COLOR_LONG,
+                            SettingsRepository.DEFAULT_07_COLOR_LONG,
+                            SettingsRepository.DEFAULT_10_COLOR_LONG,
+                        )[index.rem(4)],
                         bangumiIdInt = index + 1,
                         isActive = true,
                     )

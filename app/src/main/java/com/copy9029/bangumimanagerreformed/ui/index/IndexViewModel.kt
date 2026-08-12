@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.copy9029.bangumimanagerreformed.data.Bangumi
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
 import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
+import com.copy9029.bangumimanagerreformed.data.GlobalSettings
+import com.copy9029.bangumimanagerreformed.data.SettingsRepository
 import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialogUiState
 import com.copy9029.bangumimanagerreformed.ui.bangumi.toDetailDialogUiState
 import com.copy9029.bangumimanagerreformed.util.buildBangumiWatchProgressText
@@ -48,22 +50,43 @@ data class BangumiIndexItemUiState(
     val isActive: Boolean,
 )
 
+private data class IndexBangumiData(
+    val bangumis: List<Bangumi>,
+    val schedules: List<BangumiSchedule>,
+    val globalSettings: GlobalSettings,
+)
+
 @HiltViewModel
 class IndexViewModel @Inject constructor(
     private val repository: BangumiRepository,
+    private val settingsRepository: SettingsRepository,
 ): ViewModel() {
 
     private val _sortAndFilterStatus = MutableStateFlow(FocusingUpdatingStatus)
     private val _isFilterSheetVisible = MutableStateFlow(false)
     private val _selectedBangumiId = MutableStateFlow<Int?>(null)
 
-    val uiState: StateFlow<IndexUiState> = combine(
+    private val indexBangumiDataFlow = combine(
         repository.getAllBangumis(),
         repository.getAllSchedules(),
+        settingsRepository.globalSettings,
+    ) { bangumis, schedules, globalSettings ->
+        IndexBangumiData(
+            bangumis = bangumis,
+            schedules = schedules,
+            globalSettings = globalSettings,
+        )
+    }
+
+    val uiState: StateFlow<IndexUiState> = combine(
+        indexBangumiDataFlow,
         _sortAndFilterStatus,
         _isFilterSheetVisible,
         _selectedBangumiId,
-    ) { bangumis, schedules, sortAndFilterStatus, filterSheetVisible, selectedId ->
+    ) { bangumiData, sortAndFilterStatus, filterSheetVisible, selectedId ->
+        val bangumis = bangumiData.bangumis
+        val schedules = bangumiData.schedules
+        val globalSettings = bangumiData.globalSettings
 
         val schedulesByBangumiId = schedules.groupBy { it.bangumiId }
 
@@ -74,6 +97,7 @@ class IndexViewModel @Inject constructor(
         val itemUiStates = filteredBangumis.map { bangumi ->
             bangumi.toIndexItemUiState(
                 schedules = schedulesByBangumiId[bangumi.bangumiId].orEmpty(),
+                themeColorLong = globalSettings.colorForSeasonMonth(bangumi.seasonMonth),
             )
         }
 
@@ -90,6 +114,9 @@ class IndexViewModel @Inject constructor(
             filterEndYear = bangumis.maxOfOrNull { it.seasonYear } ?: 2027,
             bangumiDetailSelected = selectedBangumi?.toDetailDialogUiState(
                 schedules = schedulesByBangumiId[selectedBangumi.bangumiId].orEmpty(),
+                themeColorLong = globalSettings.colorForSeasonMonth(
+                    selectedBangumi.seasonMonth
+                ),
             ),
             isLoading = false,
         )
@@ -258,6 +285,7 @@ private fun List<Bangumi>.sortByStatus(
 
 private fun Bangumi.toIndexItemUiState(
     schedules: List<BangumiSchedule>,
+    themeColorLong: Long,
 ): BangumiIndexItemUiState {
     val today = LocalDate.now()
     val latestAiredEpisode = latestAiredEpisode(

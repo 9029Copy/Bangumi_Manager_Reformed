@@ -121,10 +121,6 @@ class BangumiRepository @Inject constructor(
         }
     }
 
-//    fun getAllThemeColors(): Flow<List<ThemeColor>> {  // TODO: themeColor
-//        return bangumiDao.getAllThemeColors()
-//    }
-
     suspend fun addNewBangumi(info: BangumiAddInfo) {
         database.withTransaction {
             addNewBangumiInTransaction(info)
@@ -145,7 +141,6 @@ class BangumiRepository @Inject constructor(
             seasonYear = info.seasonYear,
             seasonMonth = info.seasonMonth,
             myScore = null,
-            themeColorLong = info.themeColorLong,
             firstBroadcastDate = info.firstBroadcastDate,
             totalEpisodes = null,
             latestWatchedEpisode = 0,
@@ -242,7 +237,6 @@ private fun Bangumi.hasSameBasicInfoAs(other: Bangumi): Boolean {
             seasonYear == other.seasonYear &&
             seasonMonth == other.seasonMonth &&
             myScore == other.myScore &&
-            themeColorLong == other.themeColorLong &&
             firstBroadcastDate == other.firstBroadcastDate &&
             totalEpisodes == other.totalEpisodes &&
             isActive == other.isActive

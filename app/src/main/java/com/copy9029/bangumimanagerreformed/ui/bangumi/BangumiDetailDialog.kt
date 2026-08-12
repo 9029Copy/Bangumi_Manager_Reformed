@@ -57,6 +57,7 @@ data class BangumiDetailDialogUiState(
 
 fun Bangumi.toDetailDialogUiState(
     schedules: List<BangumiSchedule>,
+    themeColorLong: Long,
     today: LocalDate = LocalDate.now(),
 ): BangumiDetailDialogUiState {
     val latestAiredEpisode = latestAiredEpisode(

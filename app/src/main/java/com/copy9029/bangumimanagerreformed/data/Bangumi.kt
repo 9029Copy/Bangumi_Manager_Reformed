@@ -5,20 +5,12 @@ import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import java.time.LocalDate
 
-val themeColorByMonth = mapOf(
-    1  to 0xFF598CD6L,  // blue
-    4  to 0xFFA188D8L,  // purple
-    7  to 0xFF82C956L,  // green
-    10 to 0xFFF39252L,  // orange
-)
 const val INACTIVE_COLOR_LONG = 0xFFADADADL     // grey
 
-// #FFC0392B   red
 
 data class BangumiAddInfo(
     val seasonYear: Int,
     val seasonMonth: Int,
-    val themeColorLong: Long,
     val title: String,
     val firstBroadcastDate: LocalDate,
 )
@@ -32,7 +24,6 @@ data class Bangumi(
     val seasonYear: Int,        // 基本信息
     val seasonMonth: Int,       // 基本信息
     val myScore: Int?,          // 基本信息：0-100, divided by 10 when displayed
-    val themeColorLong: Long,   // 基本信息
 
     val firstBroadcastDate: LocalDate,      // 日期信息
     val totalEpisodes: Int? = null,         // 基本信息
@@ -67,12 +58,3 @@ data class BangumiSchedule(
     val broadcastDate: LocalDate,
 
 )
-
-
-//@Entity(tableName = "theme_color_items")  // TODO: themeColor
-//data class ThemeColor(
-//    @PrimaryKey(autoGenerate = false)
-//    val seasonMonth: Int = 99,  // 1, 4, 7, 10  /  99(unspecified)
-//
-//    val themeColorLong: Long,
-//)

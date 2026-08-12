@@ -32,9 +32,6 @@ interface BangumiDao {
     """)
     suspend fun getSchedulesByBangumiIdOnce(bangumiId: Int): List<BangumiSchedule>
 
-//    @Query("SELECT * FROM theme_color_items ORDER BY seasonMonth ASC")  // TODO: themeColor
-//    fun getAllThemeColors(): Flow<List<ThemeColor>>
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertBangumi(bangumi: Bangumi): Long
 

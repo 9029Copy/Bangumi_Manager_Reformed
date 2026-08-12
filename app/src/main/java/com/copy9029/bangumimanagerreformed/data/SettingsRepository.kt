@@ -52,6 +52,10 @@ data class GlobalSettings(
             7  to default07ColorLong,
             10 to default10ColorLong,
         )
+
+    fun colorForSeasonMonth(seasonMonth: Int): Long {
+        return defaultColorBySeasonMonth[seasonMonth] ?: 0xFFFFFFFFL
+    }
 }
 
 @Singleton

@@ -6,6 +6,7 @@ import com.copy9029.bangumimanagerreformed.data.Bangumi
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
 import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
 import com.copy9029.bangumimanagerreformed.data.CalendarInactiveVisibilityDefaults
+import com.copy9029.bangumimanagerreformed.data.GlobalSettings
 import com.copy9029.bangumimanagerreformed.data.SettingsRepository
 import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialogUiState
 import com.copy9029.bangumimanagerreformed.ui.bangumi.toDetailDialogUiState
@@ -41,6 +42,7 @@ private data class CalendarDateMapData(
     val weeksPrefix: Int,
     val initialWeekIndex: Int,
     val bangumisByDate: Map<LocalDate, List<CalendarBangumiItemUiState>>,
+    val globalSettings: GlobalSettings,
 )
 
 data class CalendarUiState(
@@ -83,7 +85,8 @@ class CalendarViewModel @Inject constructor(
         bangumiRepository.getAllBangumis().distinctUntilChanged(),
         bangumiRepository.getAllSchedules().distinctUntilChanged(),
         settingsRepository.calendarSettings.distinctUntilChanged(),
-    ) { bangumis, schedules, settings ->
+        settingsRepository.globalSettings.distinctUntilChanged(),
+    ) { bangumis, schedules, settings, globalSettings ->
         val weeksBeforeCurrent = settings.calendarWeeksBeforeCurrent
         val weeksAfterCurrent = settings.calendarWeeksAfterCurrent
         val weeksPrefix = settings.calendarWeeksPrefix
@@ -100,6 +103,7 @@ class CalendarViewModel @Inject constructor(
             calendarInactiveVisibility = settings.calendarInactiveVisibility,
             calendarFinishedEpisodeVisible = settings.calendarFinishedEpisodeVisible,
             calendarFinishedBangumiVisible = settings.calendarFinishedBangumiVisible,
+            colorBySeasonMonth = globalSettings.defaultColorBySeasonMonth,
         )
         val schedulesByBangumiId = schedules.groupBy { it.bangumiId }
 
@@ -111,6 +115,7 @@ class CalendarViewModel @Inject constructor(
             weeksPrefix = weeksPrefix,
             initialWeekIndex = initialWeekIndex,
             bangumisByDate = bangumisByDate,
+            globalSettings = globalSettings,
         )
     }.flowOn(Dispatchers.Default)
 
@@ -134,6 +139,9 @@ class CalendarViewModel @Inject constructor(
                 schedules = calendarData.schedulesByBangumiId[
                     selectedBangumi.bangumiId
                 ].orEmpty(),
+                themeColorLong = calendarData.globalSettings.colorForSeasonMonth(
+                    selectedBangumi.seasonMonth
+                ),
             ),
         )
     }.stateIn(
@@ -206,6 +214,7 @@ private fun calcBangumisByDateMap(
     calendarInactiveVisibility: Int,
     calendarFinishedEpisodeVisible: Boolean,
     calendarFinishedBangumiVisible: Boolean,
+    colorBySeasonMonth: Map<Int, Long>,
 ): Map<LocalDate, List<CalendarBangumiItemUiState>> {
     if (dayCount <= 0) return emptyMap()
 
@@ -297,7 +306,8 @@ private fun calcBangumisByDateMap(
                                 bangumiId = bangumi.bangumiId,
                                 episodeId = episodeId,
                                 title = bangumi.title,
-                                themeColorLong = bangumi.themeColorLong,
+                                themeColorLong = colorBySeasonMonth[bangumi.seasonMonth]
+                                    ?: 0xFFFFFFFFL,
                                 // 观看进度按“已经连续看完到第几集”解释。
                                 isDone = episodeId <= bangumi.latestWatchedEpisode,
                                 isActive = bangumi.isActive,

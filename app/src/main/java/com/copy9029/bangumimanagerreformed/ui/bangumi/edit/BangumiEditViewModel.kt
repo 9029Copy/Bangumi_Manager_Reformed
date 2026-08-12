@@ -7,13 +7,15 @@ import com.copy9029.bangumimanagerreformed.Routes
 import com.copy9029.bangumimanagerreformed.data.Bangumi
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
 import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
-import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
+import com.copy9029.bangumimanagerreformed.data.GlobalSettings
+import com.copy9029.bangumimanagerreformed.data.SettingsRepository
 import com.copy9029.bangumimanagerreformed.util.latestAiredEpisode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -64,18 +66,17 @@ data class BangumiEditUiState(
     val myScoreError: String? = null,
     val totalEpisodesError: String? = null,
     val latestWatchedEpisodeError: String? = null,
-    val isSubmitting: Boolean = false,
-) {
-    val themeColorLong: Long
-        get() = themeColorByMonth[seasonMonth] ?: 0xFFFFFFFFL
 
-}
+    val isSubmitting: Boolean = false,
+    val themeColorLong: Long = 0xFFFFFFFFL,
+)
 
 
 @HiltViewModel
 class BangumiEditViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: BangumiRepository,
+    private val settingsRepository: SettingsRepository,
 ): ViewModel() {
     companion object {
         const val SUBMIT_SUCCESS = "success"
@@ -89,10 +90,21 @@ class BangumiEditViewModel @Inject constructor(
     val uiState: StateFlow<BangumiEditUiState?> = _uiState.asStateFlow()
 
     private var storedBangumi: Bangumi? = null
+    private var globalSettings = GlobalSettings()
     private val submitMutex = Mutex()
     private var nextRuleRowId = 1L
 
     init {
+        viewModelScope.launch {
+            settingsRepository.globalSettings.collect { settings ->
+                globalSettings = settings
+                _uiState.update { state ->
+                    state?.copy(
+                        themeColorLong = settings.colorForSeasonMonth(state.seasonMonth),
+                    )
+                }
+            }
+        }
         viewModelScope.launch {
             val bangumi = repository.getBangumiById(bangumiId).first()
                 ?: return@launch
@@ -126,6 +138,7 @@ class BangumiEditViewModel @Inject constructor(
                     schedules = schedules,
                     today = today,
                 ),
+                themeColorLong = globalSettings.colorForSeasonMonth(bangumi.seasonMonth),
                 titleError = null,
                 myScoreError = null,
                 totalEpisodesError = null,
@@ -149,6 +162,7 @@ class BangumiEditViewModel @Inject constructor(
             it?.copy(
                 seasonYear = year,
                 seasonMonth = month,
+                themeColorLong = globalSettings.colorForSeasonMonth(month),
             )
         }
     }
@@ -445,7 +459,6 @@ class BangumiEditViewModel @Inject constructor(
                 ?.toBigDecimal()
                 ?.movePointRight(1)
                 ?.intValueExact(),
-            themeColorLong = state.themeColorLong,
             firstBroadcastDate = state.firstBroadcastDate,
             totalEpisodes = totalEpisodes,
             latestWatchedEpisode = requireNotNull(

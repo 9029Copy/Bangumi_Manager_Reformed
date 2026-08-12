@@ -1,17 +1,21 @@
 package com.copy9029.bangumimanagerreformed.ui.bangumi.add
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.copy9029.bangumimanagerreformed.data.BangumiAddInfo
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
-import com.copy9029.bangumimanagerreformed.data.themeColorByMonth
+import com.copy9029.bangumimanagerreformed.data.GlobalSettings
+import com.copy9029.bangumimanagerreformed.data.SettingsRepository
 import com.copy9029.bangumimanagerreformed.util.calcNearestSeason
 import com.copy9029.bangumimanagerreformed.util.parseMultipleFormattedText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -24,10 +28,8 @@ data class AddBatchUiState(
     val items: List<BatchAddItemUiState> = emptyList(),
     val pendingDeleteItemId: Long? = null,
     val isSubmitting: Boolean = false,
+    val themeColorLong: Long = 0xFFFFFFFFL,
 ) {
-    val themeColorLong: Long
-        get() = themeColorByMonth[seasonMonth] ?: 0xFFFFFFFFL
-
     val pendingDeleteItem: BatchAddItemUiState?
         get() = items.firstOrNull { it.id == pendingDeleteItemId }
 }
@@ -58,7 +60,9 @@ data class BatchParseResult(
 @HiltViewModel
 class AddBatchViewModel @Inject constructor(
     private val repository: BangumiRepository,
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
+    private var globalSettings = GlobalSettings()
     private var nextItemId = 1L
 
     private val defaultSeason = calcNearestSeason(LocalDate.now())
@@ -69,15 +73,30 @@ class AddBatchViewModel @Inject constructor(
             seasonMonth = defaultSeason.monthValue,
             startYear = defaultSeason.year - 5,
             endYear = defaultSeason.year + 2,
+            themeColorLong = globalSettings.colorForSeasonMonth(defaultSeason.monthValue),
         )
     )
     val uiState: StateFlow<AddBatchUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            settingsRepository.globalSettings.collect { settings ->
+                globalSettings = settings
+                _uiState.update { state ->
+                    state.copy(
+                        themeColorLong = settings.colorForSeasonMonth(state.seasonMonth),
+                    )
+                }
+            }
+        }
+    }
 
     fun onSeasonChanged(year: Int, month: Int) {
         _uiState.update {
             it.copy(
                 seasonYear = year,
                 seasonMonth = month,
+                themeColorLong = globalSettings.colorForSeasonMonth(month),
             )
         }
     }
@@ -200,7 +219,6 @@ class AddBatchViewModel @Inject constructor(
             BangumiAddInfo(
                 seasonYear = state.seasonYear,
                 seasonMonth = state.seasonMonth,
-                themeColorLong = state.themeColorLong,
                 title = item.title.trim(),
                 firstBroadcastDate = item.firstBroadcastDate,
             )
