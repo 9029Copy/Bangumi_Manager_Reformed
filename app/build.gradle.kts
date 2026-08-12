@@ -16,8 +16,8 @@ android {
         applicationId = "com.copy9029.bangumimanagerreformed"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.2.0-beta01"
+        versionCode = 4
+        versionName = "0.3.0-beta01"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
