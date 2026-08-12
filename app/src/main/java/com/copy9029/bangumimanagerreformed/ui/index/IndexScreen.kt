@@ -12,11 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -40,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -59,6 +62,7 @@ import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheet
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import com.copy9029.bangumimanagerreformed.util.generateBangumiColorScheme
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 
@@ -189,6 +193,14 @@ private fun IndexScreenContent(
     var pendingDeleteBangumiId by rememberSaveable {
         mutableStateOf<BangumiIndexItemUiState?>(null)
     }
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    fun scrollToTop() {
+        coroutineScope.launch {
+            listState.scrollToItem(0)
+        }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -205,6 +217,16 @@ private fun IndexScreenContent(
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
                 actions = {
+                    IconButton(
+                        onClick = ::scrollToTop,
+                        enabled = listState.canScrollBackward,
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.index_arrow_upward_24),
+                            contentDescription = "回到顶部",
+                            modifier = Modifier.size(30.dp),
+                        )
+                    }
                     IconButton(
                         onClick = onTopAddClick
                     ) {
@@ -235,14 +257,24 @@ private fun IndexScreenContent(
                 isFocusingUpdating = uiState.isFocusingUpdating,
                 selectedSortTag = uiState.sortAndFilterStatus.sortTag,
                 selectedSortOrder = uiState.sortAndFilterStatus.sortOrder,
-                onFocusingUpdatingChanged = onFocusingUpdatingChanged,
-                onSortTagSelected = onSortTagSelected,
-                onSortOrderSelected = onSortOrderSelected,
+                onFocusingUpdatingChanged = { checked ->
+                    onFocusingUpdatingChanged(checked)
+                    scrollToTop()
+                },
+                onSortTagSelected = { sortTag ->
+                    onSortTagSelected(sortTag)
+                    scrollToTop()
+                },
+                onSortOrderSelected = { sortOrder ->
+                    onSortOrderSelected(sortOrder)
+                    scrollToTop()
+                },
                 onOpenMoreFilters = onOpenMoreFilters,
             )
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
+                state = listState,
                 contentPadding = PaddingValues(1.dp)
             ) {
                 items(
@@ -282,7 +314,10 @@ private fun IndexScreenContent(
             if (uiState.isFilterSheetVisible) {
                 FilterBottomSheet(
                     status = uiState.sortAndFilterStatus,
-                    onStatusChange = onFilterStatusChanged,
+                    onStatusChange = { status ->
+                        onFilterStatusChanged(status)
+                        scrollToTop()
+                    },
                     onDismissRequest = onDismissFilterSheet,
                     startYear = uiState.filterStartYear,
                     endYear = uiState.filterEndYear,
