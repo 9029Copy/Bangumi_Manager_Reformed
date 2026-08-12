@@ -1,6 +1,7 @@
 package com.copy9029.bangumimanagerreformed.ui.profile
 
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,12 +34,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -48,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.copy9029.bangumimanagerreformed.data.AppThemeMode
 import com.copy9029.bangumimanagerreformed.data.SettingsRepository
+import com.copy9029.bangumimanagerreformed.ui.components.MyColorPickerDialog
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 
 @Composable
@@ -56,6 +60,13 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    LaunchedEffect(viewModel, context) {
+        viewModel.toastMessages.collect { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     ProfileScreenContent(
         uiState = uiState,
@@ -67,6 +78,8 @@ fun ProfileScreen(
         onDefault04ColorClick = viewModel::onDefault04ColorClick,
         onDefault07ColorClick = viewModel::onDefault07ColorClick,
         onDefault10ColorClick = viewModel::onDefault10ColorClick,
+        onDefaultColorDialogDismiss = viewModel::onDefaultColorDialogDismiss,
+        onDefaultColorSelected = viewModel::onDefaultColorSelected,
         modifier = modifier,
     )
 }
@@ -83,6 +96,8 @@ private fun ProfileScreenContent(
     onDefault04ColorClick: () -> Unit,
     onDefault07ColorClick: () -> Unit,
     onDefault10ColorClick: () -> Unit,
+    onDefaultColorDialogDismiss: () -> Unit,
+    onDefaultColorSelected: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -117,7 +132,7 @@ private fun ProfileScreenContent(
             }
             item {
                 HorizontalDivider(
-                    modifier = Modifier.padding(6.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                 )
             }
             item {
@@ -129,7 +144,7 @@ private fun ProfileScreenContent(
             }
             item {
                 HorizontalDivider(
-                    modifier = Modifier.padding(6.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                 )
             }
             item {
@@ -162,12 +177,7 @@ private fun ProfileScreenContent(
             }
             item {
                 HorizontalDivider(
-                    modifier = Modifier.padding(6.dp),
-                )
-            }
-            item {
-                Spacer(
-                    modifier = Modifier.height(10.dp),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                 )
             }
             item {
@@ -193,6 +203,19 @@ private fun ProfileScreenContent(
             selectedMode = uiState.appThemeMode,
             onModeSelected = onThemeModeSelected,
             onDismissRequest = onThemeModeDialogDismiss,
+        )
+    }
+
+    val colorPickerMonth = uiState.colorPickerMonth
+    val colorPickerInitialColorLong = uiState.colorPickerInitialColorLong
+    if (colorPickerMonth != null && colorPickerInitialColorLong != null) {
+        MyColorPickerDialog(
+            title = "${colorPickerMonth}月默认颜色",
+            initColor = Color(colorPickerInitialColorLong),
+            onDismissRequest = onDefaultColorDialogDismiss,
+            onPickedColor = { selectedColor ->
+                onDefaultColorSelected(selectedColor.toArgb().toUInt().toLong())
+            },
         )
     }
 }
@@ -241,7 +264,7 @@ private fun ThemeModeDialog(
 }
 
 @Composable
-private fun UserProfileSection(
+private fun UserProfileSection( // TODO
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -256,12 +279,6 @@ private fun UserProfileSection(
             contentDescription = null,
             modifier = Modifier.size(150.dp),
             tint = MaterialTheme.colorScheme.primary,
-        )
-        Text(
-            text = " ·  ·  ·  ·  ·  · ",
-            fontSize = 40.sp,
-            fontWeight = FontWeight.W900,
-            color = MaterialTheme.colorScheme.primary,
         )
     }
 }
@@ -288,7 +305,9 @@ private fun ProfileSettingItem(
                 SettingItemArrow()
             }
         },
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier
+            .padding(horizontal = 10.dp)
+            .clickable(onClick = onClick),
     )
 }
 
@@ -310,7 +329,9 @@ private fun ColorSettingItem(
                 SettingItemArrow()
             }
         },
-        modifier = modifier.clickable(onClick = onClick),
+        modifier = modifier
+            .padding(horizontal = 10.dp)
+            .clickable(onClick = onClick),
     )
 }
 
@@ -363,7 +384,9 @@ private fun ProfileScreenPreview() {
                 default04ColorLong = SettingsRepository.DEFAULT_04_COLOR_LONG,
                 default07ColorLong = SettingsRepository.DEFAULT_07_COLOR_LONG,
                 default10ColorLong = SettingsRepository.DEFAULT_10_COLOR_LONG,
-                isThemeModeDialogVisible = true,
+                isThemeModeDialogVisible = false,
+                colorPickerMonth = null,
+                colorPickerInitialColorLong = null,
             ),
             onTopActionClick = {},
             onThemeModeClick = {},
@@ -373,6 +396,8 @@ private fun ProfileScreenPreview() {
             onDefault04ColorClick = {},
             onDefault07ColorClick = {},
             onDefault10ColorClick = {},
+            onDefaultColorDialogDismiss = {},
+            onDefaultColorSelected = {},
         )
     }
 }

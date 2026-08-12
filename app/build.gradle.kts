@@ -80,6 +80,8 @@ dependencies {
 
     implementation("androidx.datastore:datastore-preferences:1.2.1")
 
+    implementation("com.github.skydoves:colorpicker-compose:1.1.2")
+
 }
 
 ksp {
