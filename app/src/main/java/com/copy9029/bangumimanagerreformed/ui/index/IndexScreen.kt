@@ -63,6 +63,8 @@ import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import com.copy9029.bangumimanagerreformed.util.generateBangumiColorScheme
 import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyColumnScrollbar
+import my.nanihadesuka.compose.ScrollbarLayoutSide
+import my.nanihadesuka.compose.ScrollbarSettings
 import java.time.LocalDate
 
 
@@ -277,6 +279,12 @@ private fun IndexScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
+                settings = ScrollbarSettings.Default.copy(
+                    thumbThickness = 4.dp,
+                    scrollbarPadding = 2.dp,
+                    thumbSelectedColor = MaterialTheme.colorScheme.onSurface,
+                    thumbUnselectedColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                ),
             ) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),

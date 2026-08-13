@@ -43,11 +43,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.copy9029.bangumimanagerreformed.data.AppThemeMode
 import com.copy9029.bangumimanagerreformed.data.SettingsRepository
@@ -80,6 +78,7 @@ fun ProfileScreen(
         onDefault10ColorClick = viewModel::onDefault10ColorClick,
         onDefaultColorDialogDismiss = viewModel::onDefaultColorDialogDismiss,
         onDefaultColorSelected = viewModel::onDefaultColorSelected,
+        onBackUpClick = viewModel::onBackUpClick,
         modifier = modifier,
     )
 }
@@ -98,27 +97,28 @@ private fun ProfileScreenContent(
     onDefault10ColorClick: () -> Unit,
     onDefaultColorDialogDismiss: () -> Unit,
     onDefaultColorSelected: (Long) -> Unit,
+    onBackUpClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = { Text("个人") },
-                actions = { // TODO
-                    IconButton(onClick = onTopActionClick) {
-                        Icon(
-                            imageVector = Icons.Filled.MoreVert,
-                            contentDescription = "更多",
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                ),
-            )
-        },
+//        topBar = {
+//            TopAppBar(
+//                title = { Text("个人") },
+//                actions = { // TODO
+//                    IconButton(onClick = onTopActionClick) {
+//                        Icon(
+//                            imageVector = Icons.Filled.MoreVert,
+//                            contentDescription = "更多",
+//                        )
+//                    }
+//                },
+//                colors = TopAppBarDefaults.topAppBarColors(
+//                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+//                    titleContentColor = MaterialTheme.colorScheme.primary,
+//                ),
+//            )
+//        },
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -173,6 +173,18 @@ private fun ProfileScreenContent(
                     title = "十月默认颜色",
                     colorLong = uiState.default10ColorLong,
                     onClick = onDefault10ColorClick,
+                )
+            }
+            item {
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                )
+            }
+            item {
+                ProfileSettingItem(
+                    title = "备份",
+                    value = "",
+                    onClick = onBackUpClick,
                 )
             }
             item {
@@ -264,7 +276,7 @@ private fun ThemeModeDialog(
 }
 
 @Composable
-private fun UserProfileSection( // TODO
+private fun UserProfileSection( // TODO：个人Profile
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -277,7 +289,7 @@ private fun UserProfileSection( // TODO
         Icon(
             imageVector = Icons.Outlined.AccountBox,
             contentDescription = null,
-            modifier = Modifier.size(150.dp),
+            modifier = Modifier.size(120.dp),
             tint = MaterialTheme.colorScheme.primary,
         )
     }
@@ -290,7 +302,7 @@ private fun ProfileSettingItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    ListItem(   // TODO
+    ListItem(
         headlineContent = { Text(title) },
         trailingContent = {
             Row(
@@ -370,7 +382,7 @@ private val AppThemeMode.displayText: String
 private fun Context.appVersionName(): String {
     return runCatching {
         packageManager.getPackageInfo(packageName, 0).versionName
-    }.getOrNull() ?: "0.2.0-beta01 (version catching failed)"   // FIXME
+    }.getOrNull() ?: "null"
 }
 
 @Preview(showBackground = true)
@@ -398,6 +410,7 @@ private fun ProfileScreenPreview() {
             onDefault10ColorClick = {},
             onDefaultColorDialogDismiss = {},
             onDefaultColorSelected = {},
+            onBackUpClick = {},
         )
     }
 }
