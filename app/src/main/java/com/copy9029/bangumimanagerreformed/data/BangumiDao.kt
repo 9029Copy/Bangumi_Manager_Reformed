@@ -13,6 +13,9 @@ interface BangumiDao {
     @Query("SELECT * FROM bangumi_items ORDER BY firstBroadcastDate DESC")
     fun getAllBangumis(): Flow<List<Bangumi>>
 
+    @Query("SELECT * FROM bangumi_items ORDER BY bangumiId ASC")
+    suspend fun getAllBangumisOnce(): List<Bangumi>
+
     @Query("SELECT * FROM bangumi_items WHERE bangumiId = :bangumiId")
     suspend fun getBangumiByIdOnce(bangumiId: Int): Bangumi?
 
@@ -24,6 +27,12 @@ interface BangumiDao {
         ORDER BY bangumiId ASC, episodeId ASC
     """)
     fun getAllSchedules(): Flow<List<BangumiSchedule>>
+
+    @Query("""
+        SELECT * FROM bangumi_schedule_items
+        ORDER BY bangumiId ASC, episodeId ASC
+    """)
+    suspend fun getAllSchedulesOnce(): List<BangumiSchedule>
 
     @Query("""
         SELECT * FROM bangumi_schedule_items

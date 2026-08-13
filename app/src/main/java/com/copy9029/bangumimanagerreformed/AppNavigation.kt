@@ -28,6 +28,8 @@ import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddBatchScreen
 import com.copy9029.bangumimanagerreformed.ui.bangumi.edit.BangumiEditScreen
 import com.copy9029.bangumimanagerreformed.ui.bangumi.edit.BangumiEditViewModel
+import com.copy9029.bangumimanagerreformed.ui.backup.BackupScreen
+import com.copy9029.bangumimanagerreformed.ui.backup.BackupViewModel
 import com.copy9029.bangumimanagerreformed.ui.calendar.CalendarScreen
 import com.copy9029.bangumimanagerreformed.ui.calendar.CalendarViewModel
 import com.copy9029.bangumimanagerreformed.ui.index.IndexScreen
@@ -148,6 +150,23 @@ fun AppNavigation() {
                 val profileViewModel: ProfileViewModel = hiltViewModel()
                 ProfileScreen(
                     viewModel = profileViewModel,
+                    onBackupClick = {
+                        navController.navigate(Routes.BACKUP)
+                    },
+                )
+            }
+
+            composable(
+                route = Routes.BACKUP,
+                enterTransition = { EnterTransition.None },
+                exitTransition = { ExitTransition.None },
+                popEnterTransition = { EnterTransition.None },
+                popExitTransition = { ExitTransition.None },
+            ) {
+                val backupViewModel: BackupViewModel = hiltViewModel()
+                BackupScreen(
+                    viewModel = backupViewModel,
+                    onBack = navController::navigateUp,
                 )
             }
 
@@ -216,6 +235,7 @@ object Routes {
     const val BANGUMI_EDIT = "bangumi_edit/{$BANGUMI_ID_ARGUMENT}"
     const val BANGUMI_ADD_BATCH = "bangumi_add_batch"
     const val CALENDAR_SETTINGS = "calendar_settings"
+    const val BACKUP = "backup"
 
     fun bangumiEdit(bangumiId: Int): String {
         return "bangumi_edit/$bangumiId"

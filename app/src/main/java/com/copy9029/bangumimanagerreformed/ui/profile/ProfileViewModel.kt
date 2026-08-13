@@ -110,13 +110,6 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun onBackUpClick() {
-        // TODO
-    }
-
-    fun onTopActionClick() {
-        // TODO: Define the top app bar action.
-    }
 }
 
 private fun GlobalSettings.toProfileUiState(
