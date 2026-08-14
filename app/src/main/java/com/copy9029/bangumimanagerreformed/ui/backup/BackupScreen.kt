@@ -153,9 +153,9 @@ private fun BackupScreenContent(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        "共${confirmation.bangumiCount}个Bangumi项目、" +
-                            "${confirmation.scheduleCount}个Schedule项目、" +
-                            "${confirmation.settingCount}个设置项目",
+                        "共 ${confirmation.bangumiCount} 个Bangumi项目、" +
+                            " ${confirmation.scheduleCount} 个Schedule项目、" +
+                            " ${confirmation.settingCount} 个设置项目",
                     )
                     Text(
                         text = "注意：这将覆盖当前所有数据！",

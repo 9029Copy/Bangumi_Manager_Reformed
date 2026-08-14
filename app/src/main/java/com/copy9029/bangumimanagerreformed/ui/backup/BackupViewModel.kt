@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.inject.Inject
 
 data class BackupUiState(
@@ -42,13 +43,18 @@ class BackupViewModel @Inject constructor(
     private var pendingImport: BackupImportData? = null
 
     fun onExportDestinationSelected(uri: Uri) {
-        if (_uiState.value.isExporting || _uiState.value.isImporting) return
+        if (!tryStartOperation(BackupOperation.EXPORT)) return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isExporting = true) }
             try {
-                backupRepository.exportBackup(uri)
-                _messages.emit("备份导出成功")
+                val result = backupRepository.exportBackup(uri)
+                val sizeText = result.fileSizeBytes.toReadableFileSize()
+                val sizeLimitWarning = if (result.exceedsImportSizeLimit) {
+                    "，已超过当前导入大小限制"
+                } else {
+                    ""
+                }
+                _messages.emit("备份导出成功，文件大小：$sizeText$sizeLimitWarning")
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Exception) {
@@ -60,10 +66,9 @@ class BackupViewModel @Inject constructor(
     }
 
     fun onImportFileSelected(uri: Uri) {
-        if (_uiState.value.isExporting || _uiState.value.isImporting) return
+        if (!tryStartOperation(BackupOperation.IMPORT)) return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isImporting = true) }
             try {
                 val backup = backupRepository.readBackup(uri)
                 pendingImport = backup
@@ -96,10 +101,9 @@ class BackupViewModel @Inject constructor(
 
     fun onImportConfirm() {
         val backup = pendingImport ?: return
-        if (_uiState.value.isExporting || _uiState.value.isImporting) return
+        if (!tryStartOperation(BackupOperation.IMPORT)) return
 
         viewModelScope.launch {
-            _uiState.update { it.copy(isImporting = true) }
             try {
                 backupRepository.replaceAllData(backup)
                 pendingImport = null
@@ -114,4 +118,41 @@ class BackupViewModel @Inject constructor(
             }
         }
     }
+
+    private fun tryStartOperation(operation: BackupOperation): Boolean {
+        while (true) {
+            val currentState = _uiState.value
+            if (currentState.isExporting || currentState.isImporting) return false
+
+            val busyState = when (operation) {
+                BackupOperation.EXPORT -> currentState.copy(isExporting = true)
+                BackupOperation.IMPORT -> currentState.copy(isImporting = true)
+            }
+            if (_uiState.compareAndSet(currentState, busyState)) return true
+        }
+    }
+
+    private enum class BackupOperation {
+        EXPORT,
+        IMPORT,
+    }
 }
+
+private fun Int.toReadableFileSize(): String {
+    return when {
+        this >= BYTES_PER_MIB -> String.format(
+            Locale.getDefault(),
+            "%.2f MiB",
+            this.toDouble() / BYTES_PER_MIB,
+        )
+        this >= BYTES_PER_KIB -> String.format(
+            Locale.getDefault(),
+            "%.2f KiB",
+            this.toDouble() / BYTES_PER_KIB,
+        )
+        else -> "$this B"
+    }
+}
+
+private const val BYTES_PER_KIB = 1024
+private const val BYTES_PER_MIB = 1024 * 1024
