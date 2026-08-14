@@ -45,7 +45,19 @@ interface BangumiDao {
     suspend fun insertBangumi(bangumi: Bangumi): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertBangumis(bangumis: List<Bangumi>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSchedule(schedule: BangumiSchedule)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSchedules(schedules: List<BangumiSchedule>)
+
+    @Query("DELETE FROM bangumi_schedule_items")
+    suspend fun deleteAllSchedules()
+
+    @Query("DELETE FROM bangumi_items")
+    suspend fun deleteAllBangumis()
 
     @Query("""
         DELETE FROM bangumi_schedule_items

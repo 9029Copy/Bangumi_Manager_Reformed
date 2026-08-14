@@ -4,17 +4,21 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,7 +26,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
@@ -65,6 +71,8 @@ fun BackupScreen(
         onImportClick = {
             importLauncher.launch(BACKUP_MIME_TYPES)
         },
+        onImportConfirm = viewModel::onImportConfirm,
+        onImportDismiss = viewModel::onImportDismiss,
         modifier = modifier,
     )
 }
@@ -76,6 +84,8 @@ private fun BackupScreenContent(
     onBack: () -> Unit,
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
+    onImportConfirm: () -> Unit,
+    onImportDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -130,6 +140,49 @@ private fun BackupScreenContent(
             )
         }
     }
+
+    uiState.importConfirmation?.let { confirmation ->
+        AlertDialog(
+            onDismissRequest = onImportDismiss,
+            title = {
+                Text(
+                    text = "是否导入目标数据",
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        "共${confirmation.bangumiCount}个Bangumi项目、" +
+                            "${confirmation.scheduleCount}个Schedule项目、" +
+                            "${confirmation.settingCount}个设置项目",
+                    )
+                    Text(
+                        text = "注意：这将覆盖当前所有数据！",
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = onImportConfirm,
+                    enabled = !uiState.isImporting,
+                ) {
+                    Text("确认")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = onImportDismiss,
+                    enabled = !uiState.isImporting,
+                ) {
+                    Text("取消")
+                }
+            },
+        )
+    }
 }
 
 private const val BACKUP_MIME_TYPE = "application/json"
@@ -149,10 +202,16 @@ private fun createBackupFileName(): String {
 private fun BackupScreenPreview() {
     BangumiManagerReformedTheme(dynamicColor = false) {
         BackupScreenContent(
-            uiState = BackupUiState(),
+            uiState = BackupUiState(
+                importConfirmation = BackupImportConfirmation(
+                    1,2,3,
+                ),
+            ),
             onBack = {},
             onExportClick = {},
             onImportClick = {},
+            onImportConfirm = {},
+            onImportDismiss = {},
         )
     }
 }

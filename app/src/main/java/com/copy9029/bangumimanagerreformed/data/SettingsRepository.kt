@@ -190,6 +190,25 @@ class SettingsRepository @Inject constructor(
         }
     }
 
+    suspend fun replaceAllSettings(
+        calendarSettings: CalendarSettings,
+        globalSettings: GlobalSettings,
+    ) {
+        dataStore.edit { preferences ->
+            preferences[Keys.CALENDAR_INACTIVE_VISIBILITY] = calendarSettings.calendarInactiveVisibility
+            preferences[Keys.CALENDAR_FINISHED_EPISODE_VISIBLE] = calendarSettings.calendarFinishedEpisodeVisible
+            preferences[Keys.CALENDAR_FINISHED_BANGUMI_VISIBLE] = calendarSettings.calendarFinishedBangumiVisible
+            preferences[Keys.CALENDAR_WEEKS_BEFORE_CURRENT] = calendarSettings.calendarWeeksBeforeCurrent
+            preferences[Keys.CALENDAR_WEEKS_AFTER_CURRENT] = calendarSettings.calendarWeeksAfterCurrent
+            preferences[Keys.CALENDAR_WEEKS_PREFIX] = calendarSettings.calendarWeeksPrefix
+            preferences[Keys.APP_THEME_MODE] = globalSettings.appThemeMode.storedValue
+            preferences[Keys.DEFAULT_01_COLOR_LONG] = globalSettings.default01ColorLong
+            preferences[Keys.DEFAULT_04_COLOR_LONG] = globalSettings.default04ColorLong
+            preferences[Keys.DEFAULT_07_COLOR_LONG] = globalSettings.default07ColorLong
+            preferences[Keys.DEFAULT_10_COLOR_LONG] = globalSettings.default10ColorLong
+        }
+    }
+
     private object Keys {
         val CALENDAR_INACTIVE_VISIBILITY = intPreferencesKey("calendar_inactive_visibility")
         val CALENDAR_FINISHED_EPISODE_VISIBLE = booleanPreferencesKey("calendar_finished_episode_visible")
