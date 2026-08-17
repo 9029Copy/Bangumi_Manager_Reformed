@@ -15,27 +15,6 @@ class BangumiRepository @Inject constructor(
 ) {
     private val watchedEpisodeSetMutex = Mutex()
 
-    suspend fun updateBangumi(newBangumi: Bangumi, oldBangumi: Bangumi) {
-        val totalEpisodesChanged = oldBangumi.totalEpisodes != newBangumi.totalEpisodes
-        val expectedEndDate = if (totalEpisodesChanged) {
-            val schedules = bangumiDao.getSchedulesByBangumiIdOnce(newBangumi.bangumiId)
-            newBangumi.calculateExpectedEndDate(schedules)
-        } else {
-            oldBangumi.expectedEndDate
-        }
-
-        val bangumiToUpdate = newBangumi.copy(
-            lastBasicInfoModifiedAtMillis = if (oldBangumi.hasSameBasicInfoAs(newBangumi)) {
-                oldBangumi.lastBasicInfoModifiedAtMillis
-            } else {
-                System.currentTimeMillis()
-            },
-            expectedEndDate = expectedEndDate,
-        )
-
-        bangumiDao.updateBangumi(bangumiToUpdate)
-    }
-
     suspend fun updateBangumiAndSchedules(
         newBangumi: Bangumi,
         oldBangumi: Bangumi,
@@ -63,11 +42,7 @@ class BangumiRepository @Inject constructor(
                 schedules
             }
             val bangumiToUpdate = newBangumi.copy(
-                lastBasicInfoModifiedAtMillis = if (oldBangumi.hasSameBasicInfoAs(newBangumi)) {
-                    oldBangumi.lastBasicInfoModifiedAtMillis
-                } else {
-                    System.currentTimeMillis()
-                },
+                lastModifiedAtMillis = System.currentTimeMillis(),
                 expectedEndDate = newBangumi.calculateExpectedEndDate(
                     effectiveSchedules
                 ),
@@ -145,7 +120,7 @@ class BangumiRepository @Inject constructor(
             totalEpisodes = null,
             latestWatchedEpisode = 0,
             isActive = true,
-            lastBasicInfoModifiedAtMillis = System.currentTimeMillis(),
+            lastModifiedAtMillis = System.currentTimeMillis(),
             expectedEndDate = null,
         )
         val id = bangumiDao.insertBangumi(bangumi)
@@ -159,7 +134,10 @@ class BangumiRepository @Inject constructor(
     }
 
     suspend fun toggleBangumiActive(bangumiId: Int) {
-        bangumiDao.toggleBangumiActive(bangumiId)
+        bangumiDao.toggleBangumiActive(
+            bangumiId = bangumiId,
+            modifiedAtMillis = System.currentTimeMillis(),
+        )
     }
 
     suspend fun deleteBangumi(bangumiId: Int) {
@@ -230,14 +208,4 @@ class BangumiRepository @Inject constructor(
         }
     }
 
-}
-
-private fun Bangumi.hasSameBasicInfoAs(other: Bangumi): Boolean {
-    return title == other.title &&
-            seasonYear == other.seasonYear &&
-            seasonMonth == other.seasonMonth &&
-            myScore == other.myScore &&
-            firstBroadcastDate == other.firstBroadcastDate &&
-            totalEpisodes == other.totalEpisodes &&
-            isActive == other.isActive
 }

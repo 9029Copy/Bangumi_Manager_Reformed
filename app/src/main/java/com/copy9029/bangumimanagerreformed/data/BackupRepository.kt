@@ -195,7 +195,7 @@ class BackupRepository @Inject constructor(
         putNullable("totalEpisodes", totalEpisodes)
         put("latestWatchedEpisode", latestWatchedEpisode)
         put("isActive", isActive)
-        put("lastBasicInfoModifiedAtMillis", lastBasicInfoModifiedAtMillis)
+        put("lastModifiedAtMillis", lastModifiedAtMillis)
         putNullable("expectedEndDate", expectedEndDate?.toString())
     }
 
@@ -247,7 +247,10 @@ class BackupRepository @Inject constructor(
         totalEpisodes = getNullableInt("totalEpisodes"),
         latestWatchedEpisode = getInt("latestWatchedEpisode"),
         isActive = getBoolean("isActive"),
-        lastBasicInfoModifiedAtMillis = getLong("lastBasicInfoModifiedAtMillis"),
+        lastModifiedAtMillis = when {
+            has("lastModifiedAtMillis") -> getLong("lastModifiedAtMillis")
+            else -> getLong("lastBasicInfoModifiedAtMillis")
+        },
         expectedEndDate = null,
     )
 
@@ -287,10 +290,15 @@ class BackupRepository @Inject constructor(
             "calendarSettings",
             "globalSettings",
         )
+        val formatVersion = root.getInt("formatVersion")
+        requireBackup(formatVersion in MIN_SUPPORTED_BACKUP_FORMAT_VERSION..BACKUP_FORMAT_VERSION) {
+            "不支持的备份格式版本：$formatVersion"
+        }
 
         val bangumis = root.getJSONArray("bangumis")
         repeat(bangumis.length()) { index ->
-            bangumis.getJSONObject(index).requireKeys(
+            val bangumi = bangumis.getJSONObject(index)
+            bangumi.requireKeys(
                 sectionName = "第 ${index + 1} 个 Bangumi 项目",
                 "bangumiId",
                 "title",
@@ -301,7 +309,15 @@ class BackupRepository @Inject constructor(
                 "totalEpisodes",
                 "latestWatchedEpisode",
                 "isActive",
-                "lastBasicInfoModifiedAtMillis",
+            )
+            val modifiedAtKey = if (formatVersion == 1) {
+                "lastBasicInfoModifiedAtMillis"
+            } else {
+                "lastModifiedAtMillis"
+            }
+            bangumi.requireKeys(
+                sectionName = "第 ${index + 1} 个 Bangumi 项目",
+                modifiedAtKey,
             )
         }
 
@@ -335,7 +351,10 @@ class BackupRepository @Inject constructor(
     }
 
     private fun validateBackupJson(root: JSONObject, backup: BackupImportData) {
-        requireBackup(root.getInt("formatVersion") == BACKUP_FORMAT_VERSION) {
+        requireBackup(
+            root.getInt("formatVersion") in
+                MIN_SUPPORTED_BACKUP_FORMAT_VERSION..BACKUP_FORMAT_VERSION,
+        ) {
             "不支持的备份格式版本：${root.getInt("formatVersion")}"
         }
         try {
@@ -377,8 +396,8 @@ class BackupRepository @Inject constructor(
             ) {
                 "$itemName 的已观看集数不能大于总集数"
             }
-            requireBackup(bangumi.lastBasicInfoModifiedAtMillis >= 0L) {
-                "$itemName 的最近编辑时间不能小于 0"
+            requireBackup(bangumi.lastModifiedAtMillis >= 0L) {
+                "$itemName 的最近更改时间不能小于 0"
             }
         }
 
@@ -515,7 +534,8 @@ class BackupRepository @Inject constructor(
     ) : IllegalArgumentException(message, cause)
 
     private companion object {
-        const val BACKUP_FORMAT_VERSION = 1
+        const val MIN_SUPPORTED_BACKUP_FORMAT_VERSION = 1
+        const val BACKUP_FORMAT_VERSION = 2
         const val JSON_INDENT_SPACES = 2
         const val MAX_BACKUP_FILE_SIZE_MIB = 10
         const val MAX_BACKUP_FILE_SIZE_BYTES = MAX_BACKUP_FILE_SIZE_MIB * 1024 * 1024
@@ -535,3 +555,103 @@ class BackupRepository @Inject constructor(
         )
     }
 }
+
+/*
+ * Backup format reference
+ * =======================
+ *
+ * File encoding and container
+ * ---------------------------
+ * - UTF-8 encoded JSON object, normally saved with the `.bmbackup` extension.
+ * - Import size is limited to 10 MiB.
+ * - Dates use ISO-8601 LocalDate strings (`yyyy-MM-dd`).
+ * - `exportedAt` uses an ISO-8601 Instant string.
+ * - Nullable values are represented by JSON null rather than an omitted key.
+ *
+ * Common root object
+ * ------------------
+ * {
+ *   "formatVersion": Int,
+ *   "exportedAt": String,
+ *   "appVersion": String,
+ *   "bangumis": [Bangumi...],
+ *   "schedules": [BangumiSchedule...],
+ *   "calendarSettings": CalendarSettings,
+ *   "globalSettings": GlobalSettings
+ * }
+ *
+ * Common Bangumi fields
+ * ---------------------
+ * - bangumiId: Int, positive and unique
+ * - title: String, non-blank
+ * - seasonYear: Int
+ * - seasonMonth: Int, one of 1 / 4 / 7 / 10
+ * - myScore: Int? (0..100)
+ * - firstBroadcastDate: String
+ * - totalEpisodes: Int?, positive when present
+ * - latestWatchedEpisode: Int, 0..totalEpisodes when totalEpisodes is known
+ * - isActive: Boolean
+ * - expectedEndDate: String?
+ *
+ * `expectedEndDate` remains in exported files for format continuity, but current
+ * import code deliberately ignores its stored value. It is recalculated from
+ * `totalEpisodes` and the imported Schedule anchors after validation.
+ *
+ * Common BangumiSchedule fields
+ * -----------------------------
+ * - bangumiId: Int, must reference an imported Bangumi
+ * - episodeId: Int, positive and unique within that Bangumi
+ * - broadcastDate: String
+ *
+ * Every Bangumi must have an episode-1 Schedule whose date equals
+ * `firstBroadcastDate`. Later anchors are not required to have increasing dates.
+ *
+ * CalendarSettings fields
+ * -----------------------
+ * - calendarInactiveVisibility: Int
+ * - calendarFinishedEpisodeVisible: Boolean
+ * - calendarFinishedBangumiVisible: Boolean
+ * - calendarWeeksBeforeCurrent: Int
+ * - calendarWeeksAfterCurrent: Int
+ * - calendarWeeksPrefix: Int
+ *
+ * GlobalSettings fields
+ * ---------------------
+ * - appThemeMode: String (`light`, `dark`, or `follow_system`)
+ * - default01ColorLong: Long
+ * - default04ColorLong: Long
+ * - default07ColorLong: Long
+ * - default10ColorLong: Long
+ *
+ * Color values are unsigned 32-bit ARGB values stored in a JSON Long
+ * (`0x00000000..0xFFFFFFFF`).
+ *
+ * Version 1
+ * ---------
+ * - Historical writer format.
+ * - The modification-time field is `lastBasicInfoModifiedAtMillis`.
+ * - Supported for import only; the current app no longer exports this version.
+ *
+ * Version 2
+ * ---------
+ * - Current writer format.
+ * - Renames the modification-time field to `lastModifiedAtMillis` to reflect
+ *   that additions, successful edit submissions, and visibility toggles update it.
+ * - Supported for both import and export.
+ *
+ * Compatibility policy
+ * --------------------
+ * - Current writer: version 2 only.
+ * - Current reader: versions 1 through 2.
+ * - Versions outside that range are rejected before data replacement.
+ * - Adding/removing/renaming required fields should increment formatVersion.
+ * - A new reader should keep explicit compatibility conversion for every older
+ *   supported version; do not silently reinterpret a field with changed semantics.
+ *
+ * Import behavior
+ * ---------------
+ * - Parsing and all validation finish before any stored data is changed.
+ * - Bangumi and Schedule rows replace the current Room contents in a transaction.
+ * - Calendar and global settings replace all current DataStore settings in one edit.
+ * - Imported IDs and last-modified timestamps are preserved.
+ */

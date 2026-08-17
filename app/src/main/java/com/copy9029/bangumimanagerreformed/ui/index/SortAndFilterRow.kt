@@ -39,7 +39,7 @@ import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 
 enum class SortTags(val label: String) {
     FOCUSING_UPDATE_MODE("按完成状态"),
-    BY_EDITED_ORDER("按修改顺序"),
+    BY_MODIFIED_ORDER("按修改顺序"),
     BY_RECENT_UPDATE("按更新时间"),
     BY_START_TIME("按开播日期"),
 }

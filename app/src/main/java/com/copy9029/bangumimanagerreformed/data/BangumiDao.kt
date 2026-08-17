@@ -91,10 +91,11 @@ interface BangumiDao {
 
     @Query("""
         UPDATE bangumi_items
-        SET isActive = NOT isActive
+        SET isActive = NOT isActive,
+            lastModifiedAtMillis = :modifiedAtMillis
         WHERE bangumiId = :bangumiId
     """)
-    suspend fun toggleBangumiActive(bangumiId: Int): Int
+    suspend fun toggleBangumiActive(bangumiId: Int, modifiedAtMillis: Long): Int
 
     @Query("DELETE FROM bangumi_items WHERE bangumiId = :bangumiId")
     suspend fun deleteBangumiById(bangumiId: Int)

@@ -252,10 +252,10 @@ private fun List<Bangumi>.sortByStatus(
             )
         }
 
-        SortTags.BY_EDITED_ORDER -> {
+        SortTags.BY_MODIFIED_ORDER -> {
             sortedWith(
                 compareByDescending<Bangumi> {
-                    it.lastBasicInfoModifiedAtMillis
+                    it.lastModifiedAtMillis
                 }.thenByDescending {
                     it.bangumiId
                 }
