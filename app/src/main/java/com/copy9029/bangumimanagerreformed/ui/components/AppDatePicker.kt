@@ -49,7 +49,6 @@ import com.copy9029.bangumimanagerreformed.ui.components.wheel_picker.FVerticalW
 import com.copy9029.bangumimanagerreformed.ui.components.wheel_picker.rememberFWheelPickerState
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import java.time.LocalDate
-import java.time.Year
 import java.time.YearMonth
 import java.time.temporal.ChronoUnit
 
@@ -60,7 +59,7 @@ import java.time.temporal.ChronoUnit
  * https://gist.github.com/re-ovo/2b4cc2c4fdfb03784fa8643dd360f4a5
  */
 @Composable
-fun MyDatePickerDialog(
+fun AppDatePickerDialog(
     initialDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
     onDismissRequest: () -> Unit,
@@ -442,9 +441,9 @@ private val YearMonthPickerHeight =
 
 @Preview(showBackground = true)
 @Composable
-private fun PreviewMyDatePickerDialog() {
+private fun PreviewAppDatePickerDialog() {
     BangumiManagerReformedTheme(dynamicColor = false) {
-        MyDatePickerDialog(
+        AppDatePickerDialog(
             initialDate = LocalDate.of(2026, 8, 4),
             onDateSelected = {},
             onDismissRequest = {},

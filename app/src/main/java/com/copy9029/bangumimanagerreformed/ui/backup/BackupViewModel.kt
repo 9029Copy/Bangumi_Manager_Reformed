@@ -3,8 +3,8 @@ package com.copy9029.bangumimanagerreformed.ui.backup
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.copy9029.bangumimanagerreformed.data.BackupImportData
-import com.copy9029.bangumimanagerreformed.data.BackupRepository
+import com.copy9029.bangumimanagerreformed.data.backup.BackupImportData
+import com.copy9029.bangumimanagerreformed.data.backup.BackupRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow

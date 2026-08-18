@@ -77,18 +77,18 @@ import androidx.compose.ui.semantics.Role
 import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.INACTIVE_COLOR_LONG
 import com.copy9029.bangumimanagerreformed.data.SettingsRepository
-import com.copy9029.bangumimanagerreformed.ui.components.MyDatePickerDialog
+import com.copy9029.bangumimanagerreformed.ui.components.AppDatePickerDialog
 import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialog
-import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
+import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheet
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
-import com.copy9029.bangumimanagerreformed.util.generateBangumiColorScheme
+import com.copy9029.bangumimanagerreformed.ui.theme.generateBangumiColorScheme
 import kotlinx.coroutines.launch
 
 @Composable
 fun CalendarScreen(
     calendarViewModel: CalendarViewModel,
-    addSheetViewModel: AddSheetViewModel,
+    bangumiAddSheetViewModel: BangumiAddSheetViewModel,
     onBatchClick: () -> Unit,
     onEditClick: (Int) -> Unit,
     onSettingsClick: () -> Unit,
@@ -133,7 +133,7 @@ fun CalendarScreen(
 
     addSheetDefaultDateEpochDay?.let { defaultDateEpochDay ->
         BangumiAddSheet(
-            viewModel = addSheetViewModel,
+            viewModel = bangumiAddSheetViewModel,
             defaultFirstBroadcastDate = LocalDate.ofEpochDay(defaultDateEpochDay),
             onDismissRequest = {
                 addSheetDefaultDateEpochDay = null
@@ -332,7 +332,7 @@ private fun CalendarScreenContent(
     }
 
     if (isDatePickerVisible) {
-        MyDatePickerDialog(
+        AppDatePickerDialog(
             initialDate = LocalDate.now(),
             onDateSelected = { selectedDate ->
                 val selectedWeekIndex = uiState.weekIndexFor(selectedDate)

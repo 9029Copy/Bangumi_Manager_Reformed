@@ -42,11 +42,10 @@ import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
-import kotlinx.coroutines.flow.collect
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun MyColorPickerDialog(
+fun AppColorPickerDialog(
     modifier: Modifier = Modifier,
     title: String? = null,
     initColor: Color = Color.White,
@@ -161,7 +160,7 @@ private fun Color.toArgbHex(): String =
 @Composable
 private fun CircleColorPickerDialogPreview() {
     BangumiManagerReformedTheme(dynamicColor = false) {
-        MyColorPickerDialog(
+        AppColorPickerDialog(
             title = "一月默认颜色",
             initColor = Color.White,
             onDismissRequest = {},

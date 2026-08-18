@@ -3,7 +3,7 @@ package com.copy9029.bangumimanagerreformed.ui.bangumi.edit
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.copy9029.bangumimanagerreformed.Routes
+import com.copy9029.bangumimanagerreformed.navigation.Routes
 import com.copy9029.bangumimanagerreformed.data.Bangumi
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
 import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
@@ -15,7 +15,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch

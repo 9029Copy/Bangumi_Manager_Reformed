@@ -12,7 +12,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -42,7 +41,7 @@ data class BangumiAddSheetUiState(
 
 
 @HiltViewModel
-class AddSheetViewModel @Inject constructor(
+class BangumiAddSheetViewModel @Inject constructor(
     private val repository: BangumiRepository,
     private val settingsRepository: SettingsRepository,
 ): ViewModel() {

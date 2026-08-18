@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.copy9029.bangumimanagerreformed.data.AppThemeMode
 import com.copy9029.bangumimanagerreformed.data.SettingsRepository
-import com.copy9029.bangumimanagerreformed.ui.components.MyColorPickerDialog
+import com.copy9029.bangumimanagerreformed.ui.components.AppColorPickerDialog
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 
 @Composable
@@ -214,7 +214,7 @@ private fun ProfileScreenContent(
     val colorPickerMonth = uiState.colorPickerMonth
     val colorPickerInitialColorLong = uiState.colorPickerInitialColorLong
     if (colorPickerMonth != null && colorPickerInitialColorLong != null) {
-        MyColorPickerDialog(
+        AppColorPickerDialog(
             title = "${colorPickerMonth}月默认颜色",
             initColor = Color(colorPickerInitialColorLong),
             onDismissRequest = onDefaultColorDialogDismiss,

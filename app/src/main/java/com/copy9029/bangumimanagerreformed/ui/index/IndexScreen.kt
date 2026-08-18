@@ -57,13 +57,12 @@ import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.INACTIVE_COLOR_LONG
 import com.copy9029.bangumimanagerreformed.data.SettingsRepository
 import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialog
-import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
+import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheet
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
-import com.copy9029.bangumimanagerreformed.util.generateBangumiColorScheme
+import com.copy9029.bangumimanagerreformed.ui.theme.generateBangumiColorScheme
 import kotlinx.coroutines.launch
 import my.nanihadesuka.compose.LazyColumnScrollbar
-import my.nanihadesuka.compose.ScrollbarLayoutSide
 import my.nanihadesuka.compose.ScrollbarSettings
 import java.time.LocalDate
 
@@ -98,7 +97,7 @@ val UnfocusingUpdatingStatus = SortAndFilterStatus(
 @Composable
 fun IndexScreen(
     indexViewModel: IndexViewModel,
-    addSheetViewModel: AddSheetViewModel,
+    bangumiAddSheetViewModel: BangumiAddSheetViewModel,
     onEditClick: (Int) -> Unit,
     onBatchClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -147,7 +146,7 @@ fun IndexScreen(
 
     if (isAddSheetVisible) {
         BangumiAddSheet(
-            viewModel = addSheetViewModel,
+            viewModel = bangumiAddSheetViewModel,
             defaultFirstBroadcastDate = LocalDate.now(),
             onDismissRequest = {
                 isAddSheetVisible = false

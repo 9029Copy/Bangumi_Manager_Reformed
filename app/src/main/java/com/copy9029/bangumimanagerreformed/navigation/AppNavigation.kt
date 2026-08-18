@@ -1,4 +1,4 @@
-package com.copy9029.bangumimanagerreformed
+package com.copy9029.bangumimanagerreformed.navigation
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -26,8 +26,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddBatchViewModel
-import com.copy9029.bangumimanagerreformed.ui.bangumi.add.AddSheetViewModel
+import com.copy9029.bangumimanagerreformed.R
+import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddBatchViewModel
+import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddBatchScreen
 import com.copy9029.bangumimanagerreformed.ui.bangumi.edit.BangumiEditScreen
 import com.copy9029.bangumimanagerreformed.ui.bangumi.edit.BangumiEditViewModel
@@ -106,10 +107,10 @@ fun AppNavigation() {
                 popExitTransition = { ExitTransition.None },
             ) {
                 val calendarViewModel: CalendarViewModel = hiltViewModel()
-                val addSheetViewModel: AddSheetViewModel = hiltViewModel()
+                val bangumiAddSheetViewModel: BangumiAddSheetViewModel = hiltViewModel()
                 CalendarScreen(
                     calendarViewModel = calendarViewModel,
-                    addSheetViewModel = addSheetViewModel,
+                    bangumiAddSheetViewModel = bangumiAddSheetViewModel,
                     onEditClick = { bangumiId ->
                         navController.navigate(Routes.bangumiEdit(bangumiId))
                     },
@@ -130,10 +131,10 @@ fun AppNavigation() {
                 popExitTransition = { ExitTransition.None },
             ) {
                 val indexViewModel: IndexViewModel = hiltViewModel()
-                val addSheetViewModel: AddSheetViewModel = hiltViewModel()
+                val bangumiAddSheetViewModel: BangumiAddSheetViewModel = hiltViewModel()
                 IndexScreen(
                     indexViewModel = indexViewModel,
-                    addSheetViewModel = addSheetViewModel,
+                    bangumiAddSheetViewModel = bangumiAddSheetViewModel,
                     onEditClick = { bangumiId ->
                         navController.navigate(Routes.bangumiEdit(bangumiId))
                     },
@@ -180,9 +181,9 @@ fun AppNavigation() {
                 popEnterTransition = { secondaryPageEnterTransition() },
                 popExitTransition = { secondaryPageExitTransition() },
             ) {
-                val addBatchViewModel: AddBatchViewModel = hiltViewModel()
+                val bangumiAddBatchViewModel: BangumiAddBatchViewModel = hiltViewModel()
                 BangumiAddBatchScreen(
-                    viewModel = addBatchViewModel,
+                    viewModel = bangumiAddBatchViewModel,
                     onBack = navController::navigateUp,
                 )
             }

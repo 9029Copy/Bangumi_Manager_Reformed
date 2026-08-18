@@ -1,4 +1,4 @@
-package com.copy9029.bangumimanagerreformed.util
+package com.copy9029.bangumimanagerreformed.ui.theme
 
 import androidx.compose.ui.graphics.Color
 import kotlin.math.max

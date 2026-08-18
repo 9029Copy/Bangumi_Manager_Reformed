@@ -21,7 +21,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.copy9029.bangumimanagerreformed.ui.components.MyDatePickerDialog
+import com.copy9029.bangumimanagerreformed.ui.components.AppDatePickerDialog
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -29,7 +29,7 @@ import java.time.LocalDate
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BangumiAddBatchScreen(
-    viewModel: AddBatchViewModel,
+    viewModel: BangumiAddBatchViewModel,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -372,7 +372,7 @@ private fun BatchFirstBroadcastDateCell(
     }
 
     if (showDatePicker) {
-        MyDatePickerDialog(
+        AppDatePickerDialog(
             initialDate = date,
             onDateSelected = onDateSelected,
             onDismissRequest = {

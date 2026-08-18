@@ -10,6 +10,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.copy9029.bangumimanagerreformed.data.AppThemeMode
 import com.copy9029.bangumimanagerreformed.data.GlobalSettings
 import com.copy9029.bangumimanagerreformed.data.SettingsRepository
+import com.copy9029.bangumimanagerreformed.navigation.AppNavigation
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

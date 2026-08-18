@@ -2,6 +2,8 @@ package com.copy9029.bangumimanagerreformed.data
 
 import android.content.Context
 import androidx.room.Room
+import com.copy9029.bangumimanagerreformed.data.migration.MIGRATION_1_2
+import com.copy9029.bangumimanagerreformed.data.migration.MIGRATION_2_3
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,8 +25,8 @@ object DatabaseModule {
             AppDatabase::class.java,
             "bangumi_database"
         ).addMigrations(
-            AppDatabase.MIGRATION_1_2,
-            AppDatabase.MIGRATION_2_3,
+            MIGRATION_1_2,
+            MIGRATION_2_3,
         )
             .build()
     }
