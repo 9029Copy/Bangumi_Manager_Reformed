@@ -803,7 +803,11 @@ private fun CalendarDateCell(
                         Text(
                             text = date.monthValue.toChineseMonthText(),
                             color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.labelLarge,
+                            style = if (date.monthValue < 11){
+                                MaterialTheme.typography.labelLarge
+                            } else {
+                                MaterialTheme.typography.labelMedium
+                            },
                             fontFamily = FontFamily.SansSerif,
                             fontWeight = FontWeight.ExtraBold,
                             textAlign = TextAlign.Center,
@@ -923,7 +927,7 @@ private fun PreviewCalendarScreenContent() {
                     (today.dayOfWeek.value - 1 + 7 * 10).toLong()
                 ),
                 weekCount = 21,
-                initialWeekIndex = 10 - 1,
+                initialWeekIndex = 10 - 1 + 17,
                 bangumisByDate = (0..20).associate { index ->
                     val date = today.plusDays(index.toLong() - 1L)
                     date to listOf(

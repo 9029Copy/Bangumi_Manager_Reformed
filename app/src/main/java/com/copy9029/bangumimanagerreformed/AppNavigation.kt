@@ -2,6 +2,9 @@ package com.copy9029.bangumimanagerreformed
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -158,10 +161,10 @@ fun AppNavigation() {
 
             composable(
                 route = Routes.BACKUP,
-                enterTransition = { EnterTransition.None },
-                exitTransition = { ExitTransition.None },
-                popEnterTransition = { EnterTransition.None },
-                popExitTransition = { ExitTransition.None },
+                enterTransition = { secondaryPageEnterTransition() },
+                exitTransition = { secondaryPageExitTransition() },
+                popEnterTransition = { secondaryPageEnterTransition() },
+                popExitTransition = { secondaryPageExitTransition() },
             ) {
                 val backupViewModel: BackupViewModel = hiltViewModel()
                 BackupScreen(
@@ -172,10 +175,10 @@ fun AppNavigation() {
 
             composable(
                 route = Routes.BANGUMI_ADD_BATCH,
-                enterTransition = { EnterTransition.None },
-                exitTransition = { ExitTransition.None },
-                popEnterTransition = { EnterTransition.None },
-                popExitTransition = { ExitTransition.None },
+                enterTransition = { secondaryPageEnterTransition() },
+                exitTransition = { secondaryPageExitTransition() },
+                popEnterTransition = { secondaryPageEnterTransition() },
+                popExitTransition = { secondaryPageExitTransition() },
             ) {
                 val addBatchViewModel: AddBatchViewModel = hiltViewModel()
                 BangumiAddBatchScreen(
@@ -186,10 +189,10 @@ fun AppNavigation() {
 
             composable(
                 route = Routes.CALENDAR_SETTINGS,
-                enterTransition = { EnterTransition.None },
-                exitTransition = { ExitTransition.None },
-                popEnterTransition = { EnterTransition.None },
-                popExitTransition = { ExitTransition.None },
+                enterTransition = { secondaryPageEnterTransition() },
+                exitTransition = { secondaryPageExitTransition() },
+                popEnterTransition = { secondaryPageEnterTransition() },
+                popExitTransition = { secondaryPageExitTransition() },
             ) {
                 val settingsViewModel: CalendarSettingsViewModel = hiltViewModel()
                 CalendarSettingsScreen(
@@ -205,10 +208,10 @@ fun AppNavigation() {
                         type = NavType.IntType
                     }
                 ),
-                enterTransition = { EnterTransition.None },
-                exitTransition = { ExitTransition.None },
-                popEnterTransition = { EnterTransition.None },
-                popExitTransition = { ExitTransition.None },
+                enterTransition = { secondaryPageEnterTransition() },
+                exitTransition = { secondaryPageExitTransition() },
+                popEnterTransition = { secondaryPageEnterTransition() },
+                popExitTransition = { secondaryPageExitTransition() },
             ) {
                 val editViewModel: BangumiEditViewModel = hiltViewModel()
                 BangumiEditScreen(
@@ -219,6 +222,22 @@ fun AppNavigation() {
         }
     }
 }
+
+private fun secondaryPageEnterTransition(): EnterTransition {
+    return slideInHorizontally(
+        animationSpec = tween(SECONDARY_PAGE_TRANSITION_DURATION_MILLIS),
+        initialOffsetX = { fullWidth -> fullWidth },
+    )
+}
+
+private fun secondaryPageExitTransition(): ExitTransition {
+    return slideOutHorizontally(
+        animationSpec = tween(SECONDARY_PAGE_TRANSITION_DURATION_MILLIS),
+        targetOffsetX = { fullWidth -> fullWidth },
+    )
+}
+
+private const val SECONDARY_PAGE_TRANSITION_DURATION_MILLIS = 300
 
 private enum class BottomDestination(
     val label: String,

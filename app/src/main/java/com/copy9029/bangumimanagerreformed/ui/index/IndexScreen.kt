@@ -283,7 +283,7 @@ private fun IndexScreenContent(
                     thumbThickness = 4.dp,
                     scrollbarPadding = 2.dp,
                     thumbSelectedColor = MaterialTheme.colorScheme.onSurface,
-                    thumbUnselectedColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    thumbUnselectedColor = MaterialTheme.colorScheme.outline,
                 ),
             ) {
                 LazyColumn(
