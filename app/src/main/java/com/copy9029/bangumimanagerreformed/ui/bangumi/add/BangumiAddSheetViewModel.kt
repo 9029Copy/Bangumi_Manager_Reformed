@@ -6,6 +6,7 @@ import com.copy9029.bangumimanagerreformed.data.BangumiAddInfo
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
 import com.copy9029.bangumimanagerreformed.data.GlobalSettings
 import com.copy9029.bangumimanagerreformed.data.SettingsRepository
+import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.util.calcNearestSeason
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -24,7 +25,7 @@ data class BangumiAddSheetUiState(
     val firstBroadcastDate: LocalDate,
     val startYear: Int,
     val endYear: Int,
-    val titleError: String? = null,
+    val titleError: Int? = null,
     val isSubmitting: Boolean = false,
     val themeColorLong: Long = 0xFFFFFFFFL,
 ) {
@@ -152,7 +153,7 @@ class BangumiAddSheetViewModel @Inject constructor(
         val state = _uiState.value ?: return false
 
         if (state.title.isBlank()) {
-            _uiState.value = state.copy(titleError = "标题不能为空")
+            _uiState.value = state.copy(titleError = R.string.bangumi_error_title_required)
             return false
         }
 

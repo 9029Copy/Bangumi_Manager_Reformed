@@ -1,0 +1,7 @@
+<resources>
+    <string name="bangumi_field_title">标题</string>
+    <string name="bangumi_field_first_broadcast_date">开播日期</string>
+    <string name="bangumi_field_season">季度</string>
+    <string name="bangumi_season_month">%1$d月</string>
+    <string name="bangumi_error_title_required">标题不能为空</string>
+</resources>

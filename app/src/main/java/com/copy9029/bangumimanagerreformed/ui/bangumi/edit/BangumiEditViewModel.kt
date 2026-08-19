@@ -1,8 +1,10 @@
 package com.copy9029.bangumimanagerreformed.ui.bangumi.edit
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.navigation.Routes
 import com.copy9029.bangumimanagerreformed.data.Bangumi
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
@@ -34,9 +36,9 @@ data class EpisodeBroadcastRuleUiState(
     val episodeInput: String = "",
     val ruleType: EpisodeBroadcastRuleType? = null,
     val delayWeeksInput: String = "1",
-    val episodeError: String? = null,
-    val ruleError: String? = null,
-    val delayWeeksError: String? = null,
+    val episodeError: Int? = null,
+    val ruleError: Int? = null,
+    val delayWeeksError: Int? = null,
 )
 
 data class BangumiEditUiState(
@@ -61,13 +63,17 @@ data class BangumiEditUiState(
     val episodeBroadcastRules: List<EpisodeBroadcastRuleUiState>? = emptyList(),
 
     // 表单错误
-    val titleError: String? = null,
-    val myScoreError: String? = null,
-    val totalEpisodesError: String? = null,
-    val latestWatchedEpisodeError: String? = null,
+    val titleError: Int? = null,
+    val myScoreError: Int? = null,
+    val totalEpisodesError: Int? = null,
+    val latestWatchedEpisodeError: Int? = null,
 
     val isSubmitting: Boolean = false,
     val themeColorLong: Long = 0xFFFFFFFFL,
+)
+
+data class BangumiEditSubmitResult(
+    @param:StringRes val messageRes: Int,
 )
 
 
@@ -77,10 +83,6 @@ class BangumiEditViewModel @Inject constructor(
     private val repository: BangumiRepository,
     private val settingsRepository: SettingsRepository,
 ): ViewModel() {
-    companion object {
-        const val SUBMIT_SUCCESS = "success"
-    }
-
     private val bangumiId = checkNotNull(
         savedStateHandle.get<Int>(Routes.BANGUMI_ID_ARGUMENT)
     )
@@ -382,8 +384,10 @@ class BangumiEditViewModel @Inject constructor(
         }
     }
 
-    suspend fun onSubmitClick(): String {
-        if (!submitMutex.tryLock()) return "修改正在提交，请稍候"
+    suspend fun onSubmitClick(): BangumiEditSubmitResult {
+        if (!submitMutex.tryLock()) {
+            return BangumiEditSubmitResult(R.string.bangumi_edit_submit_in_progress)
+        }
 
         _uiState.update { it?.copy(isSubmitting = true) }
         return try {
@@ -391,18 +395,18 @@ class BangumiEditViewModel @Inject constructor(
         } catch (exception: CancellationException) {
             throw exception
         } catch (_: Exception) {
-            "修改失败：保存时发生错误，请稍后重试"
+            BangumiEditSubmitResult(R.string.bangumi_edit_submit_save_failure)
         } finally {
             _uiState.update { it?.copy(isSubmitting = false) }
             submitMutex.unlock()
         }
     }
 
-    private suspend fun submitChanges(): String {
+    private suspend fun submitChanges(): BangumiEditSubmitResult {
         val state = _uiState.value
-            ?: return "项目尚未加载完成"
+            ?: return BangumiEditSubmitResult(R.string.bangumi_edit_not_loaded)
         val bangumi = storedBangumi
-            ?: return "项目尚未加载完成"
+            ?: return BangumiEditSubmitResult(R.string.bangumi_edit_not_loaded)
 
         val titleError = validateTitle(state.title)
         val myScoreError = validateMyScore(state.myScoreInput)
@@ -439,14 +443,14 @@ class BangumiEditViewModel @Inject constructor(
             // 最早通过Schedules解析Rules失败时，validatedRules为null，最终不更新Schedules，也不报错
             // TODO：若今后允许锚点的直接编辑，此处应当添加校验
         ) {
-            return "修改失败：请检查输入内容"
+            return BangumiEditSubmitResult(R.string.bangumi_edit_submit_invalid)
         }
 
         if (
             validatedRules == null &&
             state.firstBroadcastDate != bangumi.firstBroadcastDate
         ) {
-            return "修改失败：日期锚点解析失败，无法修改开播日期"
+            return BangumiEditSubmitResult(R.string.bangumi_edit_anchor_parse_failure)
         }
 
         val updatedBangumi = bangumi.copy(
@@ -475,19 +479,19 @@ class BangumiEditViewModel @Inject constructor(
             schedules = updatedSchedules,
         )
 
-        return SUBMIT_SUCCESS
+        return BangumiEditSubmitResult(R.string.bangumi_edit_submit_success)
     }
 
     // ==================== 输入校验 ====================
 
-    private fun validateTitle(input: String): String? {
-        return if (input.isBlank()) "标题不能为空" else null
+    private fun validateTitle(input: String): Int? {
+        return if (input.isBlank()) R.string.bangumi_error_title_required else null
     }
 
-    private fun validateMyScore(input: String): String? {
+    private fun validateMyScore(input: String): Int? {
         if (input.isBlank()) return null
         if (!input.matches(Regex("""\d+(?:\.\d+)?"""))) {
-            return "评分只能包含数字和一个小数点"
+            return R.string.bangumi_edit_error_score_characters
         }
 
         val scoreTimesTen = try {
@@ -495,41 +499,41 @@ class BangumiEditViewModel @Inject constructor(
                 .movePointRight(1)
                 .intValueExact()
         } catch (_: ArithmeticException) {
-            return "评分最多保留一位小数"
+            return R.string.bangumi_edit_error_score_decimal_places
         } catch (_: NumberFormatException) {
-            return "评分格式不正确"
+            return R.string.bangumi_edit_error_score_format
         }
 
         return if (scoreTimesTen in 0..100) {
             null
         } else {
-            "评分必须在 0.0 到 10.0 之间"
+            R.string.bangumi_edit_error_score_range
         }
     }
 
-    private fun validateTotalEpisodes(input: String): String? {
+    private fun validateTotalEpisodes(input: String): Int? {
         if (input.isBlank()) return null
 
         val totalEpisodes = input.toIntOrNull()
         return if (totalEpisodes != null && totalEpisodes > 0) {
             null
         } else {
-            "总集数必须是大于 0 的整数"
+            R.string.bangumi_edit_error_total_episodes_positive
         }
     }
 
     private fun validateLatestWatchedEpisode(
         input: String,
         totalEpisodes: Int?,
-    ): String? {
+    ): Int? {
         val latestWatchedEpisode = input.toIntOrNull()
-            ?: return "已观看集数必须是大于或等于 0 的整数"
+            ?: return R.string.bangumi_edit_error_watched_episode_nonnegative_integer
 
         if (latestWatchedEpisode < 0) {
-            return "已观看集数必须大于或等于 0"
+            return R.string.bangumi_edit_error_watched_episode_nonnegative
         }
         if (totalEpisodes != null && latestWatchedEpisode > totalEpisodes) {
-            return "已观看集数不能大于总集数"
+            return R.string.bangumi_edit_error_watched_episode_exceeds_total
         }
 
         return null
@@ -547,11 +551,11 @@ class BangumiEditViewModel @Inject constructor(
             rule.rowId != targetRowId && rule.episodeInput.toIntOrNull() == episode
         }
         val targetError = when {
-            targetRule.episodeInput.isBlank() -> "请输入集数"
-            episode == null || episode <= 0 -> "集数必须是大于 0 的整数"
-            episode == 1 -> "第 1 集没有上一集，无法设置播出规则"
-            totalEpisodes != null && episode > totalEpisodes -> "集数不能大于总集数"
-            isDuplicate -> "集数不能重复"
+            targetRule.episodeInput.isBlank() -> R.string.bangumi_edit_error_rule_episode_required
+            episode == null || episode <= 0 -> R.string.bangumi_edit_error_rule_episode_positive
+            episode == 1 -> R.string.bangumi_edit_error_rule_first_episode
+            totalEpisodes != null && episode > totalEpisodes -> R.string.bangumi_edit_error_rule_episode_exceeds_total
+            isDuplicate -> R.string.bangumi_edit_error_rule_episode_duplicate
             else -> null
         }
 
@@ -577,11 +581,11 @@ class BangumiEditViewModel @Inject constructor(
         return rules.map { rule ->
             val episode = rule.episodeInput.toIntOrNull()
             val error = when {
-                rule.episodeInput.isBlank() -> "请输入集数"
-                episode == null || episode <= 0 -> "集数必须是大于 0 的整数"
-                episode == 1 -> "第 1 集没有上一集，无法设置播出规则"
-                totalEpisodes != null && episode > totalEpisodes -> "集数不能大于总集数"
-                episodeCounts[episode] != 1 -> "集数不能重复"
+                rule.episodeInput.isBlank() -> R.string.bangumi_edit_error_rule_episode_required
+                episode == null || episode <= 0 -> R.string.bangumi_edit_error_rule_episode_positive
+                episode == 1 -> R.string.bangumi_edit_error_rule_first_episode
+                totalEpisodes != null && episode > totalEpisodes -> R.string.bangumi_edit_error_rule_episode_exceeds_total
+                episodeCounts[episode] != 1 -> R.string.bangumi_edit_error_rule_episode_duplicate
                 else -> null
             }
             rule.copy(episodeError = error)
@@ -598,7 +602,7 @@ class BangumiEditViewModel @Inject constructor(
         ).map { rule ->
             rule.copy(
                 ruleError = if (rule.ruleType == null) {
-                    "请选择播出规则"
+                    R.string.bangumi_edit_error_rule_type_required
                 } else {
                     null
                 },
@@ -613,11 +617,11 @@ class BangumiEditViewModel @Inject constructor(
         }
     }
 
-    private fun validateDelayWeeks(input: String): String? {
+    private fun validateDelayWeeks(input: String): Int? {
         val weeks = input.toIntOrNull()
         return when {
-            input.isBlank() -> "请输入停更周数"
-            weeks == null || weeks <= 0 -> "停更周数必须是大于 0 的整数"
+            input.isBlank() -> R.string.bangumi_edit_error_delay_weeks_required
+            weeks == null || weeks <= 0 -> R.string.bangumi_edit_error_delay_weeks_positive
             else -> null
         }
     }

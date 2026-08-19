@@ -1,0 +1,57 @@
+<resources>
+    <string name="bangumi_edit_title">编辑项目</string>
+    <string name="bangumi_edit_submit_success">修改成功</string>
+    <string name="bangumi_edit_submit_in_progress">修改正在提交，请稍候</string>
+    <string name="bangumi_edit_submit_save_failure">修改失败：保存时发生错误，请稍后重试</string>
+    <string name="bangumi_edit_not_loaded">项目尚未加载完成</string>
+    <string name="bangumi_edit_submit_invalid">修改失败：请检查输入内容</string>
+    <string name="bangumi_edit_anchor_parse_failure">修改失败：日期锚点解析失败，无法修改开播日期</string>
+
+    <string name="bangumi_edit_section_basic_info">基本信息</string>
+    <string name="bangumi_edit_my_score">我的评分</string>
+    <string name="bangumi_edit_score_unspecified">未评分</string>
+    <string name="bangumi_edit_score_suffix">/ 10.0</string>
+    <string name="bangumi_edit_visibility">是否隐藏</string>
+    <string name="bangumi_edit_visibility_visible">正常显示</string>
+    <string name="bangumi_edit_visibility_hidden">隐藏</string>
+    <string name="bangumi_edit_section_progress">集数与观看进度</string>
+    <string name="bangumi_edit_total_episodes">总集数</string>
+    <string name="bangumi_edit_total_episodes_unspecified">未定</string>
+    <string name="bangumi_edit_total_episodes_currently_unspecified">当前为未定</string>
+    <string name="bangumi_edit_watched_episodes">已观看集数</string>
+    <string name="bangumi_edit_latest_aired_episode">当前更新到第 %1$d 集</string>
+    <string name="bangumi_edit_set_minimum">最小</string>
+    <string name="bangumi_edit_set_maximum">最大</string>
+    <string name="bangumi_edit_section_broadcast_adjustment">播出日期调整</string>
+
+    <string name="bangumi_edit_error_score_characters">评分只能包含数字和一个小数点</string>
+    <string name="bangumi_edit_error_score_decimal_places">评分最多保留一位小数</string>
+    <string name="bangumi_edit_error_score_format">评分格式不正确</string>
+    <string name="bangumi_edit_error_score_range">评分必须在 0.0 到 10.0 之间</string>
+    <string name="bangumi_edit_error_total_episodes_positive">总集数必须是大于 0 的整数</string>
+    <string name="bangumi_edit_error_watched_episode_nonnegative_integer">已观看集数必须是大于或等于 0 的整数</string>
+    <string name="bangumi_edit_error_watched_episode_nonnegative">已观看集数必须大于或等于 0</string>
+    <string name="bangumi_edit_error_watched_episode_exceeds_total">已观看集数不能大于总集数</string>
+
+    <string name="bangumi_edit_rule_anchor_parse_failure">日期锚点解析失败，无法编辑播出规则</string>
+    <string name="bangumi_edit_rule_empty">暂无播出日期调整</string>
+    <string name="bangumi_edit_rule_add_row">+ 添加行</string>
+    <string name="bangumi_edit_rule_episode">集数</string>
+    <string name="bangumi_edit_rule_type">播出规则</string>
+    <string name="bangumi_edit_rule_delay_weeks">停更周数</string>
+    <string name="bangumi_edit_rule_error_message">%1$s：%2$s</string>
+    <string name="bangumi_edit_rule_input_hint">请输入</string>
+    <string name="bangumi_edit_rule_week_unit">周</string>
+    <string name="bangumi_edit_rule_delete_row">删除该行</string>
+    <string name="bangumi_edit_rule_select_hint">请选择规则</string>
+    <string name="bangumi_edit_rule_delay">停更</string>
+    <string name="bangumi_edit_rule_same_day">与上一集同日播出</string>
+    <string name="bangumi_edit_error_rule_episode_required">请输入集数</string>
+    <string name="bangumi_edit_error_rule_episode_positive">集数必须是大于 0 的整数</string>
+    <string name="bangumi_edit_error_rule_first_episode">第 1 集没有上一集，无法设置播出规则</string>
+    <string name="bangumi_edit_error_rule_episode_exceeds_total">集数不能大于总集数</string>
+    <string name="bangumi_edit_error_rule_episode_duplicate">集数不能重复</string>
+    <string name="bangumi_edit_error_rule_type_required">请选择播出规则</string>
+    <string name="bangumi_edit_error_delay_weeks_required">请输入停更周数</string>
+    <string name="bangumi_edit_error_delay_weeks_positive">停更周数必须是大于 0 的整数</string>
+</resources>

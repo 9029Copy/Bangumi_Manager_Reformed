@@ -41,12 +41,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.ui.components.AppDatePickerDialog
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import kotlinx.coroutines.launch
@@ -69,6 +71,8 @@ fun BangumiAddSheet(
 
     val thisContext = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val addSuccessMessage = stringResource(R.string.bangumi_add_success)
+    val addFailureMessage = stringResource(R.string.bangumi_add_failure)
 
     uiState?.let { state ->
         BangumiAddSheetContent(
@@ -83,14 +87,14 @@ fun BangumiAddSheet(
                     if (viewModel.onConfirmClick(defaultFirstBroadcastDate)) {
                         Toast.makeText(
                             thisContext,
-                            "添加成功",
+                            addSuccessMessage,
                             Toast.LENGTH_SHORT,
                         ).show()
                         onDismissRequest()
                     } else {
                         Toast.makeText(
                             thisContext,
-                            "添加失败",
+                            addFailureMessage,
                             Toast.LENGTH_SHORT,
                         ).show()
                     }
@@ -136,13 +140,13 @@ fun BangumiAddSheetContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(text = "添加项目", fontSize = 20.sp)
+                Text(text = stringResource(R.string.bangumi_add_title), fontSize = 20.sp)
 
                 TextButton(
                     onClick = onBatchClick,
                     enabled = !uiState.isSubmitting,
                 ) {
-                    Text(text = "批量添加", fontSize = 16.sp)
+                    Text(text = stringResource(R.string.bangumi_add_batch), fontSize = 16.sp)
                 }
             }
 
@@ -162,7 +166,7 @@ fun BangumiAddSheetContent(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "标题",
+                    text = stringResource(R.string.bangumi_field_title),
                     modifier = Modifier.width(80.dp),
                     fontSize = 16.sp,
                 )
@@ -175,7 +179,7 @@ fun BangumiAddSheetContent(
                     minLines = 2,
                     isError = uiState.titleError != null,
                     supportingText = uiState.titleError?.let { error ->
-                        { Text(error) }
+                        { Text(stringResource(error)) }
                     },
                 )
             }
@@ -186,7 +190,7 @@ fun BangumiAddSheetContent(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "开播日期",
+                    text = stringResource(R.string.bangumi_field_first_broadcast_date),
                     modifier = Modifier.width(80.dp),
                     fontSize = 16.sp,
                 )
@@ -208,14 +212,14 @@ fun BangumiAddSheetContent(
                     onClick = onDismissRequest,
                     enabled = !uiState.isSubmitting,
                 ) {
-                    Text("取消")
+                    Text(stringResource(R.string.action_cancel))
                 }
 
                 TextButton(
                     onClick = onConfirmClick,
                     enabled = !uiState.isSubmitting,
                 ) {
-                    Text("提交")
+                    Text(stringResource(R.string.action_submit))
                 }
             }
         }
@@ -241,10 +245,10 @@ fun SeasonSelectSection(
     }
 
     val monthOptions = listOf(
-        SeasonDropdownOption(1, "1月"),
-        SeasonDropdownOption(4, "4月"),
-        SeasonDropdownOption(7, "7月"),
-        SeasonDropdownOption(10, "10月"),
+        SeasonDropdownOption(1, stringResource(R.string.bangumi_season_month, 1)),
+        SeasonDropdownOption(4, stringResource(R.string.bangumi_season_month, 4)),
+        SeasonDropdownOption(7, stringResource(R.string.bangumi_season_month, 7)),
+        SeasonDropdownOption(10, stringResource(R.string.bangumi_season_month, 10)),
     )
 
     Row(
@@ -252,7 +256,7 @@ fun SeasonSelectSection(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(text = "季度", fontSize = 16.sp)
+        Text(text = stringResource(R.string.bangumi_field_season), fontSize = 16.sp)
 
         Spacer(modifier = Modifier.width(20.dp))
 

@@ -1,0 +1,23 @@
+<resources>
+    <string name="bangumi_add_title">添加项目</string>
+    <string name="bangumi_add_batch">批量添加</string>
+    <string name="bangumi_add_success">添加成功</string>
+    <string name="bangumi_add_failure">添加失败</string>
+
+    <string name="bangumi_add_batch_title">批量添加</string>
+    <string name="bangumi_add_formatted_text">格式化文本</string>
+    <string name="bangumi_add_parse">解析</string>
+    <string name="bangumi_add_parsed_items_empty">解析后的项目会显示在这里</string>
+    <string name="bangumi_add_delete_item_title">删除这一项？</string>
+    <string name="bangumi_add_unnamed_item">未命名项目</string>
+    <string name="bangumi_add_title_input_hint">点击输入标题</string>
+    <string name="bangumi_add_parse_result">成功解析%1$d/%2$d个项目</string>
+    <string name="bangumi_add_parse_result_with_errors">成功解析%1$d/%2$d个项目，错误项目编号为%3$s</string>
+    <string name="bangumi_add_submit_in_progress">正在提交，请稍候</string>
+    <string name="bangumi_add_submit_empty">添加失败：待添加列表不能为空！</string>
+    <string name="bangumi_add_submit_invalid">添加失败：请检查项目是否无误！</string>
+    <plurals name="bangumi_add_submit_success">
+        <item quantity="other">成功添加 %1$d 个项目！</item>
+    </plurals>
+    <string name="bangumi_add_submit_database_failure">添加失败：数据库写入失败</string>
+</resources>

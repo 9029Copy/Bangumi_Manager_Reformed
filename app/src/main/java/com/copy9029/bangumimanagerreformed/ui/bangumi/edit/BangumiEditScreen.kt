@@ -38,11 +38,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.ui.components.AppDatePickerDialog
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.SeasonSelectSection
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
@@ -57,6 +60,7 @@ fun BangumiEditScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val resources = LocalResources.current
     val coroutineScope = rememberCoroutineScope()
 
     if (uiState == null) {
@@ -73,11 +77,19 @@ fun BangumiEditScreen(
         onSubmit = {
             coroutineScope.launch {
                 val result = viewModel.onSubmitClick()
-                if (result == BangumiEditViewModel.SUBMIT_SUCCESS) {
-                    Toast.makeText(context, "修改成功", Toast.LENGTH_SHORT).show()
+                if (result.messageRes == R.string.bangumi_edit_submit_success) {
+                    Toast.makeText(
+                        context,
+                        resources.getString(result.messageRes),
+                        Toast.LENGTH_SHORT,
+                    ).show()
                     onBack()
                 } else {
-                    Toast.makeText(context, result, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        resources.getString(result.messageRes),
+                        Toast.LENGTH_SHORT,
+                    ).show()
                 }
             }
         },
@@ -114,12 +126,12 @@ private fun BangumiEditLoadingContent(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("编辑项目") },
+                title = { Text(stringResource(R.string.bangumi_edit_title)) },
                 navigationIcon = {
                     IconButton(onClick = onCancel) {
                         Icon(
                             imageVector = Icons.Filled.Close,
-                            contentDescription = "返回",
+                            contentDescription = stringResource(R.string.action_back),
                         )
                     }
                 },
@@ -128,7 +140,7 @@ private fun BangumiEditLoadingContent(
                         onClick = {},
                         enabled = false,
                     ) {
-                        Text("提交")
+                        Text(stringResource(R.string.action_submit))
                     }
                 },
             )
@@ -173,12 +185,12 @@ fun BangumiEditContent(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("编辑项目") },
+                title = { Text(stringResource(R.string.bangumi_edit_title)) },
                 navigationIcon = {
                     IconButton(onClick = onCancel) {
                         Icon(
                             imageVector = Icons.Filled.Close,
-                            contentDescription = "返回",
+                            contentDescription = stringResource(R.string.action_back),
                         )
                     }
                 },
@@ -187,7 +199,7 @@ fun BangumiEditContent(
                         onClick = onSubmit,
                         enabled = !uiState.isSubmitting,
                     ) {
-                        Text("提交")
+                        Text(stringResource(R.string.action_submit))
                     }
                 },
             )
@@ -205,17 +217,17 @@ fun BangumiEditContent(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    EditSectionTitle("基本信息")
+                    EditSectionTitle(stringResource(R.string.bangumi_edit_section_basic_info))
 
                     OutlinedTextField(
                         value = uiState.title,
                         onValueChange = onTitleChanged,
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text("标题") },
+                        label = { Text(stringResource(R.string.bangumi_field_title)) },
                         singleLine = true,
                         isError = uiState.titleError != null,
                         supportingText = uiState.titleError?.let { error ->
-                            { Text(error) }
+                            { Text(stringResource(error)) }
                         },
                     )
 
@@ -234,32 +246,38 @@ fun BangumiEditContent(
                         enabled = uiState.episodeBroadcastRules != null,
                     )
 
-                    EditFormRow(label = "我的评分") {
+                    EditFormRow(label = stringResource(R.string.bangumi_edit_my_score)) {
                         OutlinedTextField(
                             value = uiState.myScoreInput,
                             onValueChange = onMyScoreChanged,
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("未评分") },
-                            suffix = { Text("/ 10.0") },
+                            placeholder = { Text(stringResource(R.string.bangumi_edit_score_unspecified)) },
+                            suffix = { Text(stringResource(R.string.bangumi_edit_score_suffix)) },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Decimal,
                             ),
                             isError = uiState.myScoreError != null,
                             supportingText = uiState.myScoreError?.let { error ->
-                                { Text(error) }
+                                { Text(stringResource(error)) }
                             },
                         )
                     }
 
-                    EditFormRow(label = "是否隐藏") {
+                    EditFormRow(label = stringResource(R.string.bangumi_edit_visibility)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End,
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = if (uiState.isActive) "正常显示" else "隐藏",
+                                text = stringResource(
+                                    if (uiState.isActive) {
+                                        R.string.bangumi_edit_visibility_visible
+                                    } else {
+                                        R.string.bangumi_edit_visibility_hidden
+                                    },
+                                ),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodyMedium,
                             )
@@ -282,14 +300,14 @@ fun BangumiEditContent(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    EditSectionTitle("集数与观看进度")
+                    EditSectionTitle(stringResource(R.string.bangumi_edit_section_progress))
 
-                    EditFormRow(label = "总集数") {
+                    EditFormRow(label = stringResource(R.string.bangumi_edit_total_episodes)) {
                         OutlinedTextField(
                             value = uiState.totalEpisodesInput,
                             onValueChange = onTotalEpisodesChanged,
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("未定") },
+                            placeholder = { Text(stringResource(R.string.bangumi_edit_total_episodes_unspecified)) },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number,
@@ -301,7 +319,11 @@ fun BangumiEditContent(
                             ) {
                                 {
                                     Text(
-                                        text = uiState.totalEpisodesError ?: "当前为未定",
+                                        text = uiState.totalEpisodesError?.let {
+                                            stringResource(it)
+                                        } ?: stringResource(
+                                            R.string.bangumi_edit_total_episodes_currently_unspecified
+                                        ),
                                         color = if (uiState.totalEpisodesError != null) {
                                             MaterialTheme.colorScheme.error
                                         } else {
@@ -325,11 +347,14 @@ fun BangumiEditContent(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "已观看集数",
+                                text = stringResource(R.string.bangumi_edit_watched_episodes),
                                 style = MaterialTheme.typography.bodyLarge,
                             )
                             Text(
-                                text = "当前更新到第 ${uiState.latestAiredEpisode} 集",
+                                text = stringResource(
+                                    R.string.bangumi_edit_latest_aired_episode,
+                                    uiState.latestAiredEpisode,
+                                ),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall,
                             )
@@ -345,7 +370,7 @@ fun BangumiEditContent(
                                 modifier = Modifier.weight(1f),
                                 contentPadding = PaddingValues(horizontal = 4.dp),
                             ) {
-                                Text("最小")
+                                Text(stringResource(R.string.bangumi_edit_set_minimum))
                             }
                             OutlinedButton(
                                 onClick = onWatchedEpisodeMinusOne,
@@ -379,13 +404,13 @@ fun BangumiEditContent(
                                 modifier = Modifier.weight(1f),
                                 contentPadding = PaddingValues(horizontal = 4.dp),
                             ) {
-                                Text("最大")
+                                Text(stringResource(R.string.bangumi_edit_set_maximum))
                             }
                         }
 
                         uiState.latestWatchedEpisodeError?.let { error ->
                             Text(
-                                text = error,
+                                text = stringResource(error),
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodySmall,
                             )
@@ -399,7 +424,9 @@ fun BangumiEditContent(
             }
 
             item {
-                EditSectionTitle("播出日期调整")
+                EditSectionTitle(
+                    stringResource(R.string.bangumi_edit_section_broadcast_adjustment)
+                )
                 
                 BangumiScheduleRuleEditor(
                     rules = uiState.episodeBroadcastRules,
@@ -467,7 +494,7 @@ private fun FirstBroadcastDateEditRow(
     var showDatePicker by remember { mutableStateOf(false) }
 
     EditFormRow(
-        label = "开播日期",
+        label = stringResource(R.string.bangumi_field_first_broadcast_date),
         modifier = modifier,
     ) {
         OutlinedButton(
@@ -569,10 +596,11 @@ private fun PreviewBangumiEditContent2() {
                 totalEpisodesInput = "12",
                 latestWatchedEpisodeInput = "5",
                 latestAiredEpisode = 7,
-                titleError = "titleError text",
-                myScoreError = "myScoreError text",
-                totalEpisodesError = "totalEpisodesError text",
-                latestWatchedEpisodeError = "latestWatchedEpisodeError text",
+                titleError = R.string.bangumi_error_title_required,
+                myScoreError = R.string.bangumi_edit_error_score_format,
+                totalEpisodesError = R.string.bangumi_edit_error_total_episodes_positive,
+                latestWatchedEpisodeError =
+                    R.string.bangumi_edit_error_watched_episode_nonnegative_integer,
             ),
             onCancel = {},
             onSubmit = {},

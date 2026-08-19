@@ -1,5 +1,6 @@
 package com.copy9029.bangumimanagerreformed.ui.bangumi.edit
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,11 +32,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 
 @Composable
@@ -55,7 +58,13 @@ fun BangumiScheduleRuleEditor(
 
         if (rules.isNullOrEmpty()) {
             Text(
-                text = if ((rules == null)) "日期锚点解析失败，无法编辑播出规则" else "暂无播出日期调整",
+                text = stringResource(
+                    if (rules == null) {
+                        R.string.bangumi_edit_rule_anchor_parse_failure
+                    } else {
+                        R.string.bangumi_edit_rule_empty
+                    },
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(EMPTY_STATE_HEIGHT_DP.dp)
@@ -97,7 +106,7 @@ fun BangumiScheduleRuleEditor(
                 onClick = onAddRule,
                 enabled = rules != null
             ) {
-                Text("+ 添加行")
+                Text(stringResource(R.string.bangumi_edit_rule_add_row))
             }
         }
     }
@@ -114,7 +123,7 @@ private fun ScheduleRuleHeader() {
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "集数",
+            text = stringResource(R.string.bangumi_edit_rule_episode),
             modifier = Modifier.width(EPISODE_COLUMN_WIDTH),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.labelMedium,
@@ -124,7 +133,7 @@ private fun ScheduleRuleHeader() {
         Spacer(modifier = Modifier.width(2.dp))
 
         Text(
-            text = "播出规则",
+            text = stringResource(R.string.bangumi_edit_rule_type),
             modifier = Modifier.weight(1f),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.labelMedium,
@@ -143,9 +152,27 @@ private fun ScheduleRuleRow(
     onDelete: () -> Unit,
 ) {
     val errorMessages = listOfNotNull(
-        rule.episodeError?.let { "集数：$it" },
-        rule.ruleError?.let { "播出规则：$it" },
-        rule.delayWeeksError?.let { "停更周数：$it" },
+        rule.episodeError?.let {
+            stringResource(
+                R.string.bangumi_edit_rule_error_message,
+                stringResource(R.string.bangumi_edit_rule_episode),
+                stringResource(it),
+            )
+        },
+        rule.ruleError?.let {
+            stringResource(
+                R.string.bangumi_edit_rule_error_message,
+                stringResource(R.string.bangumi_edit_rule_type),
+                stringResource(it),
+            )
+        },
+        rule.delayWeeksError?.let {
+            stringResource(
+                R.string.bangumi_edit_rule_error_message,
+                stringResource(R.string.bangumi_edit_rule_delay_weeks),
+                stringResource(it),
+            )
+        },
     )
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -163,7 +190,12 @@ private fun ScheduleRuleRow(
                 modifier = Modifier
                     .width(EPISODE_COLUMN_WIDTH)
                     .height(INPUT_HEIGHT),
-                placeholder = { Text(text = "请输入", fontSize = 12.sp) },
+                placeholder = {
+                    Text(
+                        text = stringResource(R.string.bangumi_edit_rule_input_hint),
+                        fontSize = 12.sp,
+                    )
+                },
                 singleLine = true,
                 isError = rule.episodeError != null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -191,8 +223,13 @@ private fun ScheduleRuleRow(
                         modifier = Modifier
                             .height(INPUT_HEIGHT)
                             .weight(1f),
-                        placeholder = { Text(text = "请输入", fontSize = 12.sp) },
-                        suffix = { Text("周") },
+                        placeholder = {
+                            Text(
+                                text = stringResource(R.string.bangumi_edit_rule_input_hint),
+                                fontSize = 12.sp,
+                            )
+                        },
+                        suffix = { Text(stringResource(R.string.bangumi_edit_rule_week_unit)) },
                         singleLine = true,
                         isError = rule.delayWeeksError != null,
                         keyboardOptions = KeyboardOptions(
@@ -209,7 +246,7 @@ private fun ScheduleRuleRow(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
-                    contentDescription = "删除该行",
+                    contentDescription = stringResource(R.string.bangumi_edit_rule_delete_row),
                 )
             }
         }
@@ -264,13 +301,18 @@ private fun ScheduleRuleTypeDropdown(
         modifier = modifier,
     ) {
         OutlinedTextField(
-            value = selectedType?.displayText().orEmpty(),
+            value = selectedType?.let { stringResource(it.displayTextRes()) }.orEmpty(),
             onValueChange = {},
             modifier = Modifier
                 .menuAnchor(MenuAnchorType.PrimaryNotEditable)
                 .fillMaxWidth()
                 .height(INPUT_HEIGHT),
-            placeholder = { Text(text = "请选择规则", fontSize = 12.sp) },
+            placeholder = {
+                Text(
+                    text = stringResource(R.string.bangumi_edit_rule_select_hint),
+                    fontSize = 12.sp,
+                )
+            },
             readOnly = true,
             singleLine = true,
             isError = isError,
@@ -289,7 +331,7 @@ private fun ScheduleRuleTypeDropdown(
             EpisodeBroadcastRuleType.entries.forEach { type ->
                 DropdownMenuItem(
                     text = {
-                        Text(type.displayText())
+                        Text(stringResource(type.displayTextRes()))
                     },
                     onClick = {
                         onRuleTypeSelected(type)
@@ -301,10 +343,11 @@ private fun ScheduleRuleTypeDropdown(
     }
 }
 
-private fun EpisodeBroadcastRuleType.displayText(): String {
+@StringRes
+private fun EpisodeBroadcastRuleType.displayTextRes(): Int {
     return when (this) {
-        EpisodeBroadcastRuleType.DELAY -> "停更"
-        EpisodeBroadcastRuleType.SAME_DAY_AS_PREVIOUS -> "与上一集同日播出"
+        EpisodeBroadcastRuleType.DELAY -> R.string.bangumi_edit_rule_delay
+        EpisodeBroadcastRuleType.SAME_DAY_AS_PREVIOUS -> R.string.bangumi_edit_rule_same_day
     }
 }
 
@@ -382,9 +425,9 @@ private fun ErrorBangumiScheduleRuleEditorPreview() {
                     episodeInput = "5",
                     ruleType = EpisodeBroadcastRuleType.DELAY,
                     delayWeeksInput = "1",
-                    episodeError = "Episode Error",
-                    ruleError = "Rule Error",
-                    delayWeeksError = "Delay Weeks Error",
+                    episodeError = R.string.bangumi_edit_error_rule_episode_positive,
+                    ruleError = R.string.bangumi_edit_error_rule_type_required,
+                    delayWeeksError = R.string.bangumi_edit_error_delay_weeks_positive,
                 ),
                 EpisodeBroadcastRuleUiState(
                     rowId = 2,

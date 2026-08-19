@@ -17,10 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.ui.components.AppDatePickerDialog
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import kotlinx.coroutines.launch
@@ -35,6 +38,7 @@ fun BangumiAddBatchScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val resources = LocalResources.current
     val coroutineScope = rememberCoroutineScope()
 
     BangumiAddBatchScreenContent(
@@ -42,20 +46,26 @@ fun BangumiAddBatchScreen(
         onBack = onBack,
         onSubmitAllClick = {
             coroutineScope.launch {
-                val msg = viewModel.onSubmitAllClick()
-                if (msg[0] == 'T') {
-                    Toast.makeText(
-                        context,
-                        msg.substring(startIndex = 1),
-                        Toast.LENGTH_SHORT,
-                    ).show()
-                    onBack()
-                } else {
-                    Toast.makeText(
-                        context,
-                        msg.substring(startIndex = 1),
-                        Toast.LENGTH_SHORT,
-                    ).show()
+                when (val result = viewModel.onSubmitAllClick()) {
+                    is BatchSubmitResult.Success -> {
+                        Toast.makeText(
+                            context,
+                            resources.getQuantityString(
+                                R.plurals.bangumi_add_submit_success,
+                                result.itemCount,
+                                result.itemCount,
+                            ),
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                        onBack()
+                    }
+                    is BatchSubmitResult.Failure -> {
+                        Toast.makeText(
+                            context,
+                            resources.getString(result.messageRes),
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                    }
                 }
             }
         },
@@ -63,7 +73,21 @@ fun BangumiAddBatchScreen(
         onFormattedTextChanged = viewModel::onFormattedTextChanged,
         onParseClick = {
             val result = viewModel.onParseClick()
-            Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+            val message = if (result.errorIndexes.isEmpty()) {
+                resources.getString(
+                    R.string.bangumi_add_parse_result,
+                    result.successCount,
+                    result.totalCount,
+                )
+            } else {
+                resources.getString(
+                    R.string.bangumi_add_parse_result_with_errors,
+                    result.successCount,
+                    result.totalCount,
+                    result.errorIndexes.joinToString("/"),
+                )
+            }
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         },
         onTitleChanged = viewModel::onTitleChanged,
         onFirstBroadcastDateChanged = viewModel::onFirstBroadcastDateChanged,
@@ -94,10 +118,13 @@ fun BangumiAddBatchScreenContent(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("批量添加") },
+                title = { Text(stringResource(R.string.bangumi_add_batch_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.Close, contentDescription = "返回")
+                        Icon(
+                            Icons.Filled.Close,
+                            contentDescription = stringResource(R.string.action_back),
+                        )
                     }
                 },
                 actions = {
@@ -105,7 +132,7 @@ fun BangumiAddBatchScreenContent(
                         onClick = onSubmitAllClick,
                         enabled = !uiState.isSubmitting,
                     ) {
-                        Text("提交")
+                        Text(stringResource(R.string.action_submit))
                     }
                 },
             )
@@ -155,14 +182,14 @@ fun BangumiAddBatchScreenContent(
                         OutlinedTextField(
                             value = uiState.formattedText,
                             onValueChange = onFormattedTextChanged,
-                            label = { Text("格式化文本") },
+                            label = { Text(stringResource(R.string.bangumi_add_formatted_text)) },
                             modifier = Modifier.weight(1f),
                             minLines = 3,
                             maxLines = Int.MAX_VALUE,
                         )
 
                         TextButton(onClick = onParseClick) {
-                            Text(text = "解析")
+                            Text(text = stringResource(R.string.bangumi_add_parse))
                         }
                     }
                 }
@@ -178,7 +205,7 @@ fun BangumiAddBatchScreenContent(
                 if (uiState.items.isEmpty()) {
                     item {
                         Text(
-                            text = "解析后的项目会显示在这里",
+                            text = stringResource(R.string.bangumi_add_parsed_items_empty),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(vertical = 28.dp),
@@ -212,22 +239,24 @@ fun BangumiAddBatchScreenContent(
     uiState.pendingDeleteItem?.let { item ->
         AlertDialog(
             onDismissRequest = onDismissDeleteDialog,
-            title = { Text("删除这一项？") },
+            title = { Text(stringResource(R.string.bangumi_add_delete_item_title)) },
             text = {
                 Text(
-                    text = item.title.ifBlank { "未命名项目" },
+                    text = item.title.ifBlank {
+                        stringResource(R.string.bangumi_add_unnamed_item)
+                    },
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
                 )
             },
             confirmButton = {
                 TextButton(onClick = onConfirmDelete) {
-                    Text("删除")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismissDeleteDialog) {
-                    Text("取消")
+                    Text(stringResource(R.string.action_cancel))
                 }
             },
         )
@@ -245,13 +274,13 @@ private fun BatchAddListHeader(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "标题",
+            text = stringResource(R.string.bangumi_field_title),
             modifier = Modifier.weight(1.8f),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.labelMedium,
         )
         Text(
-            text = "开播日期",
+            text = stringResource(R.string.bangumi_field_first_broadcast_date),
             modifier = Modifier
                 .widthIn(min = 120.dp)
                 .weight(1f)
@@ -302,7 +331,7 @@ private fun BatchAddItemCard(
                     Box {
                         if (item.title.isBlank()) {
                             Text(
-                                text = "点击输入标题",
+                                text = stringResource(R.string.bangumi_add_title_input_hint),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodyMedium,
                             )
@@ -332,14 +361,17 @@ private fun BatchAddItemCard(
             )
 
             IconButton(onClick = onDeleteClick) {
-                Icon(Icons.Filled.Delete, contentDescription = "删除")
+                Icon(
+                    Icons.Filled.Delete,
+                    contentDescription = stringResource(R.string.action_delete),
+                )
             }
         }
 
         item.titleError?.let { error ->
             HorizontalDivider(color = MaterialTheme.colorScheme.error.copy(alpha = 0.35f))
             Text(
-                text = error,
+                text = stringResource(error),
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
@@ -399,7 +431,7 @@ private fun PreviewBangumiAddBatchScreen() {
                         id = index.toLong(),
                         title = "示例标题 ${index + 1}".repeat(index + 2),
                         firstBroadcastDate = LocalDate.of(2026, 7, 1).plusWeeks(index.toLong()),
-                        titleError = if (index == 4) "error message" else null,
+                        titleError = if (index == 4) R.string.bangumi_error_title_required else null,
                     )
                 },
             ),

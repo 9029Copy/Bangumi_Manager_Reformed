@@ -1,7 +1,9 @@
 package com.copy9029.bangumimanagerreformed.ui.bangumi.add
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.BangumiAddInfo
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
 import com.copy9029.bangumimanagerreformed.data.GlobalSettings
@@ -37,23 +39,21 @@ data class BatchAddItemUiState(
     val id: Long,
     val title: String,
     val firstBroadcastDate: LocalDate,
-    val titleError: String? = null,
+    val titleError: Int? = null,
 )
 
 data class BatchParseResult(
     val successCount: Int,
     val totalCount: Int,
     val errorIndexes: List<Int>,
-) {
-    val message: String
-        get() {
-            val base = "成功解析${successCount}/${totalCount}个项目"
-            return if (errorIndexes.isEmpty()) {
-                base
-            } else {
-                "$base，错误项目编号为${errorIndexes.joinToString("/")}"
-            }
-        }
+)
+
+sealed interface BatchSubmitResult {
+    data class Success(val itemCount: Int) : BatchSubmitResult
+
+    data class Failure(
+        @param:StringRes val messageRes: Int,
+    ) : BatchSubmitResult
 }
 
 @HiltViewModel
@@ -189,15 +189,15 @@ class BangumiAddBatchViewModel @Inject constructor(
         }
     }
 
-    suspend fun onSubmitAllClick(): String {
+    suspend fun onSubmitAllClick(): BatchSubmitResult {
         val state = _uiState.value
         if (state.isSubmitting) {
-            return "F正在提交，请稍候"
+            return BatchSubmitResult.Failure(R.string.bangumi_add_submit_in_progress)
         }
 
         val validatedItems = state.items.map { item ->
             if (item.title.isBlank()) {
-                item.copy(titleError = "标题不能为空")
+                item.copy(titleError = R.string.bangumi_error_title_required)
             } else {
                 item
             }
@@ -208,10 +208,10 @@ class BangumiAddBatchViewModel @Inject constructor(
         }
 
         if (validatedItems.isEmpty()) {
-            return "F添加失败：待添加列表为空！"
+            return BatchSubmitResult.Failure(R.string.bangumi_add_submit_empty)
         }
         if (validatedItems.any { it.titleError != null }) {
-            return "F添加失败：请检查项目是否无误！"
+            return BatchSubmitResult.Failure(R.string.bangumi_add_submit_invalid)
         }
 
         val infos = validatedItems.map { item ->
@@ -238,17 +238,17 @@ class BangumiAddBatchViewModel @Inject constructor(
                     isSubmitting = false,
                 )
             }
-            "T成功添加 ${infos.size} 个项目！"
+            BatchSubmitResult.Success(infos.size)
         } catch (exception: CancellationException) {
             _uiState.update {
                 it.copy(isSubmitting = false)
             }
             throw exception
-        } catch (exception: Exception) {
+        } catch (_: Exception) {
             _uiState.update {
                 it.copy(isSubmitting = false)
             }
-            "F添加失败：${exception.message ?: "数据库写入失败"}"
+            BatchSubmitResult.Failure(R.string.bangumi_add_submit_database_failure)
         }
     }
 }
