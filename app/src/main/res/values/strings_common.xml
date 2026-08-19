@@ -1,0 +1,19 @@
+<resources>
+    <string name="action_confirm">确定</string>
+    <string name="action_cancel">取消</string>
+    <string name="action_delete">删除</string>
+    <string name="action_edit">编辑</string>
+    <string name="action_more">更多</string>
+    <string name="action_settings">设置</string>
+    <string name="action_add_item">添加项目</string>
+    <string name="action_hide">隐藏</string>
+    <string name="action_unhide">取消隐藏</string>
+    <string name="action_reset">重置</string>
+    <string name="action_done">完成</string>
+
+    <string name="item_completed">已完成</string>
+    <string name="item_not_completed">未完成</string>
+    <string name="item_confirm_hide">你确定要隐藏这个项目吗？</string>
+    <string name="item_confirm_unhide">你确定要取消隐藏这个项目吗？</string>
+    <string name="item_confirm_delete">你确定要删除这个项目吗？</string>
+</resources>

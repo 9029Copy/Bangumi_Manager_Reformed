@@ -40,10 +40,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.ui.components.wheel_picker.CurrentIndex
 import com.copy9029.bangumimanagerreformed.ui.components.wheel_picker.FVerticalWheelPicker
 import com.copy9029.bangumimanagerreformed.ui.components.wheel_picker.rememberFWheelPickerState
@@ -89,7 +92,7 @@ fun AppDatePickerDialog(
             )
         },
         title = {
-            Text("选择日期")
+            Text(stringResource(R.string.date_picker_title))
         },
         text = {
             Column(
@@ -125,12 +128,12 @@ fun AppDatePickerDialog(
                     onDismissRequest()
                 },
             ) {
-                Text("确定")
+                Text(stringResource(R.string.action_confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("取消")
+                Text(stringResource(R.string.action_cancel))
             }
         },
     )
@@ -157,6 +160,8 @@ private fun MonthNavigationRow(
     onYearMonthClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val selectYearMonthLabel = stringResource(R.string.date_picker_select_year_month)
+
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -166,14 +171,18 @@ private fun MonthNavigationRow(
                 .weight(1f)
                 .clip(RoundedCornerShape(6.dp))
                 .clickable(
-                    onClickLabel = "选择年月",
+                    onClickLabel = selectYearMonthLabel,
                     onClick = onYearMonthClick,
                 )
                 .padding(horizontal = 4.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "${month.year} 年 ${month.monthValue} 月",
+                text = stringResource(
+                    R.string.date_picker_year_month,
+                    month.year,
+                    month.monthValue,
+                ),
                 style = MaterialTheme.typography.titleMedium,
             )
             Icon(
@@ -184,13 +193,13 @@ private fun MonthNavigationRow(
         IconButton(onClick = onPreviousMonthClick) {
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
-                contentDescription = "上个月",
+                contentDescription = stringResource(R.string.date_picker_previous_month),
             )
         }
         IconButton(onClick = onNextMonthClick) {
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                contentDescription = "下个月",
+                contentDescription = stringResource(R.string.date_picker_next_month),
             )
         }
     }
@@ -242,7 +251,7 @@ private fun YearMonthPickerDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(
-                    text = "选择年月",
+                    text = stringResource(R.string.date_picker_select_year_month),
                     style = MaterialTheme.typography.titleMedium,
                 )
 
@@ -262,7 +271,10 @@ private fun YearMonthPickerDialog(
                         unfocusedCount = WheelPickerUnfocusedCount,
                     ) { index ->
                         Text(
-                            text = "${MinimumPickerYear + index} 年",
+                            text = stringResource(
+                                R.string.date_picker_year,
+                                MinimumPickerYear + index,
+                            ),
                             style = MaterialTheme.typography.bodyLarge,
                         )
                     }
@@ -276,7 +288,7 @@ private fun YearMonthPickerDialog(
                         unfocusedCount = WheelPickerUnfocusedCount,
                     ) { index ->
                         Text(
-                            text = "${index + 1} 月",
+                            text = stringResource(R.string.date_picker_month, index + 1),
                             style = MaterialTheme.typography.bodyLarge,
                         )
                     }
@@ -287,7 +299,7 @@ private fun YearMonthPickerDialog(
                     horizontalArrangement = Arrangement.End,
                 ) {
                     TextButton(onClick = onDismissRequest) {
-                        Text("取消")
+                        Text(stringResource(R.string.action_cancel))
                     }
                     TextButton(
                         onClick = {
@@ -302,7 +314,7 @@ private fun YearMonthPickerDialog(
                             onMonthSelected(YearMonth.of(year, month))
                         },
                     ) {
-                        Text("确定")
+                        Text(stringResource(R.string.action_confirm))
                     }
                 }
             }
@@ -314,8 +326,12 @@ private fun YearMonthPickerDialog(
 private fun WeekdayHeader(
     modifier: Modifier = Modifier,
 ) {
+    val weekdayLabels = stringArrayResource(
+        R.array.weekday_labels_monday_first,
+    )
+
     Row(modifier = modifier.fillMaxWidth()) {
-        mondayFirstWeekdayLabels.forEach { label ->
+        weekdayLabels.forEach { label ->
             Text(
                 text = label,
                 modifier = Modifier.weight(1f),
@@ -426,7 +442,6 @@ private fun YearMonth.toMonthOffset(): Long {
     return ChronoUnit.MONTHS.between(monthOffsetOrigin, this)
 }
 
-private val mondayFirstWeekdayLabels = listOf("一", "二", "三", "四", "五", "六", "日")
 private val monthOffsetOrigin: YearMonth = YearMonth.of(1970, 1)
 private const val DaysPerWeek = 7
 private const val CalendarRowCount = 6

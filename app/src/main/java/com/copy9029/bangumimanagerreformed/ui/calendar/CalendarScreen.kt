@@ -73,6 +73,8 @@ import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.INACTIVE_COLOR_LONG
@@ -164,6 +166,7 @@ private fun CalendarScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val dateOutOfRangeMessage = stringResource(R.string.calendar_date_out_of_range)
     val listState = rememberSaveable(
         uiState.firstWeekStart.toEpochDay(),
         uiState.weekCount,
@@ -197,7 +200,7 @@ private fun CalendarScreenContent(
                         modifier = Modifier
                             .heightIn(min = 48.dp)
                             .clickable(
-                                onClickLabel = "跳转到日期",
+                                onClickLabel = stringResource(R.string.calendar_jump_to_date),
                                 role = Role.Button,
                                 onClick = {
                                     isDatePickerVisible = true
@@ -206,7 +209,11 @@ private fun CalendarScreenContent(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "${displayedMonth.year} 年 ${displayedMonth.monthValue} 月",
+                            text = stringResource(
+                                R.string.calendar_year_month,
+                                displayedMonth.year,
+                                displayedMonth.monthValue,
+                            ),
                             fontSize = 20.sp,
                         )
                         Icon(
@@ -228,7 +235,7 @@ private fun CalendarScreenContent(
                         },
                     ) {
                         Text(
-                            text = "今",
+                            text = stringResource(R.string.calendar_today_short),
                             fontSize = 20.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 2.dp)
@@ -245,7 +252,7 @@ private fun CalendarScreenContent(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Add,
-                            contentDescription = "添加项目",
+                            contentDescription = stringResource(R.string.action_add_item),
                             modifier = Modifier.size(32.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -253,7 +260,7 @@ private fun CalendarScreenContent(
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
-                            contentDescription = "设置",
+                            contentDescription = stringResource(R.string.action_settings),
                             modifier = Modifier.size(26.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -340,7 +347,7 @@ private fun CalendarScreenContent(
                 if (selectedWeekIndex == null) {
                     Toast.makeText(
                         context,
-                        "日期超出可显示范围",
+                        dateOutOfRangeMessage,
                         Toast.LENGTH_SHORT,
                     ).show()
                 } else {
@@ -364,13 +371,15 @@ private fun CalendarScreenContent(
 private fun DaysOfWeekHeader(
     modifier: Modifier = Modifier,
 ) {
+    val weekdayLabels = stringArrayResource(R.array.weekday_labels_monday_first)
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 2.dp),
     ) {
-        listOf("一", "二", "三", "四", "五", "六", "日").forEach { day ->
+        weekdayLabels.forEach { day ->
             Text(
                 text = day,
                 modifier = Modifier
@@ -492,7 +501,7 @@ private fun CalendarSelectedDateDetails(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "添加项目",
+                    text = stringResource(R.string.action_add_item),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -501,13 +510,15 @@ private fun CalendarSelectedDateDetails(
     }
 
     pendingSetActiveBangumi?.let { bangumi ->
-        val actionText = if (bangumi.isActive) "隐藏" else "取消隐藏"
+        val confirmationTitle = stringResource(
+            if (bangumi.isActive) R.string.item_confirm_hide else R.string.item_confirm_unhide,
+        )
         AlertDialog(
             onDismissRequest = {
                 pendingSetActiveBangumi = null
             },
             title = {
-                Text("你确定要${actionText}这个项目吗？")
+                Text(confirmationTitle)
             },
             text = {
                 Text(bangumi.title)
@@ -519,7 +530,7 @@ private fun CalendarSelectedDateDetails(
                         onToggleBangumiActiveClick(bangumi.bangumiId)
                     },
                 ) {
-                    Text("确定")
+                    Text(stringResource(R.string.action_confirm))
                 }
             },
             dismissButton = {
@@ -528,7 +539,7 @@ private fun CalendarSelectedDateDetails(
                         pendingSetActiveBangumi = null
                     },
                 ) {
-                    Text("取消")
+                    Text(stringResource(R.string.action_cancel))
                 }
             },
         )
@@ -540,7 +551,7 @@ private fun CalendarSelectedDateDetails(
                 pendingDeleteBangumi = null
             },
             title = {
-                Text("你确定要删除这个项目吗？")
+                Text(stringResource(R.string.item_confirm_delete))
             },
             text = {
                 Text(bangumi.title)
@@ -552,7 +563,7 @@ private fun CalendarSelectedDateDetails(
                         onDeleteBangumiClick(bangumi.bangumiId)
                     },
                 ) {
-                    Text("删除")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
@@ -561,7 +572,7 @@ private fun CalendarSelectedDateDetails(
                         pendingDeleteBangumi = null
                     },
                 ) {
-                    Text("取消")
+                    Text(stringResource(R.string.action_cancel))
                 }
             },
         )
@@ -621,14 +632,14 @@ private fun CalendarSelectedDateDetailCard(
                     if (item.isDone) {
                         Icon(
                             imageVector = Icons.Filled.Check,
-                            contentDescription = "已完成",
+                            contentDescription = stringResource(R.string.item_completed),
                             modifier = Modifier.size(24.dp),
                             tint = colorScheme.main,
                         )
                     } else {
                         Icon(
                             painter = painterResource(R.drawable.calendar_outline_circle),
-                            contentDescription = "未完成",
+                            contentDescription = stringResource(R.string.item_not_completed),
                             modifier = Modifier.size(22.dp),
                             tint = colorScheme.main,
                         )
@@ -650,7 +661,7 @@ private fun CalendarSelectedDateDetailCard(
                     )
 
                     Text(
-                        text = "第 ${item.episodeId} 集",
+                        text = stringResource(R.string.calendar_episode_number, item.episodeId),
                         color = episodeColor,
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 1,
@@ -669,7 +680,7 @@ private fun CalendarSelectedDateDetailCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Edit,
-                        contentDescription = "编辑",
+                        contentDescription = stringResource(R.string.action_edit),
                         modifier = Modifier.size(18.dp),
                     )
                 }
@@ -680,7 +691,7 @@ private fun CalendarSelectedDateDetailCard(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.MoreVert,
-                            contentDescription = "更多",
+                            contentDescription = stringResource(R.string.action_more),
                             modifier = Modifier.size(18.dp),
                         )
                     }
@@ -690,12 +701,22 @@ private fun CalendarSelectedDateDetailCard(
                         onDismissRequest = onDismissMoreMenu,
                     ) {
                         DropdownMenuItem(
-                            text = { Text(if (item.isActive) "隐藏" else "取消隐藏") },
+                            text = {
+                                Text(
+                                    stringResource(
+                                        if (item.isActive) {
+                                            R.string.action_hide
+                                        } else {
+                                            R.string.action_unhide
+                                        },
+                                    ),
+                                )
+                            },
                             onClick = onToggleActiveClick,
                         )
 
                         DropdownMenuItem(
-                            text = { Text("删除") },
+                            text = { Text(stringResource(R.string.action_delete)) },
                             onClick = onDeleteClick,
                         )
                     }
@@ -707,13 +728,13 @@ private fun CalendarSelectedDateDetailCard(
 
 @Composable
 private fun CalendarCircleActionButton(
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
     borderColor: Color = MaterialTheme.colorScheme.outline,
     colors: IconButtonColors = IconButtonDefaults.filledIconButtonColors(
         containerColor = MaterialTheme.colorScheme.surface,
         contentColor = MaterialTheme.colorScheme.onSurface,
     ),
-    modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
     OutlinedIconButton(
@@ -738,6 +759,8 @@ private fun CalendarDateCell(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val monthNames = stringArrayResource(R.array.calendar_month_names)
+
     Card(
         onClick = onClick,
         modifier = modifier
@@ -775,7 +798,7 @@ private fun CalendarDateCell(
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = "今",
+                            text = stringResource(R.string.calendar_today_short),
                             color = MaterialTheme.colorScheme.onPrimary,
                             style = MaterialTheme.typography.labelLarge,
                             fontFamily = FontFamily.SansSerif,
@@ -801,7 +824,7 @@ private fun CalendarDateCell(
                         Spacer(modifier = Modifier.width(3.dp))
 
                         Text(
-                            text = date.monthValue.toChineseMonthText(),
+                            text = monthNames[date.monthValue - 1],
                             color = MaterialTheme.colorScheme.primary,
                             style = if (date.monthValue < 11){
                                 MaterialTheme.typography.labelLarge
@@ -837,7 +860,7 @@ private fun CalendarBangumiTag(
     item: CalendarBangumiItemUiState,
     modifier: Modifier = Modifier,
 ) {
-    val colorScheme = generateBangumiColorScheme(   // TODO: theme Color
+    val colorScheme = generateBangumiColorScheme(
         if (item.isActive) item.themeColorLong else INACTIVE_COLOR_LONG
     )
 
@@ -851,7 +874,11 @@ private fun CalendarBangumiTag(
         shape = RoundedCornerShape(3.dp),
     ) {
         Text(
-            text = if (item.isDone) "✔${item.title}" else item.title,
+            text = if (item.isDone) {
+                stringResource(R.string.calendar_completed_item_title, item.title)
+            } else {
+                item.title
+            },
             modifier = Modifier.padding(horizontal = 1.dp, vertical = 1.dp),
             color = Color.White,
             fontSize = 8.sp,
@@ -891,27 +918,6 @@ private fun CalendarUiState.weekIndexFor(date: LocalDate): Int? {
         .takeIf { it in 0L until weekCount.toLong() }
         ?.toInt()
 }
-
-private fun Int.toChineseMonthText(): String {
-    return when (this) {
-        1 -> "一月"
-        2 -> "二月"
-        3 -> "三月"
-        4 -> "四月"
-        5 -> "五月"
-        6 -> "六月"
-        7 -> "七月"
-        8 -> "八月"
-        9 -> "九月"
-        10 -> "十月"
-        11 -> "十一月"
-        12 -> "十二月"
-        else -> error("Invalid month value: $this")
-    }
-}
-
-
-
 
 
 

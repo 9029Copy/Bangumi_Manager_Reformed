@@ -36,11 +36,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import com.github.skydoves.colorpicker.compose.AlphaSlider
 import com.github.skydoves.colorpicker.compose.AlphaTile
 import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
+import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
@@ -139,12 +141,12 @@ fun AppColorPickerDialog(
                     onDismissRequest()
                 },
             ) {
-                Text("确定")
+                Text(stringResource(R.string.action_confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("取消")
+                Text(stringResource(R.string.action_cancel))
             }
         },
     )

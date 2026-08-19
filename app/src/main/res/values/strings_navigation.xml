@@ -1,0 +1,5 @@
+<resources>
+    <string name="navigation_calendar">日历</string>
+    <string name="navigation_index">列表</string>
+    <string name="navigation_profile">个人</string>
+</resources>

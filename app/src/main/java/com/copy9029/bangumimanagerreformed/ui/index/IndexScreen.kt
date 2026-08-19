@@ -48,6 +48,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -209,7 +211,11 @@ private fun IndexScreenContent(
             TopAppBar(
                 title = {
                     Text(
-                        text = "当前 · 共 ${uiState.filteredItemCount} 项",
+                        text = pluralStringResource(
+                            R.plurals.index_item_count,
+                            uiState.filteredItemCount,
+                            uiState.filteredItemCount,
+                        ),
                         fontSize = 20.sp,
                     )
                 },
@@ -224,7 +230,7 @@ private fun IndexScreenContent(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.index_arrow_upward_24),
-                            contentDescription = "回到顶部",
+                            contentDescription = stringResource(R.string.index_back_to_top),
                             modifier = Modifier.size(30.dp),
                         )
                     }
@@ -233,7 +239,7 @@ private fun IndexScreenContent(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Add,
-                            contentDescription = "添加项目",
+                            contentDescription = stringResource(R.string.action_add_item),
                             modifier = Modifier.size(32.dp),
                         )
                     }
@@ -242,7 +248,7 @@ private fun IndexScreenContent(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
-                            contentDescription = "设置",
+                            contentDescription = stringResource(R.string.action_settings),
                             modifier = Modifier.size(26.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -351,13 +357,19 @@ private fun IndexScreenContent(
 
             // 切换Active状态确认对话
             pendingSetActiveBangumiId?.let { bangumi ->
-                val str1 = if (bangumi.isActive) "隐藏" else "取消隐藏"
+                val confirmationTitle = stringResource(
+                    if (bangumi.isActive) {
+                        R.string.item_confirm_hide
+                    } else {
+                        R.string.item_confirm_unhide
+                    },
+                )
                 AlertDialog(
                     onDismissRequest = {
                         pendingSetActiveBangumiId = null
                     },
                     title = {
-                        Text("你确定要${str1}这个项目吗？")
+                        Text(confirmationTitle)
                     },
                     text = {
                         Text(bangumi.titleStr)
@@ -369,7 +381,7 @@ private fun IndexScreenContent(
                                 onSetBangumiActiveClick(bangumi.bangumiIdInt)
                             },
                         ) {
-                            Text("确定")
+                            Text(stringResource(R.string.action_confirm))
                         }
                     },
                     dismissButton = {
@@ -378,7 +390,7 @@ private fun IndexScreenContent(
                                 pendingSetActiveBangumiId = null
                             },
                         ) {
-                            Text("取消")
+                            Text(stringResource(R.string.action_cancel))
                         }
                     },
                 )
@@ -391,7 +403,7 @@ private fun IndexScreenContent(
                         pendingDeleteBangumiId = null
                     },
                     title = {
-                        Text("你确定要删除这个项目吗？")
+                        Text(stringResource(R.string.item_confirm_delete))
                     },
                     text = {
                         Text(bangumi.titleStr)
@@ -403,7 +415,7 @@ private fun IndexScreenContent(
                                 onDeleteBangumiClick(bangumi.bangumiIdInt)
                             },
                         ) {
-                            Text("删除")
+                            Text(stringResource(R.string.action_delete))
                         }
                     },
                     dismissButton = {
@@ -412,7 +424,7 @@ private fun IndexScreenContent(
                                 pendingDeleteBangumiId = null
                             },
                         ) {
-                            Text("取消")
+                            Text(stringResource(R.string.action_cancel))
                         }
                     },
                 )
@@ -441,7 +453,7 @@ private fun IndexScreenItem(
 
     modifier: Modifier = Modifier,
 ) {
-    val colorScheme = generateBangumiColorScheme(   // TODO: theme Color
+    val colorScheme = generateBangumiColorScheme(
         if (isActive) uiState.themeColorLong else INACTIVE_COLOR_LONG
     )
 
@@ -511,7 +523,9 @@ private fun IndexScreenItem(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.index_item_button_plus_1),
-                        contentDescription = "+1",
+                        contentDescription = stringResource(
+                            R.string.index_watched_episode_increment,
+                        ),
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -525,7 +539,7 @@ private fun IndexScreenItem(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Edit,
-                        contentDescription = "编辑",
+                        contentDescription = stringResource(R.string.action_edit),
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -538,7 +552,7 @@ private fun IndexScreenItem(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.MoreVert,
-                            contentDescription = "更多",
+                            contentDescription = stringResource(R.string.action_more),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -548,17 +562,29 @@ private fun IndexScreenItem(
                         onDismissRequest = onDismissMoreMenu,
                     ) {
                         DropdownMenuItem(
-                            text = { Text("-1") },
+                            text = {
+                                Text(stringResource(R.string.index_watched_episode_decrement))
+                            },
                             onClick = onMinus1Click,
                         )
 
                         DropdownMenuItem(
-                            text = { Text(if (isActive) "隐藏" else "取消隐藏") },
+                            text = {
+                                Text(
+                                    stringResource(
+                                        if (isActive) {
+                                            R.string.action_hide
+                                        } else {
+                                            R.string.action_unhide
+                                        },
+                                    ),
+                                )
+                            },
                             onClick = onSetActiveClick,
                         )
 
                         DropdownMenuItem(
-                            text = { Text("删除") },
+                            text = { Text(stringResource(R.string.action_delete)) },
                             onClick = onDeleteClick,
                         )
                     }

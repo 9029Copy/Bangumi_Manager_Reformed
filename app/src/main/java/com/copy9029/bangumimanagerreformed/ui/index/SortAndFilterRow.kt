@@ -1,5 +1,6 @@
 package com.copy9029.bangumimanagerreformed.ui.index
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -31,17 +32,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 
 
-enum class SortTags(val label: String) {
-    FOCUSING_UPDATE_MODE("按完成状态"),
-    BY_MODIFIED_ORDER("按修改顺序"),
-    BY_RECENT_UPDATE("按更新时间"),
-    BY_START_TIME("按开播日期"),
+enum class SortTags(@param:StringRes val labelRes: Int) {
+    FOCUSING_UPDATE_MODE(R.string.index_sort_by_completion),
+    BY_MODIFIED_ORDER(R.string.index_sort_by_modified),
+    BY_RECENT_UPDATE(R.string.index_sort_by_recent_update),
+    BY_START_TIME(R.string.index_sort_by_start_date),
 }
 
 enum class SortOrders {
@@ -79,7 +81,7 @@ fun SortAndFilterRow(
                 selected = isFocusingUpdating,
                 onClick = { onFocusingUpdatingChanged(!isFocusingUpdating) },
                 label = {
-                    Text("追更模式")
+                    Text(stringResource(R.string.index_filter_following_mode))
                 },
                 leadingIcon = {
                     Checkbox(
@@ -94,12 +96,12 @@ fun SortAndFilterRow(
                 selected = false,
                 onClick = onOpenMoreFilters,
                 label = {
-                    Text("筛选")
+                    Text(stringResource(R.string.index_filter_title))
                 },
                 leadingIcon = {
                     Icon(
                         painter = painterResource(R.drawable.filter_alt_outlined),
-                        contentDescription = "更多筛选",
+                        contentDescription = stringResource(R.string.index_filter_more),
                         modifier = Modifier.size(FilterChipDefaults.IconSize),
                     )
                 },
@@ -137,7 +139,7 @@ private fun SortControl(
                 onClick = { expanded = true },
                 label = {
                     Text(
-                        text = selectedSortTag.label,
+                        text = stringResource(selectedSortTag.labelRes),
                         maxLines = 1,
                     )
                 },
@@ -148,8 +150,12 @@ private fun SortControl(
                             SortOrders.DESC -> painterResource(R.drawable.sort_arrow_downward)
                         },
                         contentDescription = when (selectedSortOrder) {
-                            SortOrders.ASC -> "当前为升序，点击切换为降序"
-                            SortOrders.DESC -> "当前为降序，点击切换为升序"
+                            SortOrders.ASC -> stringResource(
+                                R.string.index_sort_ascending_toggle,
+                            )
+                            SortOrders.DESC -> stringResource(
+                                R.string.index_sort_descending_toggle,
+                            )
                         },
                         modifier = Modifier
                             .size(20.dp)
@@ -171,7 +177,7 @@ private fun SortControl(
                 SortTags.entries.forEach { sortTag ->
                     DropdownMenuItem(
                         text = {
-                            Text(sortTag.label)
+                            Text(stringResource(sortTag.labelRes))
                         },
                         onClick = {
                             onSortTagSelected(sortTag)
@@ -181,7 +187,7 @@ private fun SortControl(
                             if (sortTag == selectedSortTag) {
                                 Icon(
                                     imageVector = Icons.Outlined.Check,
-                                    contentDescription = "已选择",
+                                    contentDescription = stringResource(R.string.index_sort_selected),
                                 )
                             }
                         },

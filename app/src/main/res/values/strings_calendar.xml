@@ -1,0 +1,8 @@
+<resources>
+    <string name="calendar_jump_to_date">跳转到日期</string>
+    <string name="calendar_year_month">%1$d 年 %2$d 月</string>
+    <string name="calendar_today_short">今</string>
+    <string name="calendar_date_out_of_range">日期超出可显示范围</string>
+    <string name="calendar_episode_number">第 %1$d 集</string>
+    <string name="calendar_completed_item_title">✔%1$s</string>
+</resources>

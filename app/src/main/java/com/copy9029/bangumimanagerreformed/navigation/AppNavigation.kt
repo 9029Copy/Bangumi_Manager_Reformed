@@ -1,5 +1,6 @@
 package com.copy9029.bangumimanagerreformed.navigation
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
@@ -17,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -70,10 +72,10 @@ fun AppNavigation() {
                     icon = {
                         Icon(
                             painter = painterResource(destination.icon),
-                            contentDescription = destination.label,
+                            contentDescription = stringResource(destination.labelRes),
                         )
                     },
-                    label = { Text(destination.label) },
+                    label = { Text(stringResource(destination.labelRes)) },
                     selected = currentDestination?.hierarchy?.any {
                         it.route == destination.route
                     } == true,
@@ -241,13 +243,13 @@ private fun secondaryPageExitTransition(): ExitTransition {
 private const val SECONDARY_PAGE_TRANSITION_DURATION_MILLIS = 300
 
 private enum class BottomDestination(
-    val label: String,
+    @param:StringRes val labelRes: Int,
     val icon: Int,
     val route: String,
 ) {
-    CALENDAR("日历", R.drawable.app_dest_calendar, "calendar"),
-    INDEX("列表", R.drawable.app_dest_index, "index"),
-    PROFILE("个人", R.drawable.app_dest_profile, "profile"),
+    CALENDAR(R.string.navigation_calendar, R.drawable.app_dest_calendar, "calendar"),
+    INDEX(R.string.navigation_index, R.drawable.app_dest_index, "index"),
+    PROFILE(R.string.navigation_profile, R.drawable.app_dest_profile, "profile"),
 }
 
 object Routes {

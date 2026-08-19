@@ -1,5 +1,6 @@
 package com.copy9029.bangumimanagerreformed.ui.index
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,22 +31,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 
 
-enum class WatchedTags(val label: String) {
-    ALL("全部"),
-    UNFINISHED("未结束"),
-    FINISHED("已结束"),
+enum class WatchedTags(@param:StringRes val labelRes: Int) {
+    ALL(R.string.index_filter_all),
+    UNFINISHED(R.string.index_filter_unfinished),
+    FINISHED(R.string.index_filter_finished),
 }
 
-enum class InactiveTags(val label: String) {
-    ACTIVE("不显示"),
-    ALL("显示"),
-    INACTIVE("仅显示"),
+enum class InactiveTags(@param:StringRes val labelRes: Int) {
+    ACTIVE(R.string.index_filter_inactive_hidden),
+    ALL(R.string.index_filter_inactive_all),
+    INACTIVE(R.string.index_filter_inactive_only),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,7 +76,7 @@ fun FilterBottomSheet(
                 .padding(horizontal = 20.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(text = "筛选", fontSize = 20.sp)
+            Text(text = stringResource(R.string.index_filter_title), fontSize = 20.sp)
 
             Spacer(modifier = Modifier.height(3.dp))
 
@@ -90,7 +93,7 @@ fun FilterBottomSheet(
                 },
             )
 
-            FilterSection2(title = "结束状态") {
+            FilterSection2(title = stringResource(R.string.index_filter_end_status)) {
                 WatchedTags.entries.forEach { tag ->
                     FilterChip(
                         selected = status.watchedTag == tag,
@@ -98,14 +101,14 @@ fun FilterBottomSheet(
                             onStatusChange(status.copy(watchedTag = tag))
                         },
                         label = {
-                            Text(text = tag.label, fontSize = 12.sp)
+                            Text(text = stringResource(tag.labelRes), fontSize = 12.sp)
                         },
                         modifier = Modifier.weight(1f)
                     )
                 }
             }
 
-            FilterSection2(title = "隐藏项目") {
+            FilterSection2(title = stringResource(R.string.index_filter_hidden_items)) {
                 InactiveTags.entries.forEach { tag ->
                     FilterChip(
                         selected = status.inactiveTag == tag,
@@ -113,7 +116,7 @@ fun FilterBottomSheet(
                             onStatusChange(status.copy(inactiveTag = tag))
                         },
                         label = {
-                            Text(text = tag.label, fontSize = 12.sp)
+                            Text(text = stringResource(tag.labelRes), fontSize = 12.sp)
                         },
                         modifier = Modifier.weight(1f)
                     )
@@ -138,13 +141,13 @@ fun FilterBottomSheet(
                         )
                     },
                 ) {
-                    Text("重置")
+                    Text(stringResource(R.string.action_reset))
                 }
 
                 TextButton(
                     onClick = onDismissRequest,
                 ) {
-                    Text("完成")
+                    Text(stringResource(R.string.action_done))
                 }
             }
         }
@@ -160,8 +163,9 @@ private fun FilterSection1(
     onYearSelected: (Int?) -> Unit,
     onMonthSelected: (Int?) -> Unit,
 ) {
+    val allLabel = stringResource(R.string.index_filter_all)
     val yearOptions = buildList<FilterDropdownOption<Int?>> {
-        add(FilterDropdownOption(null, "全部"))
+        add(FilterDropdownOption(null, allLabel))
 
         if (startYear <= endYear) {
             for (year in endYear downTo startYear) {
@@ -171,18 +175,18 @@ private fun FilterSection1(
     }
 
     val monthOptions = listOf<FilterDropdownOption<Int?>>(
-        FilterDropdownOption(null, "全部"),
-        FilterDropdownOption(1, "1月"),
-        FilterDropdownOption(4, "4月"),
-        FilterDropdownOption(7, "7月"),
-        FilterDropdownOption(10, "10月"),
+        FilterDropdownOption(null, allLabel),
+        FilterDropdownOption(1, stringResource(R.string.index_filter_month, 1)),
+        FilterDropdownOption(4, stringResource(R.string.index_filter_month, 4)),
+        FilterDropdownOption(7, stringResource(R.string.index_filter_month, 7)),
+        FilterDropdownOption(10, stringResource(R.string.index_filter_month, 10)),
     )
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(text = "季度", fontSize = 16.sp)
+        Text(text = stringResource(R.string.index_filter_quarter), fontSize = 16.sp)
 
         Spacer(modifier = Modifier.width(30.dp))
 
@@ -251,7 +255,7 @@ private fun <T> FilterDropdown(
     val selectedText = options
         .firstOrNull { it.value == selectedValue }
         ?.label
-        ?: "全部"
+        ?: stringResource(R.string.index_filter_all)
 
     ExposedDropdownMenuBox(
         expanded = expanded,
