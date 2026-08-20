@@ -48,3 +48,7 @@ internal class BackupValidationException(
     message: String,
     cause: Throwable? = null,
 ) : IllegalArgumentException(message, cause)
+
+internal class BackupFileTooLargeException(
+    val maxSizeMiB: Int,
+) : IllegalArgumentException()

@@ -128,9 +128,7 @@ class BackupRepository @Inject constructor(
             val bytesRead = read(buffer)
             if (bytesRead < 0) break
             if (totalBytes + bytesRead > maxBytes) {
-                throw IllegalArgumentException(
-                    "备份文件不能超过 ${BackupFormat.MAX_FILE_SIZE_MIB} MiB",
-                )
+                throw BackupFileTooLargeException(BackupFormat.MAX_FILE_SIZE_MIB)
             }
             output.write(buffer, 0, bytesRead)
             totalBytes += bytesRead

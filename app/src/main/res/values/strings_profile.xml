@@ -1,0 +1,11 @@
+<resources>
+    <string name="profile_appearance_mode">外观模式</string>
+    <string name="profile_default_color">%1$d月默认颜色</string>
+    <string name="profile_backup">备份</string>
+    <string name="profile_version">版本：%1$s</string>
+    <string name="profile_version_unknown">未知</string>
+    <string name="profile_theme_follow_system">跟随系统</string>
+    <string name="profile_theme_light">浅色</string>
+    <string name="profile_theme_dark">深色（待完善）</string>
+    <string name="profile_color_updated">成功设置%1$d月默认颜色为：#%2$s</string>
+</resources>

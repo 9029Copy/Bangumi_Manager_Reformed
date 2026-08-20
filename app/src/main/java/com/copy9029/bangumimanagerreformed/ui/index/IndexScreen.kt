@@ -59,6 +59,8 @@ import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.INACTIVE_COLOR_LONG
 import com.copy9029.bangumimanagerreformed.data.SettingsRepository
 import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialog
+import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiWatchProgressUiState
+import com.copy9029.bangumimanagerreformed.ui.bangumi.displayText
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheetViewModel
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheet
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
@@ -489,7 +491,7 @@ private fun IndexScreenItem(
                 )
 
                 Text(
-                    text = uiState.watchProgressStr,
+                    text = uiState.watchProgress.displayText(),
                     color = colorScheme.indexSecondaryContent,
                     style = MaterialTheme.typography.labelSmall,
                     maxLines = 1,
@@ -627,7 +629,13 @@ private fun PreviewHere() {
                 bangumiList = List(10) { index ->
                     BangumiIndexItemUiState(
                         titleStr = "Bangumi Title ${index + 1}".repeat(index + 1),
-                        watchProgressStr = "周一 丨 已看完第 10 话 丨 更新到第 12 话",
+                        watchProgress = BangumiWatchProgressUiState(
+                            dayOfWeek = 1,
+                            latestWatchedEpisode = 10,
+                            latestAiredEpisode = 12,
+                            totalEpisodes = 12,
+                            startDate = LocalDate.of(2026, 7, 1),
+                        ),
                         themeColorLong = listOf(
                             SettingsRepository.DEFAULT_01_COLOR_LONG,
                             SettingsRepository.DEFAULT_04_COLOR_LONG,

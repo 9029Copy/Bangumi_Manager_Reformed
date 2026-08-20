@@ -8,8 +8,9 @@ import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
 import com.copy9029.bangumimanagerreformed.data.GlobalSettings
 import com.copy9029.bangumimanagerreformed.data.SettingsRepository
 import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiDetailDialogUiState
+import com.copy9029.bangumimanagerreformed.ui.bangumi.BangumiWatchProgressUiState
 import com.copy9029.bangumimanagerreformed.ui.bangumi.toDetailDialogUiState
-import com.copy9029.bangumimanagerreformed.util.buildBangumiWatchProgressText
+import com.copy9029.bangumimanagerreformed.ui.bangumi.toWatchProgressUiState
 import com.copy9029.bangumimanagerreformed.util.latestAiredBroadcastDate
 import com.copy9029.bangumimanagerreformed.util.latestAiredEpisode
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,7 +44,7 @@ data class IndexUiState(
 
 data class BangumiIndexItemUiState(
     val titleStr: String,
-    val watchProgressStr: String,
+    val watchProgress: BangumiWatchProgressUiState,
     val themeColorLong: Long,
 
     val bangumiIdInt: Int,
@@ -288,22 +289,11 @@ private fun Bangumi.toIndexItemUiState(
     themeColorLong: Long,
 ): BangumiIndexItemUiState {
     val today = LocalDate.now()
-    val latestAiredEpisode = latestAiredEpisode(
-        schedules = schedules,
-        today = today,
-    )
-    val latestAiredDate = latestAiredBroadcastDate(
-        schedules = schedules,
-        today = today,
-    )
     return BangumiIndexItemUiState(
         titleStr = title,
-        watchProgressStr = buildBangumiWatchProgressText(
-            dayOfWeekInt = latestAiredDate?.dayOfWeek?.value ?: firstBroadcastDate.dayOfWeek.value,
-            latestWatchedEpisode = latestWatchedEpisode,
-            latestAiredEpisode = latestAiredEpisode,
-            totalEpisodes = totalEpisodes,
-            startDate = firstBroadcastDate,
+        watchProgress = toWatchProgressUiState(
+            schedules = schedules,
+            today = today,
         ),
         themeColorLong = themeColorLong,
         bangumiIdInt = bangumiId,

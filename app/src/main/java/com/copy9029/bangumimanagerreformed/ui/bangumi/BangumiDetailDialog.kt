@@ -30,27 +30,27 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogWindowProvider
+import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.Bangumi
 import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
 import com.copy9029.bangumimanagerreformed.data.INACTIVE_COLOR_LONG
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
-import com.copy9029.bangumimanagerreformed.util.latestAiredEpisode
-import com.copy9029.bangumimanagerreformed.util.buildBangumiWatchProgressText
-import com.copy9029.bangumimanagerreformed.util.latestAiredBroadcastDate
 import java.time.LocalDate
 
 
 data class BangumiDetailDialogUiState(
     val titleStr: String,
-    val seasonStr: String,           // "yyyy 年 mm 月"
-    val watchProgressStr: String,    // "已看完第 x 话 丨 共/更新到第 y 话"
+    val seasonYear: Int,
+    val seasonMonth: Int,
+    val watchProgress: BangumiWatchProgressUiState,
     val themeColorLong: Long,
-    val scoreStr: String,            // "10.0"/"未知"
-    val firstBroadcastDateStr: String,
+    val scoreTimesTen: Int?,
+    val firstBroadcastDate: LocalDate,
     val isActive: Boolean,
     val inProjectIDInt: Int,
 )
@@ -60,28 +60,17 @@ fun Bangumi.toDetailDialogUiState(
     themeColorLong: Long,
     today: LocalDate = LocalDate.now(),
 ): BangumiDetailDialogUiState {
-    val latestAiredEpisode = latestAiredEpisode(
-        schedules = schedules,
-        today = today,
-    )
-    val latestAiredDate = latestAiredBroadcastDate(
-        schedules = schedules,
-        today = today,
-    )
-
     return BangumiDetailDialogUiState(
         titleStr = title,
-        seasonStr = "$seasonYear 年 $seasonMonth 月",
-        watchProgressStr = buildBangumiWatchProgressText(
-            dayOfWeekInt = latestAiredDate?.dayOfWeek?.value ?: firstBroadcastDate.dayOfWeek.value,
-            latestWatchedEpisode = latestWatchedEpisode,
-            latestAiredEpisode = latestAiredEpisode,
-            totalEpisodes = totalEpisodes,
-            startDate = firstBroadcastDate,
+        seasonYear = seasonYear,
+        seasonMonth = seasonMonth,
+        watchProgress = toWatchProgressUiState(
+            schedules = schedules,
+            today = today,
         ),
         themeColorLong = themeColorLong,
-        scoreStr = myScore?.let { (it / 10.0).toString() } ?: "未知",
-        firstBroadcastDateStr = firstBroadcastDate.toString(),
+        scoreTimesTen = myScore,
+        firstBroadcastDate = firstBroadcastDate,
         isActive = isActive,
         inProjectIDInt = bangumiId,
     )
@@ -145,18 +134,22 @@ fun BangumiDetailDialog(
                 modifier = modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text(uiState.watchProgressStr)
+                Text(uiState.watchProgress.displayText())
 
                 Spacer(modifier = Modifier.height(10.dp))
 
                 DetailInfoRow(
-                    label = "季度",
-                    value = uiState.seasonStr,
+                    label = stringResource(R.string.bangumi_detail_season),
+                    value = stringResource(
+                        R.string.bangumi_detail_season_value,
+                        uiState.seasonYear,
+                        uiState.seasonMonth,
+                    ),
                 )
 
                 DetailInfoRow(
-                    label = "首播日期",
-                    value = uiState.firstBroadcastDateStr,
+                    label = stringResource(R.string.bangumi_detail_first_broadcast_date),
+                    value = uiState.firstBroadcastDate.toString(),
                 )
 
                 ColorInfoRow(
@@ -164,17 +157,25 @@ fun BangumiDetailDialog(
                 )
 
                 DetailInfoRow(
-                    label = "是否隐藏",
-                    value = if (uiState.isActive) "正常显示" else "已隐藏"
+                    label = stringResource(R.string.bangumi_detail_visibility),
+                    value = stringResource(
+                        if (uiState.isActive) {
+                            R.string.bangumi_detail_visible
+                        } else {
+                            R.string.bangumi_detail_hidden
+                        },
+                    ),
                 )
 
                 DetailInfoRow(
-                    label = "评分",
-                    value = uiState.scoreStr,
+                    label = stringResource(R.string.bangumi_detail_score),
+                    value = uiState.scoreTimesTen?.let { score ->
+                        (score / 10.0).toString()
+                    } ?: stringResource(R.string.bangumi_detail_score_unknown),
                 )
 
                 DetailInfoRow(
-                    label = "内部ID",
+                    label = stringResource(R.string.bangumi_detail_internal_id),
                     value = uiState.inProjectIDInt.toString(),
                 )
             }
@@ -183,14 +184,14 @@ fun BangumiDetailDialog(
             TextButton(
                 onClick = onEditClick,
             ) {
-                Text("编辑")
+                Text(stringResource(R.string.action_edit))
             }
         },
         dismissButton = {
             TextButton(
                 onClick = onDismissRequest,
             ) {
-                Text("关闭")
+                Text(stringResource(R.string.action_close))
             }
         },
     )
@@ -233,7 +234,7 @@ private fun ColorInfoRow(
         verticalAlignment = Alignment.Top,
     ) {
         Text(
-            text = "主题颜色",
+            text = stringResource(R.string.bangumi_detail_theme_color),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.width(72.dp),
@@ -270,11 +271,18 @@ private fun PreviewHere() {
         BangumiDetailDialog(
             uiState = BangumiDetailDialogUiState(
                 titleStr = "标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题标题",
-                seasonStr = "2026 年 07 月",
-                watchProgressStr = "周一 丨 已看完第 0 话 丨 更新到第 2 话",
+                seasonYear = 2026,
+                seasonMonth = 7,
+                watchProgress = BangumiWatchProgressUiState(
+                    dayOfWeek = 1,
+                    latestWatchedEpisode = 0,
+                    latestAiredEpisode = 2,
+                    totalEpisodes = 12,
+                    startDate = LocalDate.of(2026, 7, 1),
+                ),
                 themeColorLong = 0xFFFF0000,
-                scoreStr = "未知",
-                firstBroadcastDateStr = "2026-07-01",
+                scoreTimesTen = null,
+                firstBroadcastDate = LocalDate.of(2026, 7, 1),
                 isActive = true,
                 inProjectIDInt = 114,
             ),

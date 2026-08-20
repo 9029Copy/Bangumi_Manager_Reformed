@@ -27,6 +27,11 @@ data class ProfileUiState(
     val colorPickerInitialColorLong: Long? = null,
 )
 
+data class ProfileToastMessage(
+    val month: Int,
+    val argbHex: String,
+)
+
 private enum class DefaultColorTarget(val month: Int) {
     JANUARY(1),
     APRIL(4),
@@ -40,8 +45,8 @@ class ProfileViewModel @Inject constructor(
 ) : ViewModel() {
     private val isThemeModeDialogVisible = MutableStateFlow(false)
     private val defaultColorTarget = MutableStateFlow<DefaultColorTarget?>(null)
-    private val _toastMessages = MutableSharedFlow<String>(extraBufferCapacity = 1)
-    val toastMessages: SharedFlow<String> = _toastMessages
+    private val _toastMessages = MutableSharedFlow<ProfileToastMessage>(extraBufferCapacity = 1)
+    val toastMessages: SharedFlow<ProfileToastMessage> = _toastMessages
 
     val uiState: StateFlow<ProfileUiState> = combine(
         settingsRepository.globalSettings,
@@ -105,7 +110,10 @@ class ProfileViewModel @Inject constructor(
                 DefaultColorTarget.OCTOBER -> settingsRepository.setDefault10ColorLong(value)
             }
             _toastMessages.emit(
-                "成功设置${target.month}月默认颜色为：#${value.toArgbHex()}",
+                ProfileToastMessage(
+                    month = target.month,
+                    argbHex = value.toArgbHex(),
+                ),
             )
         }
     }

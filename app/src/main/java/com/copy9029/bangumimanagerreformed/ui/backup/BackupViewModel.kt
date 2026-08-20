@@ -4,7 +4,9 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.copy9029.bangumimanagerreformed.data.backup.BackupImportData
+import com.copy9029.bangumimanagerreformed.data.backup.BackupFileTooLargeException
 import com.copy9029.bangumimanagerreformed.data.backup.BackupRepository
+import com.copy9029.bangumimanagerreformed.data.backup.BackupValidationException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -30,6 +32,20 @@ data class BackupImportConfirmation(
     val settingCount: Int,
 )
 
+sealed interface BackupMessage {
+    data class ExportSuccess(
+        val fileSizeText: String,
+        val exceedsImportSizeLimit: Boolean,
+    ) : BackupMessage
+
+    data object ExportFailure : BackupMessage
+    data class ReadTooLarge(val maxSizeMiB: Int) : BackupMessage
+    data object ReadInvalid : BackupMessage
+    data object ReadFailure : BackupMessage
+    data object ImportSuccess : BackupMessage
+    data object ImportFailure : BackupMessage
+}
+
 @HiltViewModel
 class BackupViewModel @Inject constructor(
     private val backupRepository: BackupRepository,
@@ -37,8 +53,8 @@ class BackupViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(BackupUiState())
     val uiState: StateFlow<BackupUiState> = _uiState.asStateFlow()
 
-    private val _messages = MutableSharedFlow<String>()
-    val messages: SharedFlow<String> = _messages.asSharedFlow()
+    private val _messages = MutableSharedFlow<BackupMessage>()
+    val messages: SharedFlow<BackupMessage> = _messages.asSharedFlow()
 
     private var pendingImport: BackupImportData? = null
 
@@ -49,16 +65,16 @@ class BackupViewModel @Inject constructor(
             try {
                 val result = backupRepository.exportBackup(uri)
                 val sizeText = result.fileSizeBytes.toReadableFileSize()
-                val sizeLimitWarning = if (result.exceedsImportSizeLimit) {
-                    "，已超过当前导入大小限制"
-                } else {
-                    ""
-                }
-                _messages.emit("备份导出成功，文件大小：$sizeText$sizeLimitWarning")
+                _messages.emit(
+                    BackupMessage.ExportSuccess(
+                        fileSizeText = sizeText,
+                        exceedsImportSizeLimit = result.exceedsImportSizeLimit,
+                    )
+                )
             } catch (exception: CancellationException) {
                 throw exception
-            } catch (exception: Exception) {
-                _messages.emit("备份导出失败：${exception.message ?: "未知错误"}")
+            } catch (_: Exception) {
+                _messages.emit(BackupMessage.ExportFailure)
             } finally {
                 _uiState.update { it.copy(isExporting = false) }
             }
@@ -83,9 +99,15 @@ class BackupViewModel @Inject constructor(
                 }
             } catch (exception: CancellationException) {
                 throw exception
-            } catch (exception: Exception) {
+            } catch (exception: BackupFileTooLargeException) {
                 pendingImport = null
-                _messages.emit("备份读取失败：${exception.message ?: "未知错误"}")
+                _messages.emit(BackupMessage.ReadTooLarge(exception.maxSizeMiB))
+            } catch (_: BackupValidationException) {
+                pendingImport = null
+                _messages.emit(BackupMessage.ReadInvalid)
+            } catch (_: Exception) {
+                pendingImport = null
+                _messages.emit(BackupMessage.ReadFailure)
             } finally {
                 _uiState.update { it.copy(isImporting = false) }
             }
@@ -108,11 +130,11 @@ class BackupViewModel @Inject constructor(
                 backupRepository.replaceAllData(backup)
                 pendingImport = null
                 _uiState.update { it.copy(importConfirmation = null) }
-                _messages.emit("备份导入成功")
+                _messages.emit(BackupMessage.ImportSuccess)
             } catch (exception: CancellationException) {
                 throw exception
-            } catch (exception: Exception) {
-                _messages.emit("备份导入失败：${exception.message ?: "未知错误"}")
+            } catch (_: Exception) {
+                _messages.emit(BackupMessage.ImportFailure)
             } finally {
                 _uiState.update { it.copy(isImporting = false) }
             }

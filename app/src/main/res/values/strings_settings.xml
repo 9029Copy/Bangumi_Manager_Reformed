@@ -1,0 +1,23 @@
+<resources>
+    <string name="settings_calendar_title">日历设置</string>
+    <string name="settings_restore_defaults">恢复默认</string>
+    <string name="settings_section_display">显示</string>
+    <string name="settings_hidden_items">隐藏项目</string>
+    <string name="settings_hidden_items_exclude">不显示</string>
+    <string name="settings_hidden_items_include">显示</string>
+    <string name="settings_hidden_items_only">仅显示</string>
+    <string name="settings_show_watched_episodes">显示已看过的单集</string>
+    <string name="settings_show_completed_bangumis">显示已完成番剧</string>
+    <string name="settings_section_calendar_range">日历范围</string>
+    <string name="settings_weeks_before_current">当前周之前</string>
+    <string name="settings_weeks_before_current_description">日历向过去加载的周数</string>
+    <string name="settings_weeks_after_current">当前周之后</string>
+    <string name="settings_weeks_after_current_description">日历向未来加载的周数</string>
+    <string name="settings_initial_weeks_prefix">初始位置提前周数</string>
+    <string name="settings_initial_weeks_prefix_description">打开日历时在当前周之前保留的周数</string>
+    <string name="settings_restore_defaults_title">恢复默认设置？</string>
+    <string name="settings_restore_defaults_message">日历的所有设置都将恢复为默认值。</string>
+    <string name="settings_restore">恢复</string>
+    <string name="settings_week_count">周数</string>
+    <string name="settings_number_range_hint">请输入 %1$d 到 %2$d 之间的整数</string>
+</resources>

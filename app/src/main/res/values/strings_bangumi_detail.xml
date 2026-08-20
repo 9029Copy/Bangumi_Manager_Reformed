@@ -1,0 +1,12 @@
+<resources>
+    <string name="bangumi_detail_season">季度</string>
+    <string name="bangumi_detail_season_value">%1$d 年 %2$d 月</string>
+    <string name="bangumi_detail_first_broadcast_date">首播日期</string>
+    <string name="bangumi_detail_visibility">是否隐藏</string>
+    <string name="bangumi_detail_visible">正常显示</string>
+    <string name="bangumi_detail_hidden">已隐藏</string>
+    <string name="bangumi_detail_score">评分</string>
+    <string name="bangumi_detail_score_unknown">未知</string>
+    <string name="bangumi_detail_internal_id">内部 ID</string>
+    <string name="bangumi_detail_theme_color">主题颜色</string>
+</resources>

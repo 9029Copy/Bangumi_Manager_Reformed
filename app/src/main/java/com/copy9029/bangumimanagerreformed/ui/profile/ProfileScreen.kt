@@ -2,6 +2,7 @@ package com.copy9029.bangumimanagerreformed.ui.profile
 
 import android.content.Context
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,10 +38,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.AppThemeMode
 import com.copy9029.bangumimanagerreformed.data.SettingsRepository
 import com.copy9029.bangumimanagerreformed.ui.components.AppColorPickerDialog
@@ -54,10 +58,19 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val resources = LocalResources.current
 
-    LaunchedEffect(viewModel, context) {
+    LaunchedEffect(viewModel, context, resources) {
         viewModel.toastMessages.collect { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                resources.getString(
+                    R.string.profile_color_updated,
+                    message.month,
+                    message.argbHex,
+                ),
+                Toast.LENGTH_SHORT,
+            ).show()
         }
     }
 
@@ -130,8 +143,8 @@ private fun ProfileScreenContent(
             }
             item {
                 ProfileSettingItem(
-                    title = "外观模式",
-                    value = uiState.appThemeMode.displayText,
+                    title = stringResource(R.string.profile_appearance_mode),
+                    value = stringResource(uiState.appThemeMode.displayTextRes),
                     onClick = onThemeModeClick,
                 )
             }
@@ -142,28 +155,28 @@ private fun ProfileScreenContent(
             }
             item {
                 ColorSettingItem(
-                    title = "一月默认颜色",
+                    title = stringResource(R.string.profile_default_color, 1),
                     colorLong = uiState.default01ColorLong,
                     onClick = onDefault01ColorClick,
                 )
             }
             item {
                 ColorSettingItem(
-                    title = "四月默认颜色",
+                    title = stringResource(R.string.profile_default_color, 4),
                     colorLong = uiState.default04ColorLong,
                     onClick = onDefault04ColorClick,
                 )
             }
             item {
                 ColorSettingItem(
-                    title = "七月默认颜色",
+                    title = stringResource(R.string.profile_default_color, 7),
                     colorLong = uiState.default07ColorLong,
                     onClick = onDefault07ColorClick,
                 )
             }
             item {
                 ColorSettingItem(
-                    title = "十月默认颜色",
+                    title = stringResource(R.string.profile_default_color, 10),
                     colorLong = uiState.default10ColorLong,
                     onClick = onDefault10ColorClick,
                 )
@@ -175,7 +188,7 @@ private fun ProfileScreenContent(
             }
             item {
                 ProfileSettingItem(
-                    title = "备份",
+                    title = stringResource(R.string.profile_backup),
                     value = "",
                     onClick = onBackupClick,
                 )
@@ -191,7 +204,10 @@ private fun ProfileScreenContent(
                     context.appVersionName()
                 }
                 Text(
-                    text = "版本： $versionName",
+                    text = stringResource(
+                        R.string.profile_version,
+                        versionName ?: stringResource(R.string.profile_version_unknown),
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -215,7 +231,7 @@ private fun ProfileScreenContent(
     val colorPickerInitialColorLong = uiState.colorPickerInitialColorLong
     if (colorPickerMonth != null && colorPickerInitialColorLong != null) {
         AppColorPickerDialog(
-            title = "${colorPickerMonth}月默认颜色",
+            title = stringResource(R.string.profile_default_color, colorPickerMonth),
             initColor = Color(colorPickerInitialColorLong),
             onDismissRequest = onDefaultColorDialogDismiss,
             onPickedColor = { selectedColor ->
@@ -233,7 +249,7 @@ private fun ThemeModeDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text("外观模式") },
+        title = { Text(stringResource(R.string.profile_appearance_mode)) },
         text = {
             Column(
 //                modifier = Modifier.,
@@ -253,7 +269,7 @@ private fun ThemeModeDialog(
                             onClick = null,
                         )
                         Text(
-                            text = mode.displayText,
+                            text = stringResource(mode.displayTextRes),
                             style = MaterialTheme.typography.bodyLarge,
                         )
                     }
@@ -262,7 +278,7 @@ private fun ThemeModeDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("取消")
+                Text(stringResource(R.string.action_cancel))
             }
         },
     )
@@ -364,18 +380,19 @@ private fun ColorSwatch(
     )
 }
 
-private val AppThemeMode.displayText: String
+@get:StringRes
+private val AppThemeMode.displayTextRes: Int
     get() = when (this) {
-        AppThemeMode.FOLLOW_SYSTEM -> "跟随系统"
-        AppThemeMode.LIGHT -> "浅色"
-        AppThemeMode.DARK -> "深色（待完善）"
+        AppThemeMode.FOLLOW_SYSTEM -> R.string.profile_theme_follow_system
+        AppThemeMode.LIGHT -> R.string.profile_theme_light
+        AppThemeMode.DARK -> R.string.profile_theme_dark
     }
 
 @Suppress("DEPRECATION")
-private fun Context.appVersionName(): String {
+private fun Context.appVersionName(): String? {
     return runCatching {
         packageManager.getPackageInfo(packageName, 0).versionName
-    }.getOrNull() ?: "null"
+    }.getOrNull()
 }
 
 @Preview(showBackground = true)

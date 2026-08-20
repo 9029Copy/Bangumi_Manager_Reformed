@@ -32,11 +32,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.CalendarInactiveVisibilityDefaults
 import com.copy9029.bangumimanagerreformed.data.CalendarSettings
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
@@ -85,15 +87,18 @@ private fun CalendarSettingsScreenContent(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("日历设置") },
+                title = { Text(stringResource(R.string.settings_calendar_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(
+                            Icons.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.action_back),
+                        )
                     }
                 },
                 actions = {
                     TextButton(onClick = { isResetDialogVisible = true }) {
-                        Text("恢复默认")
+                        Text(stringResource(R.string.settings_restore_defaults))
                     }
                 },
             )
@@ -105,10 +110,10 @@ private fun CalendarSettingsScreenContent(
                 .fillMaxSize(),
             contentPadding = PaddingValues(bottom = 24.dp),
         ) {
-            item { SettingsSectionTitle("显示") }
+            item { SettingsSectionTitle(stringResource(R.string.settings_section_display)) }
             item {
                 Text(
-                    text = "隐藏项目",
+                    text = stringResource(R.string.settings_hidden_items),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
@@ -116,7 +121,7 @@ private fun CalendarSettingsScreenContent(
             }
             item {
                 InactiveVisibilityOption(
-                    title = "不显示",
+                    title = stringResource(R.string.settings_hidden_items_exclude),
                     selected = uiState.calendarInactiveVisibility ==
                         CalendarInactiveVisibilityDefaults.ACTIVE,
                     onClick = {
@@ -126,7 +131,7 @@ private fun CalendarSettingsScreenContent(
             }
             item {
                 InactiveVisibilityOption(
-                    title = "显示",
+                    title = stringResource(R.string.settings_hidden_items_include),
                     selected = uiState.calendarInactiveVisibility ==
                         CalendarInactiveVisibilityDefaults.ALL,
                     onClick = {
@@ -136,7 +141,7 @@ private fun CalendarSettingsScreenContent(
             }
             item {
                 InactiveVisibilityOption(
-                    title = "仅显示",
+                    title = stringResource(R.string.settings_hidden_items_only),
                     selected = uiState.calendarInactiveVisibility ==
                         CalendarInactiveVisibilityDefaults.INACTIVE,
                     onClick = {
@@ -146,26 +151,28 @@ private fun CalendarSettingsScreenContent(
             }
             item {
                 SwitchSettingItem(
-                    title = "显示已看过的单集",
+                    title = stringResource(R.string.settings_show_watched_episodes),
                     checked = uiState.calendarFinishedEpisodeVisible,
                     onCheckedChange = onFinishedEpisodeVisibleChanged,
                 )
             }
             item {
                 SwitchSettingItem(
-                    title = "显示已完成番剧",
+                    title = stringResource(R.string.settings_show_completed_bangumis),
                     checked = uiState.calendarFinishedBangumiVisible,
                     onCheckedChange = onFinishedBangumiVisibleChanged,
                 )
             }
             item {
                 HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
-                SettingsSectionTitle("日历范围")
+                SettingsSectionTitle(stringResource(R.string.settings_section_calendar_range))
             }
             item {
                 NumberSettingItem(
-                    title = "当前周之前",
-                    supportingText = "日历向过去加载的周数",
+                    title = stringResource(R.string.settings_weeks_before_current),
+                    supportingText = stringResource(
+                        R.string.settings_weeks_before_current_description
+                    ),
                     value = uiState.calendarWeeksBeforeCurrent,
                     valueRange = IntRange(
                         start = CalendarSettingsViewModel.MIN_WEEK_COUNT,
@@ -176,8 +183,10 @@ private fun CalendarSettingsScreenContent(
             }
             item {
                 NumberSettingItem(
-                    title = "当前周之后",
-                    supportingText = "日历向未来加载的周数",
+                    title = stringResource(R.string.settings_weeks_after_current),
+                    supportingText = stringResource(
+                        R.string.settings_weeks_after_current_description
+                    ),
                     value = uiState.calendarWeeksAfterCurrent,
                     valueRange = IntRange(
                         start = CalendarSettingsViewModel.MIN_WEEK_COUNT,
@@ -188,8 +197,10 @@ private fun CalendarSettingsScreenContent(
             }
             item {
                 NumberSettingItem(
-                    title = "初始位置提前周数",
-                    supportingText = "打开日历时在当前周之前保留的周数",
+                    title = stringResource(R.string.settings_initial_weeks_prefix),
+                    supportingText = stringResource(
+                        R.string.settings_initial_weeks_prefix_description
+                    ),
                     value = uiState.calendarWeeksPrefix,
                     valueRange = 0..10,
                     onValueChange = onWeeksPrefixChanged,
@@ -201,8 +212,8 @@ private fun CalendarSettingsScreenContent(
     if (isResetDialogVisible) {
         AlertDialog(
             onDismissRequest = { isResetDialogVisible = false },
-            title = { Text("恢复默认设置？") },
-            text = { Text("日历的所有设置都将恢复为默认值。") },
+            title = { Text(stringResource(R.string.settings_restore_defaults_title)) },
+            text = { Text(stringResource(R.string.settings_restore_defaults_message)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -210,12 +221,12 @@ private fun CalendarSettingsScreenContent(
                         onResetToDefaults()
                     },
                 ) {
-                    Text("恢复")
+                    Text(stringResource(R.string.settings_restore))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { isResetDialogVisible = false }) {
-                    Text("取消")
+                    Text(stringResource(R.string.action_cancel))
                 }
             },
         )
@@ -334,9 +345,15 @@ private fun NumberSettingItem(
                             inputText = text
                         }
                     },
-                    label = { Text("周数") },
+                    label = { Text(stringResource(R.string.settings_week_count)) },
                     supportingText = {
-                        Text("请输入 ${valueRange.first} 到 ${valueRange.last}")
+                        Text(
+                            stringResource(
+                                R.string.settings_number_range_hint,
+                                valueRange.first,
+                                valueRange.last,
+                            )
+                        )
                     },
                     isError = inputText.isNotEmpty() && !isInputValid,
                     singleLine = true,
@@ -351,12 +368,12 @@ private fun NumberSettingItem(
                     },
                     enabled = isInputValid,
                 ) {
-                    Text("确定")
+                    Text(stringResource(R.string.action_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { isInputDialogVisible = false }) {
-                    Text("取消")
+                    Text(stringResource(R.string.action_cancel))
                 }
             },
         )

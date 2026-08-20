@@ -1,5 +1,6 @@
 package com.copy9029.bangumimanagerreformed.ui.backup
 
+import android.content.res.Resources
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,7 +26,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -42,6 +45,7 @@ fun BackupScreen(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument(BACKUP_MIME_TYPE),
@@ -56,9 +60,13 @@ fun BackupScreen(
         },
     )
 
-    LaunchedEffect(viewModel, context) {
+    LaunchedEffect(viewModel, context, resources) {
         viewModel.messages.collect { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                message.resolve(resources),
+                Toast.LENGTH_SHORT,
+            ).show()
         }
     }
 
@@ -92,12 +100,12 @@ private fun BackupScreenContent(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text("数据备份与恢复") },
+                title = { Text(stringResource(R.string.backup_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "返回",
+                            contentDescription = stringResource(R.string.action_back),
                         )
                     }
                 },
@@ -110,8 +118,10 @@ private fun BackupScreenContent(
                 .padding(padding),
         ) {
             ListItem(
-                headlineContent = { Text("导出备份") },
-                supportingContent = { Text("将应用数据保存到备份文件") },
+                headlineContent = { Text(stringResource(R.string.backup_export)) },
+                supportingContent = {
+                    Text(stringResource(R.string.backup_export_description))
+                },
                 leadingContent = {
                     Icon(
                         painter = painterResource(R.drawable.backup_upload_24),
@@ -125,8 +135,10 @@ private fun BackupScreenContent(
             )
 
             ListItem(
-                headlineContent = { Text("导入备份") },
-                supportingContent = { Text("从备份文件恢复应用数据") },
+                headlineContent = { Text(stringResource(R.string.backup_import)) },
+                supportingContent = {
+                    Text(stringResource(R.string.backup_import_description))
+                },
                 leadingContent = {
                     Icon(
                         painter = painterResource(R.drawable.backup_download_24),
@@ -146,19 +158,22 @@ private fun BackupScreenContent(
             onDismissRequest = onImportDismiss,
             title = {
                 Text(
-                    text = "是否导入目标数据",
+                    text = stringResource(R.string.backup_import_confirmation_title),
                     fontWeight = FontWeight.Bold,
                 )
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        "共 ${confirmation.bangumiCount} 个Bangumi项目、" +
-                            " ${confirmation.scheduleCount} 个Schedule项目、" +
-                            " ${confirmation.settingCount} 个设置项目",
+                        stringResource(
+                            R.string.backup_import_summary,
+                            confirmation.bangumiCount,
+                            confirmation.scheduleCount,
+                            confirmation.settingCount,
+                        )
                     )
                     Text(
-                        text = "注意：这将覆盖当前所有数据！",
+                        text = stringResource(R.string.backup_import_overwrite_warning),
                         color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium,
@@ -170,7 +185,7 @@ private fun BackupScreenContent(
                     onClick = onImportConfirm,
                     enabled = !uiState.isImporting,
                 ) {
-                    Text("确认")
+                    Text(stringResource(R.string.action_confirm))
                 }
             },
             dismissButton = {
@@ -178,10 +193,32 @@ private fun BackupScreenContent(
                     onClick = onImportDismiss,
                     enabled = !uiState.isImporting,
                 ) {
-                    Text("取消")
+                    Text(stringResource(R.string.action_cancel))
                 }
             },
         )
+    }
+}
+
+private fun BackupMessage.resolve(resources: Resources): String {
+    return when (this) {
+        is BackupMessage.ExportSuccess -> resources.getString(
+            if (exceedsImportSizeLimit) {
+                R.string.backup_export_success_over_limit
+            } else {
+                R.string.backup_export_success
+            },
+            fileSizeText,
+        )
+        BackupMessage.ExportFailure -> resources.getString(R.string.backup_export_failure)
+        is BackupMessage.ReadTooLarge -> resources.getString(
+            R.string.backup_read_too_large,
+            maxSizeMiB,
+        )
+        BackupMessage.ReadInvalid -> resources.getString(R.string.backup_read_invalid)
+        BackupMessage.ReadFailure -> resources.getString(R.string.backup_read_failure)
+        BackupMessage.ImportSuccess -> resources.getString(R.string.backup_import_success)
+        BackupMessage.ImportFailure -> resources.getString(R.string.backup_import_failure)
     }
 }
 

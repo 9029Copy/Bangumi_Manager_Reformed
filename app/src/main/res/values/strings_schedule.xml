@@ -1,0 +1,16 @@
+<resources>
+    <string name="schedule_weekday">周%1$s</string>
+    <string name="schedule_weekday_unknown">周？</string>
+    <plurals name="schedule_watched_episode">
+        <item quantity="other">已看完第 %1$d 话</item>
+    </plurals>
+    <string name="schedule_not_watched">尚未观看</string>
+    <plurals name="schedule_latest_aired_episode">
+        <item quantity="other">更新到第 %1$d 话</item>
+    </plurals>
+    <plurals name="schedule_total_episodes">
+        <item quantity="other">共 %1$d 话</item>
+    </plurals>
+    <string name="schedule_start_date">%1$d 月 %2$d 日开播</string>
+    <string name="schedule_progress_summary">%1$s 丨 %2$s 丨 %3$s</string>
+</resources>
