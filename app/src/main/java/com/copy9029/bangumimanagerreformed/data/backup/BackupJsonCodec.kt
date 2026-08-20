@@ -9,6 +9,7 @@ import com.copy9029.bangumimanagerreformed.util.calculateExpectedEndDate
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.time.DateTimeException
 import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
@@ -41,17 +42,17 @@ internal class BackupJsonCodec {
             throw exception
         } catch (exception: JSONException) {
             throw BackupValidationException(
-                message = "JSON 结构错误、字段缺失或字段类型不正确：${exception.message}",
+                issue = BackupValidationIssue.MalformedJson,
                 cause = exception,
             )
         } catch (exception: DateTimeParseException) {
             throw BackupValidationException(
-                message = "日期或时间格式不正确：${exception.parsedString}",
+                issue = BackupValidationIssue.InvalidDateOrTime(exception.parsedString),
                 cause = exception,
             )
         } catch (exception: IllegalArgumentException) {
             throw BackupValidationException(
-                message = exception.message ?: "备份内容不合法",
+                issue = BackupValidationIssue.InvalidContent,
                 cause = exception,
             )
         }
@@ -170,24 +171,40 @@ internal class BackupJsonCodec {
         calendarWeeksPrefix = getInt("calendarWeeksPrefix"),
     )
 
-    private fun JSONObject.toGlobalSettings(): GlobalSettings = GlobalSettings(
-        appThemeMode = requireNotNull(
-            AppThemeMode.fromStoredValue(getString("appThemeMode")),
-        ) { "备份中包含未知的主题模式" },
-        default01ColorLong = getLong("default01ColorLong"),
-        default04ColorLong = getLong("default04ColorLong"),
-        default07ColorLong = getLong("default07ColorLong"),
-        default10ColorLong = getLong("default10ColorLong"),
-    )
+    private fun JSONObject.toGlobalSettings(): GlobalSettings {
+        val storedThemeMode = getString("appThemeMode")
+        val appThemeMode = AppThemeMode.fromStoredValue(storedThemeMode)
+            ?: throw BackupValidationException(
+                BackupValidationIssue.UnknownThemeMode(storedThemeMode),
+            )
+
+        return GlobalSettings(
+            appThemeMode = appThemeMode,
+            default01ColorLong = getLong("default01ColorLong"),
+            default04ColorLong = getLong("default04ColorLong"),
+            default07ColorLong = getLong("default07ColorLong"),
+            default10ColorLong = getLong("default10ColorLong"),
+        )
+    }
 
     private fun BackupImportData.withRecalculatedExpectedEndDates(): BackupImportData {
         val schedulesByBangumiId = schedules.groupBy(BangumiSchedule::bangumiId)
         return copy(
             bangumis = bangumis.map { bangumi ->
-                bangumi.copy(
-                    expectedEndDate = bangumi.calculateExpectedEndDate(
+                val expectedEndDate = try {
+                    bangumi.calculateExpectedEndDate(
                         schedulesByBangumiId[bangumi.bangumiId].orEmpty(),
-                    ),
+                    )
+                } catch (exception: DateTimeException) {
+                    throw BackupValidationException(
+                        issue = BackupValidationIssue.ExpectedEndDateOutOfRange(
+                            bangumi.bangumiId,
+                        ),
+                        cause = exception,
+                    )
+                }
+                bangumi.copy(
+                    expectedEndDate = expectedEndDate,
                 )
             },
         )

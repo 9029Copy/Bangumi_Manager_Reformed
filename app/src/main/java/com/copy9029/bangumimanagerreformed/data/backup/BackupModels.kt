@@ -44,10 +44,76 @@ internal object BackupFormat {
     }
 }
 
+sealed interface BackupSection {
+    data object Root : BackupSection
+    data class BangumiItem(val index: Int) : BackupSection
+    data class ScheduleItem(val index: Int) : BackupSection
+    data object CalendarSettings : BackupSection
+    data object GlobalSettings : BackupSection
+}
+
+enum class BangumiValidationReason {
+    ID_NON_POSITIVE,
+    TITLE_BLANK,
+    SEASON_YEAR_OUT_OF_RANGE,
+    SEASON_MONTH_INVALID,
+    SCORE_OUT_OF_RANGE,
+    TOTAL_EPISODES_NON_POSITIVE,
+    WATCHED_EPISODE_NEGATIVE,
+    WATCHED_EPISODE_EXCEEDS_TOTAL,
+    LAST_MODIFIED_NEGATIVE,
+}
+
+enum class ScheduleValidationReason {
+    MISSING_BANGUMI_REFERENCE,
+    EPISODE_NON_POSITIVE,
+    DUPLICATE,
+    EPISODE_EXCEEDS_TOTAL,
+}
+
+enum class CalendarSettingValidationReason {
+    INACTIVE_VISIBILITY_INVALID,
+    WEEKS_BEFORE_OUT_OF_RANGE,
+    WEEKS_AFTER_OUT_OF_RANGE,
+    WEEKS_PREFIX_OUT_OF_RANGE,
+}
+
+sealed interface BackupValidationIssue {
+    data class MissingField(
+        val section: BackupSection,
+        val fieldName: String,
+    ) : BackupValidationIssue
+
+    data class UnsupportedFormatVersion(val version: Int) : BackupValidationIssue
+    data object MalformedJson : BackupValidationIssue
+    data class InvalidDateOrTime(val value: String?) : BackupValidationIssue
+    data object InvalidContent : BackupValidationIssue
+    data object InvalidExportedAt : BackupValidationIssue
+    data object BlankAppVersion : BackupValidationIssue
+    data object DuplicateBangumiId : BackupValidationIssue
+    data class InvalidBangumi(
+        val bangumiId: Int,
+        val reason: BangumiValidationReason,
+    ) : BackupValidationIssue
+    data class InvalidSchedule(
+        val bangumiId: Int,
+        val episodeId: Int,
+        val reason: ScheduleValidationReason,
+    ) : BackupValidationIssue
+    data class MissingFirstSchedule(val bangumiId: Int) : BackupValidationIssue
+    data class FirstScheduleDateMismatch(val bangumiId: Int) : BackupValidationIssue
+    data class InvalidCalendarSetting(
+        val reason: CalendarSettingValidationReason,
+    ) : BackupValidationIssue
+    data class InvalidColor(val month: Int) : BackupValidationIssue
+    data class UnknownThemeMode(val storedValue: String) : BackupValidationIssue
+    data class ExpectedEndDateOutOfRange(val bangumiId: Int) : BackupValidationIssue
+}
+
 internal class BackupValidationException(
-    message: String,
+    val issue: BackupValidationIssue,
     cause: Throwable? = null,
-) : IllegalArgumentException(message, cause)
+) : IllegalArgumentException(issue.toString(), cause)
 
 internal class BackupFileTooLargeException(
     val maxSizeMiB: Int,

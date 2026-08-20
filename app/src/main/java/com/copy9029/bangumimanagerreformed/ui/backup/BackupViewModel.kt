@@ -7,6 +7,7 @@ import com.copy9029.bangumimanagerreformed.data.backup.BackupImportData
 import com.copy9029.bangumimanagerreformed.data.backup.BackupFileTooLargeException
 import com.copy9029.bangumimanagerreformed.data.backup.BackupRepository
 import com.copy9029.bangumimanagerreformed.data.backup.BackupValidationException
+import com.copy9029.bangumimanagerreformed.data.backup.BackupValidationIssue
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -40,7 +41,7 @@ sealed interface BackupMessage {
 
     data object ExportFailure : BackupMessage
     data class ReadTooLarge(val maxSizeMiB: Int) : BackupMessage
-    data object ReadInvalid : BackupMessage
+    data class ReadInvalid(val issue: BackupValidationIssue) : BackupMessage
     data object ReadFailure : BackupMessage
     data object ImportSuccess : BackupMessage
     data object ImportFailure : BackupMessage
@@ -102,9 +103,9 @@ class BackupViewModel @Inject constructor(
             } catch (exception: BackupFileTooLargeException) {
                 pendingImport = null
                 _messages.emit(BackupMessage.ReadTooLarge(exception.maxSizeMiB))
-            } catch (_: BackupValidationException) {
+            } catch (exception: BackupValidationException) {
                 pendingImport = null
-                _messages.emit(BackupMessage.ReadInvalid)
+                _messages.emit(BackupMessage.ReadInvalid(exception.issue))
             } catch (_: Exception) {
                 pendingImport = null
                 _messages.emit(BackupMessage.ReadFailure)

@@ -10,7 +10,7 @@ import java.time.format.DateTimeParseException
 internal object BackupValidator {
     fun validateStructure(root: JSONObject) {
         root.requireKeys(
-            sectionName = "备份文件",
+            section = BackupSection.Root,
             "formatVersion",
             "exportedAt",
             "appVersion",
@@ -20,15 +20,17 @@ internal object BackupValidator {
             "globalSettings",
         )
         val formatVersion = root.getInt("formatVersion")
-        requireBackup(BackupFormat.isSupported(formatVersion)) {
-            "不支持的备份格式版本：$formatVersion"
-        }
+        requireBackup(
+            condition = BackupFormat.isSupported(formatVersion),
+            issue = BackupValidationIssue.UnsupportedFormatVersion(formatVersion),
+        )
 
         val bangumis = root.getJSONArray("bangumis")
         repeat(bangumis.length()) { index ->
+            val section = BackupSection.BangumiItem(index + 1)
             val bangumi = bangumis.getJSONObject(index)
             bangumi.requireKeys(
-                sectionName = "第 ${index + 1} 个 Bangumi 项目",
+                section = section,
                 "bangumiId",
                 "title",
                 "seasonYear",
@@ -44,16 +46,13 @@ internal object BackupValidator {
             } else {
                 "lastModifiedAtMillis"
             }
-            bangumi.requireKeys(
-                sectionName = "第 ${index + 1} 个 Bangumi 项目",
-                modifiedAtKey,
-            )
+            bangumi.requireKeys(section = section, modifiedAtKey)
         }
 
         val schedules = root.getJSONArray("schedules")
         repeat(schedules.length()) { index ->
             schedules.getJSONObject(index).requireKeys(
-                sectionName = "第 ${index + 1} 个 Schedule 项目",
+                section = BackupSection.ScheduleItem(index + 1),
                 "bangumiId",
                 "episodeId",
                 "broadcastDate",
@@ -61,7 +60,7 @@ internal object BackupValidator {
         }
 
         root.getJSONObject("calendarSettings").requireKeys(
-            sectionName = "日历设置",
+            section = BackupSection.CalendarSettings,
             "calendarInactiveVisibility",
             "calendarFinishedEpisodeVisible",
             "calendarFinishedBangumiVisible",
@@ -70,7 +69,7 @@ internal object BackupValidator {
             "calendarWeeksPrefix",
         )
         root.getJSONObject("globalSettings").requireKeys(
-            sectionName = "全局设置",
+            section = BackupSection.GlobalSettings,
             "appThemeMode",
             "default01ColorLong",
             "default04ColorLong",
@@ -80,68 +79,94 @@ internal object BackupValidator {
     }
 
     fun validateContent(root: JSONObject, backup: BackupImportData) {
-        requireBackup(BackupFormat.isSupported(root.getInt("formatVersion"))) {
-            "不支持的备份格式版本：${root.getInt("formatVersion")}"
-        }
+        val formatVersion = root.getInt("formatVersion")
+        requireBackup(
+            condition = BackupFormat.isSupported(formatVersion),
+            issue = BackupValidationIssue.UnsupportedFormatVersion(formatVersion),
+        )
         try {
             Instant.parse(root.getString("exportedAt"))
         } catch (exception: DateTimeParseException) {
-            throw BackupValidationException("导出时间格式不正确", exception)
+            throw BackupValidationException(
+                issue = BackupValidationIssue.InvalidExportedAt,
+                cause = exception,
+            )
         }
-        requireBackup(root.getString("appVersion").isNotBlank()) {
-            "应用版本不能为空"
-        }
+        requireBackup(
+            condition = root.getString("appVersion").isNotBlank(),
+            issue = BackupValidationIssue.BlankAppVersion,
+        )
 
         val bangumiIds = backup.bangumis.map(Bangumi::bangumiId)
-        requireBackup(bangumiIds.distinct().size == bangumiIds.size) {
-            "Bangumi ID 不能重复"
-        }
+        requireBackup(
+            condition = bangumiIds.distinct().size == bangumiIds.size,
+            issue = BackupValidationIssue.DuplicateBangumiId,
+        )
 
         backup.bangumis.forEach { bangumi ->
-            val itemName = "Bangumi ${bangumi.bangumiId}"
-            requireBackup(bangumi.bangumiId > 0) { "$itemName 的 ID 必须大于 0" }
-            requireBackup(bangumi.title.isNotBlank()) { "$itemName 的标题不能为空" }
+            fun issue(reason: BangumiValidationReason) =
+                BackupValidationIssue.InvalidBangumi(bangumi.bangumiId, reason)
+
+            requireBackup(bangumi.bangumiId > 0, issue(BangumiValidationReason.ID_NON_POSITIVE))
+            requireBackup(bangumi.title.isNotBlank(), issue(BangumiValidationReason.TITLE_BLANK))
             requireBackup(
                 bangumi.seasonYear in BackupFormat.MIN_SEASON_YEAR..BackupFormat.MAX_SEASON_YEAR,
-            ) { "$itemName 的季度年份超出范围" }
-            requireBackup(bangumi.seasonMonth in BackupFormat.SEASON_MONTHS) {
-                "$itemName 的季度月份必须是 1、4、7 或 10"
-            }
-            requireBackup(bangumi.myScore == null || bangumi.myScore in 0..100) {
-                "$itemName 的评分必须在 0 到 100 之间"
-            }
-            requireBackup(bangumi.totalEpisodes == null || bangumi.totalEpisodes > 0) {
-                "$itemName 的总集数必须大于 0"
-            }
-            requireBackup(bangumi.latestWatchedEpisode >= 0) {
-                "$itemName 的已观看集数不能小于 0"
-            }
+                issue(BangumiValidationReason.SEASON_YEAR_OUT_OF_RANGE),
+            )
+            requireBackup(
+                bangumi.seasonMonth in BackupFormat.SEASON_MONTHS,
+                issue(BangumiValidationReason.SEASON_MONTH_INVALID),
+            )
+            requireBackup(
+                bangumi.myScore == null || bangumi.myScore in 0..100,
+                issue(BangumiValidationReason.SCORE_OUT_OF_RANGE),
+            )
+            requireBackup(
+                bangumi.totalEpisodes == null || bangumi.totalEpisodes > 0,
+                issue(BangumiValidationReason.TOTAL_EPISODES_NON_POSITIVE),
+            )
+            requireBackup(
+                bangumi.latestWatchedEpisode >= 0,
+                issue(BangumiValidationReason.WATCHED_EPISODE_NEGATIVE),
+            )
             requireBackup(
                 bangumi.totalEpisodes == null ||
                     bangumi.latestWatchedEpisode <= bangumi.totalEpisodes,
-            ) { "$itemName 的已观看集数不能大于总集数" }
-            requireBackup(bangumi.lastModifiedAtMillis >= 0L) {
-                "$itemName 的最近更改时间不能小于 0"
-            }
+                issue(BangumiValidationReason.WATCHED_EPISODE_EXCEEDS_TOTAL),
+            )
+            requireBackup(
+                bangumi.lastModifiedAtMillis >= 0L,
+                issue(BangumiValidationReason.LAST_MODIFIED_NEGATIVE),
+            )
         }
 
         val bangumiById = backup.bangumis.associateBy(Bangumi::bangumiId)
         val scheduleKeys = mutableSetOf<Pair<Int, Int>>()
         backup.schedules.forEach { schedule ->
-            requireBackup(schedule.bangumiId in bangumiById) {
-                "Schedule 引用了不存在的 Bangumi ID：${schedule.bangumiId}"
-            }
-            requireBackup(schedule.episodeId > 0) {
-                "Bangumi ${schedule.bangumiId} 的 Schedule 集数必须大于 0"
-            }
-            requireBackup(scheduleKeys.add(schedule.bangumiId to schedule.episodeId)) {
-                "Bangumi ${schedule.bangumiId} 的第 ${schedule.episodeId} 集 Schedule 重复"
-            }
+            fun issue(reason: ScheduleValidationReason) = BackupValidationIssue.InvalidSchedule(
+                bangumiId = schedule.bangumiId,
+                episodeId = schedule.episodeId,
+                reason = reason,
+            )
+
+            requireBackup(
+                schedule.bangumiId in bangumiById,
+                issue(ScheduleValidationReason.MISSING_BANGUMI_REFERENCE),
+            )
+            requireBackup(
+                schedule.episodeId > 0,
+                issue(ScheduleValidationReason.EPISODE_NON_POSITIVE),
+            )
+            requireBackup(
+                scheduleKeys.add(schedule.bangumiId to schedule.episodeId),
+                issue(ScheduleValidationReason.DUPLICATE),
+            )
 
             val totalEpisodes = bangumiById.getValue(schedule.bangumiId).totalEpisodes
-            requireBackup(totalEpisodes == null || schedule.episodeId <= totalEpisodes) {
-                "Bangumi ${schedule.bangumiId} 的 Schedule 集数不能大于总集数"
-            }
+            requireBackup(
+                totalEpisodes == null || schedule.episodeId <= totalEpisodes,
+                issue(ScheduleValidationReason.EPISODE_EXCEEDS_TOTAL),
+            )
         }
 
         val schedulesByBangumiId = backup.schedules.groupBy(BangumiSchedule::bangumiId)
@@ -149,51 +174,69 @@ internal object BackupValidator {
             val firstSchedule = schedulesByBangumiId[bangumi.bangumiId]
                 ?.firstOrNull { schedule -> schedule.episodeId == 1 }
                 ?: throw BackupValidationException(
-                    "Bangumi ${bangumi.bangumiId} 缺少第 1 集 Schedule",
+                    BackupValidationIssue.MissingFirstSchedule(bangumi.bangumiId),
                 )
-            requireBackup(firstSchedule.broadcastDate == bangumi.firstBroadcastDate) {
-                "Bangumi ${bangumi.bangumiId} 的第 1 集日期必须与开播日期一致"
-            }
+            requireBackup(
+                firstSchedule.broadcastDate == bangumi.firstBroadcastDate,
+                BackupValidationIssue.FirstScheduleDateMismatch(bangumi.bangumiId),
+            )
         }
 
         val calendarSettings = backup.calendarSettings
         requireBackup(
             calendarSettings.calendarInactiveVisibility in INACTIVE_VISIBILITY_VALUES,
-        ) { "日历的活跃状态筛选值无效" }
+            BackupValidationIssue.InvalidCalendarSetting(
+                CalendarSettingValidationReason.INACTIVE_VISIBILITY_INVALID,
+            ),
+        )
         requireBackup(
             calendarSettings.calendarWeeksBeforeCurrent in
                 BackupFormat.MIN_CALENDAR_WEEKS..BackupFormat.MAX_CALENDAR_WEEKS,
-        ) { "日历向前显示的周数超出范围" }
+            BackupValidationIssue.InvalidCalendarSetting(
+                CalendarSettingValidationReason.WEEKS_BEFORE_OUT_OF_RANGE,
+            ),
+        )
         requireBackup(
             calendarSettings.calendarWeeksAfterCurrent in
                 BackupFormat.MIN_CALENDAR_WEEKS..BackupFormat.MAX_CALENDAR_WEEKS,
-        ) { "日历向后显示的周数超出范围" }
+            BackupValidationIssue.InvalidCalendarSetting(
+                CalendarSettingValidationReason.WEEKS_AFTER_OUT_OF_RANGE,
+            ),
+        )
         requireBackup(
             calendarSettings.calendarWeeksPrefix in 0..BackupFormat.MAX_CALENDAR_WEEKS_PREFIX,
-        ) { "日历周数前缀超出范围" }
+            BackupValidationIssue.InvalidCalendarSetting(
+                CalendarSettingValidationReason.WEEKS_PREFIX_OUT_OF_RANGE,
+            ),
+        )
 
         with(backup.globalSettings) {
-            validateColorLong("1 月默认颜色", default01ColorLong)
-            validateColorLong("4 月默认颜色", default04ColorLong)
-            validateColorLong("7 月默认颜色", default07ColorLong)
-            validateColorLong("10 月默认颜色", default10ColorLong)
+            validateColorLong(month = 1, value = default01ColorLong)
+            validateColorLong(month = 4, value = default04ColorLong)
+            validateColorLong(month = 7, value = default07ColorLong)
+            validateColorLong(month = 10, value = default10ColorLong)
         }
     }
 
-    private fun JSONObject.requireKeys(sectionName: String, vararg keys: String) {
+    private fun JSONObject.requireKeys(section: BackupSection, vararg keys: String) {
         keys.forEach { key ->
-            requireBackup(has(key)) { "$sectionName 缺少必要字段：$key" }
+            requireBackup(
+                condition = has(key),
+                issue = BackupValidationIssue.MissingField(section, key),
+            )
         }
     }
 
-    private fun validateColorLong(name: String, value: Long) {
-        requireBackup(value in BackupFormat.MIN_ARGB_COLOR_LONG..BackupFormat.MAX_ARGB_COLOR_LONG) {
-            "$name 不是有效的 ARGB 色值"
-        }
+    private fun validateColorLong(month: Int, value: Long) {
+        requireBackup(
+            condition = value in
+                BackupFormat.MIN_ARGB_COLOR_LONG..BackupFormat.MAX_ARGB_COLOR_LONG,
+            issue = BackupValidationIssue.InvalidColor(month),
+        )
     }
 
-    private inline fun requireBackup(condition: Boolean, message: () -> String) {
-        if (!condition) throw BackupValidationException(message())
+    private fun requireBackup(condition: Boolean, issue: BackupValidationIssue) {
+        if (!condition) throw BackupValidationException(issue)
     }
 
     private val INACTIVE_VISIBILITY_VALUES = setOf(
