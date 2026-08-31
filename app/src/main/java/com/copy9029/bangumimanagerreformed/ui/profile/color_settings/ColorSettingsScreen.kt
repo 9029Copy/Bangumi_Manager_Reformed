@@ -139,6 +139,14 @@ private fun ColorSettingsScreenContent(
                     onClick = onDefault10ColorClick,
                 )
             }
+            item {
+                ColorPreviewSection(
+                    default01ColorLong = uiState.default01ColorLong,
+                    default04ColorLong = uiState.default04ColorLong,
+                    default07ColorLong = uiState.default07ColorLong,
+                    default10ColorLong = uiState.default10ColorLong,
+                )
+            }
         }
     }
 
