@@ -14,12 +14,26 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.copy9029.bangumimanagerreformed.R
+import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun StatisticsScreen(
     viewModel: StatisticsViewModel,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    StatisticsScreenContent(
+        onBack = onBack,
+        modifier = modifier,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StatisticsScreenContent(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -44,5 +58,13 @@ fun StatisticsScreen(
                 .fillMaxSize()
                 .padding(padding),
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun StatisticsScreenPreview() {
+    BangumiManagerReformedTheme(dynamicColor = false) {
+        StatisticsScreenContent(onBack = {})
     }
 }

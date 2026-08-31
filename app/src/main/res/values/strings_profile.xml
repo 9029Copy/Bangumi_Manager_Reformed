@@ -8,7 +8,7 @@
     <string name="profile_theme_light">浅色</string>
     <string name="profile_theme_dark">深色（待完善）</string>
     <string name="profile_color_updated">成功设置%1$d月默认颜色为：#%2$s</string>
-    <string name="profile_color_settings_title">默认颜色</string>
-    <string name="profile_statistics_title">统计</string>
-    <string name="profile_overview_title">概览</string>
+    <string name="profile_color_settings_title">季度颜色设置</string>
+    <string name="profile_statistics_title">统计信息</string>
+    <string name="profile_overview_title">季度概览</string>
 </resources>

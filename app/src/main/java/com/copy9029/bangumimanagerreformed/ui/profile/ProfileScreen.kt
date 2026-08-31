@@ -1,7 +1,6 @@
 package com.copy9029.bangumimanagerreformed.ui.profile
 
 import android.content.Context
-import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -18,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.AccountBox
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -29,16 +27,12 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,85 +40,46 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.data.AppThemeMode
-import com.copy9029.bangumimanagerreformed.data.SettingsRepository
-import com.copy9029.bangumimanagerreformed.ui.components.AppColorPickerDialog
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel,
+    onColorSettingsClick: () -> Unit,
+    onOverviewClick: () -> Unit,
+    onStatisticsClick: () -> Unit,
     onBackupClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    val resources = LocalResources.current
-
-    LaunchedEffect(viewModel, context, resources) {
-        viewModel.toastMessages.collect { message ->
-            Toast.makeText(
-                context,
-                resources.getString(
-                    R.string.profile_color_updated,
-                    message.month,
-                    message.argbHex,
-                ),
-                Toast.LENGTH_SHORT,
-            ).show()
-        }
-    }
 
     ProfileScreenContent(
         uiState = uiState,
         onThemeModeClick = viewModel::onThemeModeClick,
         onThemeModeDialogDismiss = viewModel::onThemeModeDialogDismiss,
         onThemeModeSelected = viewModel::onThemeModeSelected,
-        onDefault01ColorClick = viewModel::onDefault01ColorClick,
-        onDefault04ColorClick = viewModel::onDefault04ColorClick,
-        onDefault07ColorClick = viewModel::onDefault07ColorClick,
-        onDefault10ColorClick = viewModel::onDefault10ColorClick,
-        onDefaultColorDialogDismiss = viewModel::onDefaultColorDialogDismiss,
-        onDefaultColorSelected = viewModel::onDefaultColorSelected,
+        onColorSettingsClick = onColorSettingsClick,
+        onOverviewClick = onOverviewClick,
+        onStatisticsClick = onStatisticsClick,
         onBackupClick = onBackupClick,
         modifier = modifier,
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProfileScreenContent(
     uiState: ProfileUiState,
     onThemeModeClick: () -> Unit,
     onThemeModeDialogDismiss: () -> Unit,
     onThemeModeSelected: (AppThemeMode) -> Unit,
-    onDefault01ColorClick: () -> Unit,
-    onDefault04ColorClick: () -> Unit,
-    onDefault07ColorClick: () -> Unit,
-    onDefault10ColorClick: () -> Unit,
-    onDefaultColorDialogDismiss: () -> Unit,
-    onDefaultColorSelected: (Long) -> Unit,
+    onColorSettingsClick: () -> Unit,
+    onOverviewClick: () -> Unit,
+    onStatisticsClick: () -> Unit,
     onBackupClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
-//        topBar = {
-//            TopAppBar(
-//                title = { Text("个人") },
-//                actions = { // TODO
-//                    IconButton(onClick = onTopActionClick) {
-//                        Icon(
-//                            imageVector = Icons.Filled.MoreVert,
-//                            contentDescription = "更多",
-//                        )
-//                    }
-//                },
-//                colors = TopAppBarDefaults.topAppBarColors(
-//                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-//                    titleContentColor = MaterialTheme.colorScheme.primary,
-//                ),
-//            )
-//        },
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -149,36 +104,37 @@ private fun ProfileScreenContent(
                 )
             }
             item {
+                ProfileSettingItem(
+                    title = stringResource(R.string.profile_color_settings_title),
+                    value = "",
+                    onClick = onColorSettingsClick,
+                    previewContent = {
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            ProfileColorSwatch(Color(uiState.default01ColorLong))
+                            ProfileColorSwatch(Color(uiState.default04ColorLong))
+                            ProfileColorSwatch(Color(uiState.default07ColorLong))
+                            ProfileColorSwatch(Color(uiState.default10ColorLong))
+                        }
+                    },
+                )
+            }
+            item {
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                 )
             }
             item {
-                ColorSettingItem(
-                    title = stringResource(R.string.profile_default_color, 1),
-                    colorLong = uiState.default01ColorLong,
-                    onClick = onDefault01ColorClick,
+                ProfileSettingItem(
+                    title = stringResource(R.string.profile_overview_title),
+                    value = "",
+                    onClick = onOverviewClick,
                 )
             }
             item {
-                ColorSettingItem(
-                    title = stringResource(R.string.profile_default_color, 4),
-                    colorLong = uiState.default04ColorLong,
-                    onClick = onDefault04ColorClick,
-                )
-            }
-            item {
-                ColorSettingItem(
-                    title = stringResource(R.string.profile_default_color, 7),
-                    colorLong = uiState.default07ColorLong,
-                    onClick = onDefault07ColorClick,
-                )
-            }
-            item {
-                ColorSettingItem(
-                    title = stringResource(R.string.profile_default_color, 10),
-                    colorLong = uiState.default10ColorLong,
-                    onClick = onDefault10ColorClick,
+                ProfileSettingItem(
+                    title = stringResource(R.string.profile_statistics_title),
+                    value = "",
+                    onClick = onStatisticsClick,
                 )
             }
             item {
@@ -226,19 +182,6 @@ private fun ProfileScreenContent(
             onDismissRequest = onThemeModeDialogDismiss,
         )
     }
-
-    val colorPickerMonth = uiState.colorPickerMonth
-    val colorPickerInitialColorLong = uiState.colorPickerInitialColorLong
-    if (colorPickerMonth != null && colorPickerInitialColorLong != null) {
-        AppColorPickerDialog(
-            title = stringResource(R.string.profile_default_color, colorPickerMonth),
-            initColor = Color(colorPickerInitialColorLong),
-            onDismissRequest = onDefaultColorDialogDismiss,
-            onPickedColor = { selectedColor ->
-                onDefaultColorSelected(selectedColor.toArgb().toUInt().toLong())
-            },
-        )
-    }
 }
 
 @Composable
@@ -252,7 +195,6 @@ private fun ThemeModeDialog(
         title = { Text(stringResource(R.string.profile_appearance_mode)) },
         text = {
             Column(
-//                modifier = Modifier.,
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
@@ -262,7 +204,7 @@ private fun ThemeModeDialog(
                             .fillMaxWidth()
                             .clickable { onModeSelected(mode) },
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         RadioButton(
                             selected = mode == selectedMode,
@@ -285,7 +227,7 @@ private fun ThemeModeDialog(
 }
 
 @Composable
-private fun UserProfileSection( // TODO：个人Profile
+private fun UserProfileSection(
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -310,20 +252,28 @@ private fun ProfileSettingItem(
     value: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    previewContent: (@Composable () -> Unit)? = null,
 ) {
     ListItem(
         headlineContent = { Text(title) },
         trailingContent = {
             Row(
-                modifier = modifier,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = value,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
+                if (value.isNotEmpty()) {
+                    Text(
+                        text = value,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+                previewContent?.invoke()
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                SettingItemArrow()
             }
         },
         modifier = modifier
@@ -333,47 +283,13 @@ private fun ProfileSettingItem(
 }
 
 @Composable
-private fun ColorSettingItem(
-    title: String,
-    colorLong: Long,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    ListItem(
-        headlineContent = { Text(title) },
-        trailingContent = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                ColorSwatch(color = Color(colorLong))
-                SettingItemArrow()
-            }
-        },
-        modifier = modifier
-            .padding(horizontal = 10.dp)
-            .clickable(onClick = onClick),
-    )
-}
-
-@Composable
-private fun SettingItemArrow() {
-    Icon(
-        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-        contentDescription = null,
-        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-}
-
-@Composable
-private fun ColorSwatch(
+private fun ProfileColorSwatch(
     color: Color,
     modifier: Modifier = Modifier,
-    shape: Shape = MaterialTheme.shapes.small,
 ) {
     Surface(
-        modifier = modifier.size(28.dp),
-        shape = shape,
+        modifier = modifier.size(20.dp),
+        shape = MaterialTheme.shapes.extraSmall,
         color = color,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         content = {},
@@ -402,23 +318,13 @@ private fun ProfileScreenPreview() {
         ProfileScreenContent(
             uiState = ProfileUiState(
                 appThemeMode = AppThemeMode.FOLLOW_SYSTEM,
-                default01ColorLong = SettingsRepository.DEFAULT_01_COLOR_LONG,
-                default04ColorLong = SettingsRepository.DEFAULT_04_COLOR_LONG,
-                default07ColorLong = SettingsRepository.DEFAULT_07_COLOR_LONG,
-                default10ColorLong = SettingsRepository.DEFAULT_10_COLOR_LONG,
-                isThemeModeDialogVisible = false,
-                colorPickerMonth = null,
-                colorPickerInitialColorLong = null,
             ),
             onThemeModeClick = {},
             onThemeModeDialogDismiss = {},
             onThemeModeSelected = {},
-            onDefault01ColorClick = {},
-            onDefault04ColorClick = {},
-            onDefault07ColorClick = {},
-            onDefault10ColorClick = {},
-            onDefaultColorDialogDismiss = {},
-            onDefaultColorSelected = {},
+            onColorSettingsClick = {},
+            onOverviewClick = {},
+            onStatisticsClick = {},
             onBackupClick = {},
         )
     }

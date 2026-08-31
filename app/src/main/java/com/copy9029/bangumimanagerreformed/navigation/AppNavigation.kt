@@ -162,6 +162,15 @@ fun AppNavigation() {
                 val profileViewModel: ProfileViewModel = hiltViewModel()
                 ProfileScreen(
                     viewModel = profileViewModel,
+                    onColorSettingsClick = {
+                        navController.navigate(Routes.COLOR_SETTINGS)
+                    },
+                    onOverviewClick = {
+                        navController.navigate(Routes.OVERVIEW)
+                    },
+                    onStatisticsClick = {
+                        navController.navigate(Routes.STATISTICS)
+                    },
                     onBackupClick = {
                         navController.navigate(Routes.BACKUP)
                     },
