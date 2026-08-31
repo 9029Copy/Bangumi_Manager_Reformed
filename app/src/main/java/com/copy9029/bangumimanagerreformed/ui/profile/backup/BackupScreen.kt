@@ -1,4 +1,4 @@
-package com.copy9029.bangumimanagerreformed.ui.backup
+package com.copy9029.bangumimanagerreformed.ui.profile.backup
 
 import android.content.res.Resources
 import android.widget.Toast

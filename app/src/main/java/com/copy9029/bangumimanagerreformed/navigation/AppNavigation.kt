@@ -34,16 +34,22 @@ import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddSheetViewMod
 import com.copy9029.bangumimanagerreformed.ui.bangumi.add.BangumiAddBatchScreen
 import com.copy9029.bangumimanagerreformed.ui.bangumi.edit.BangumiEditScreen
 import com.copy9029.bangumimanagerreformed.ui.bangumi.edit.BangumiEditViewModel
-import com.copy9029.bangumimanagerreformed.ui.backup.BackupScreen
-import com.copy9029.bangumimanagerreformed.ui.backup.BackupViewModel
 import com.copy9029.bangumimanagerreformed.ui.calendar.CalendarScreen
 import com.copy9029.bangumimanagerreformed.ui.calendar.CalendarViewModel
 import com.copy9029.bangumimanagerreformed.ui.index.IndexScreen
 import com.copy9029.bangumimanagerreformed.ui.index.IndexViewModel
 import com.copy9029.bangumimanagerreformed.ui.profile.ProfileScreen
 import com.copy9029.bangumimanagerreformed.ui.profile.ProfileViewModel
-import com.copy9029.bangumimanagerreformed.ui.settings.CalendarSettingsScreen
-import com.copy9029.bangumimanagerreformed.ui.settings.CalendarSettingsViewModel
+import com.copy9029.bangumimanagerreformed.ui.profile.backup.BackupScreen
+import com.copy9029.bangumimanagerreformed.ui.profile.backup.BackupViewModel
+import com.copy9029.bangumimanagerreformed.ui.profile.color_settings.ColorSettingsScreen
+import com.copy9029.bangumimanagerreformed.ui.profile.color_settings.ColorSettingsViewModel
+import com.copy9029.bangumimanagerreformed.ui.profile.overview.OverviewScreen
+import com.copy9029.bangumimanagerreformed.ui.profile.overview.OverviewViewModel
+import com.copy9029.bangumimanagerreformed.ui.profile.statistics.StatisticsScreen
+import com.copy9029.bangumimanagerreformed.ui.profile.statistics.StatisticsViewModel
+import com.copy9029.bangumimanagerreformed.ui.calendar.settings.CalendarSettingsScreen
+import com.copy9029.bangumimanagerreformed.ui.calendar.settings.CalendarSettingsViewModel
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -177,6 +183,48 @@ fun AppNavigation() {
             }
 
             composable(
+                route = Routes.COLOR_SETTINGS,
+                enterTransition = { secondaryPageEnterTransition() },
+                exitTransition = { secondaryPageExitTransition() },
+                popEnterTransition = { secondaryPageEnterTransition() },
+                popExitTransition = { secondaryPageExitTransition() },
+            ) {
+                val colorSettingsViewModel: ColorSettingsViewModel = hiltViewModel()
+                ColorSettingsScreen(
+                    viewModel = colorSettingsViewModel,
+                    onBack = navController::navigateUp,
+                )
+            }
+
+            composable(
+                route = Routes.STATISTICS,
+                enterTransition = { secondaryPageEnterTransition() },
+                exitTransition = { secondaryPageExitTransition() },
+                popEnterTransition = { secondaryPageEnterTransition() },
+                popExitTransition = { secondaryPageExitTransition() },
+            ) {
+                val statisticsViewModel: StatisticsViewModel = hiltViewModel()
+                StatisticsScreen(
+                    viewModel = statisticsViewModel,
+                    onBack = navController::navigateUp,
+                )
+            }
+
+            composable(
+                route = Routes.OVERVIEW,
+                enterTransition = { secondaryPageEnterTransition() },
+                exitTransition = { secondaryPageExitTransition() },
+                popEnterTransition = { secondaryPageEnterTransition() },
+                popExitTransition = { secondaryPageExitTransition() },
+            ) {
+                val overviewViewModel: OverviewViewModel = hiltViewModel()
+                OverviewScreen(
+                    viewModel = overviewViewModel,
+                    onBack = navController::navigateUp,
+                )
+            }
+
+            composable(
                 route = Routes.BANGUMI_ADD_BATCH,
                 enterTransition = { secondaryPageEnterTransition() },
                 exitTransition = { secondaryPageExitTransition() },
@@ -258,6 +306,9 @@ object Routes {
     const val BANGUMI_ADD_BATCH = "bangumi_add_batch"
     const val CALENDAR_SETTINGS = "calendar_settings"
     const val BACKUP = "backup"
+    const val COLOR_SETTINGS = "profile/color_settings"
+    const val STATISTICS = "profile/statistics"
+    const val OVERVIEW = "profile/overview"
 
     fun bangumiEdit(bangumiId: Int): String {
         return "bangumi_edit/$bangumiId"

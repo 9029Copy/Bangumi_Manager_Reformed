@@ -1,4 +1,4 @@
-package com.copy9029.bangumimanagerreformed.ui.settings
+package com.copy9029.bangumimanagerreformed.ui.calendar.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

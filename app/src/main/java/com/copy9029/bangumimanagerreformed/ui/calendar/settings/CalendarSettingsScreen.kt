@@ -1,4 +1,4 @@
-package com.copy9029.bangumimanagerreformed.ui.settings
+package com.copy9029.bangumimanagerreformed.ui.calendar.settings
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement

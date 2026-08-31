@@ -1,4 +1,4 @@
-package com.copy9029.bangumimanagerreformed.ui.backup
+package com.copy9029.bangumimanagerreformed.ui.profile.backup
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel

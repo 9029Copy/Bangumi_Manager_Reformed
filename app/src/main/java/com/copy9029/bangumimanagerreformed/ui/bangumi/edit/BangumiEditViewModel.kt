@@ -1,6 +1,5 @@
 package com.copy9029.bangumimanagerreformed.ui.bangumi.edit
 
-import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,7 +7,6 @@ import com.copy9029.bangumimanagerreformed.R
 import com.copy9029.bangumimanagerreformed.navigation.Routes
 import com.copy9029.bangumimanagerreformed.data.Bangumi
 import com.copy9029.bangumimanagerreformed.data.BangumiRepository
-import com.copy9029.bangumimanagerreformed.data.BangumiSchedule
 import com.copy9029.bangumimanagerreformed.data.GlobalSettings
 import com.copy9029.bangumimanagerreformed.data.SettingsRepository
 import com.copy9029.bangumimanagerreformed.util.latestAiredEpisode
@@ -23,59 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.temporal.ChronoUnit
 import javax.inject.Inject
-
-enum class EpisodeBroadcastRuleType {
-    DELAY,
-    SAME_DAY_AS_PREVIOUS,
-}
-
-data class EpisodeBroadcastRuleUiState(
-    val rowId: Long,    // Stable identifier within the editor lifecycle.
-    val episodeInput: String = "",
-    val ruleType: EpisodeBroadcastRuleType? = null,
-    val delayWeeksInput: String = "1",
-    val episodeError: Int? = null,
-    val ruleError: Int? = null,
-    val delayWeeksError: Int? = null,
-)
-
-data class BangumiEditUiState(
-    val bangumiId: Int,
-
-    // 第一部分：基本信息
-    val title: String = "",
-    val seasonYear: Int,
-    val seasonMonth: Int,
-    val seasonStartYear: Int,
-    val seasonEndYear: Int,
-    val firstBroadcastDate: LocalDate,
-    val myScoreInput: String = "",
-    val isActive: Boolean = true,
-
-    // 第二部分：集数与观看进度
-    val totalEpisodesInput: String = "",
-    val latestWatchedEpisodeInput: String = "0",
-    val latestAiredEpisode: Int = 0,
-
-    // 第三部分：分集播出规则
-    val episodeBroadcastRules: List<EpisodeBroadcastRuleUiState>? = emptyList(),
-
-    // 表单错误
-    val titleError: Int? = null,
-    val myScoreError: Int? = null,
-    val totalEpisodesError: Int? = null,
-    val latestWatchedEpisodeError: Int? = null,
-
-    val isSubmitting: Boolean = false,
-    val themeColorLong: Long = 0xFFFFFFFFL,
-)
-
-data class BangumiEditSubmitResult(
-    @param:StringRes val messageRes: Int,
-)
-
 
 @HiltViewModel
 class BangumiEditViewModel @Inject constructor(
@@ -482,162 +428,6 @@ class BangumiEditViewModel @Inject constructor(
         return BangumiEditSubmitResult(R.string.bangumi_edit_submit_success)
     }
 
-    // ==================== 输入校验 ====================
-
-    private fun validateTitle(input: String): Int? {
-        return if (input.isBlank()) R.string.bangumi_error_title_required else null
-    }
-
-    private fun validateMyScore(input: String): Int? {
-        if (input.isBlank()) return null
-        if (!input.matches(Regex("""\d+(?:\.\d+)?"""))) {
-            return R.string.bangumi_edit_error_score_characters
-        }
-
-        val scoreTimesTen = try {
-            input.toBigDecimal()
-                .movePointRight(1)
-                .intValueExact()
-        } catch (_: ArithmeticException) {
-            return R.string.bangumi_edit_error_score_decimal_places
-        } catch (_: NumberFormatException) {
-            return R.string.bangumi_edit_error_score_format
-        }
-
-        return if (scoreTimesTen in 0..100) {
-            null
-        } else {
-            R.string.bangumi_edit_error_score_range
-        }
-    }
-
-    private fun validateTotalEpisodes(input: String): Int? {
-        if (input.isBlank()) return null
-
-        val totalEpisodes = input.toIntOrNull()
-        return if (totalEpisodes != null && totalEpisodes > 0) {
-            null
-        } else {
-            R.string.bangumi_edit_error_total_episodes_positive
-        }
-    }
-
-    private fun validateLatestWatchedEpisode(
-        input: String,
-        totalEpisodes: Int?,
-    ): Int? {
-        val latestWatchedEpisode = input.toIntOrNull()
-            ?: return R.string.bangumi_edit_error_watched_episode_nonnegative_integer
-
-        if (latestWatchedEpisode < 0) {
-            return R.string.bangumi_edit_error_watched_episode_nonnegative
-        }
-        if (totalEpisodes != null && latestWatchedEpisode > totalEpisodes) {
-            return R.string.bangumi_edit_error_watched_episode_exceeds_total
-        }
-
-        return null
-    }
-
-    private fun validateRuleEpisodes(
-        rules: List<EpisodeBroadcastRuleUiState>,
-        targetRowId: Long,
-        totalEpisodes: Int?,
-    ): List<EpisodeBroadcastRuleUiState> {
-        val targetRule = rules.firstOrNull { it.rowId == targetRowId }
-            ?: return rules
-        val episode = targetRule.episodeInput.toIntOrNull()
-        val isDuplicate = episode != null && episode > 1 && rules.any { rule ->
-            rule.rowId != targetRowId && rule.episodeInput.toIntOrNull() == episode
-        }
-        val targetError = when {
-            targetRule.episodeInput.isBlank() -> R.string.bangumi_edit_error_rule_episode_required
-            episode == null || episode <= 0 -> R.string.bangumi_edit_error_rule_episode_positive
-            episode == 1 -> R.string.bangumi_edit_error_rule_first_episode
-            totalEpisodes != null && episode > totalEpisodes -> R.string.bangumi_edit_error_rule_episode_exceeds_total
-            isDuplicate -> R.string.bangumi_edit_error_rule_episode_duplicate
-            else -> null
-        }
-
-        return rules.map { rule ->
-            if (rule.rowId == targetRowId) {
-                rule.copy(episodeError = targetError)
-            } else {
-                rule
-            }
-        }
-    }
-
-    private fun validateAllRuleEpisodes(
-        rules: List<EpisodeBroadcastRuleUiState>,
-        totalEpisodes: Int?,
-    ): List<EpisodeBroadcastRuleUiState> {
-        val episodeCounts = rules
-            .mapNotNull { it.episodeInput.toIntOrNull() }
-            .filter { it > 1 }
-            .groupingBy { it }
-            .eachCount()
-
-        return rules.map { rule ->
-            val episode = rule.episodeInput.toIntOrNull()
-            val error = when {
-                rule.episodeInput.isBlank() -> R.string.bangumi_edit_error_rule_episode_required
-                episode == null || episode <= 0 -> R.string.bangumi_edit_error_rule_episode_positive
-                episode == 1 -> R.string.bangumi_edit_error_rule_first_episode
-                totalEpisodes != null && episode > totalEpisodes -> R.string.bangumi_edit_error_rule_episode_exceeds_total
-                episodeCounts[episode] != 1 -> R.string.bangumi_edit_error_rule_episode_duplicate
-                else -> null
-            }
-            rule.copy(episodeError = error)
-        }
-    }
-
-    private fun validateRulesWhenSubmit(
-        rules: List<EpisodeBroadcastRuleUiState>,
-        totalEpisodes: Int?,
-    ): List<EpisodeBroadcastRuleUiState> {
-        return validateAllRuleEpisodes(
-            rules = rules,
-            totalEpisodes = totalEpisodes,
-        ).map { rule ->
-            rule.copy(
-                ruleError = if (rule.ruleType == null) {
-                    R.string.bangumi_edit_error_rule_type_required
-                } else {
-                    null
-                },
-                delayWeeksError = if (
-                    rule.ruleType == EpisodeBroadcastRuleType.DELAY
-                ) {
-                    validateDelayWeeks(rule.delayWeeksInput)
-                } else {
-                    null
-                },
-            )
-        }
-    }
-
-    private fun validateDelayWeeks(input: String): Int? {
-        val weeks = input.toIntOrNull()
-        return when {
-            input.isBlank() -> R.string.bangumi_edit_error_delay_weeks_required
-            weeks == null || weeks <= 0 -> R.string.bangumi_edit_error_delay_weeks_positive
-            else -> null
-        }
-    }
-
-    private fun sortRuleRows(
-        rules: List<EpisodeBroadcastRuleUiState>,
-    ): List<EpisodeBroadcastRuleUiState> {
-        return rules.sortedWith(
-            compareBy<EpisodeBroadcastRuleUiState> { rule ->
-                rule.episodeInput.toIntOrNull()?.takeIf { it > 0 } == null
-            }.thenBy { rule ->
-                rule.episodeInput.toIntOrNull()?.takeIf { it > 0 } ?: Int.MAX_VALUE
-            }.thenBy(EpisodeBroadcastRuleUiState::rowId),
-        )
-    }
-
     private fun BangumiEditUiState.recalculateLatestAiredEpisode(): BangumiEditUiState {
         val bangumi = storedBangumi ?: return this
         val rules = episodeBroadcastRules ?: return this
@@ -674,113 +464,9 @@ class BangumiEditViewModel @Inject constructor(
     }
 }
 
-private fun EpisodeBroadcastRuleUiState.hasError(): Boolean {
-    return episodeError != null || ruleError != null || delayWeeksError != null
-}
-
 private fun Int?.toScoreInput(): String {
     return when {
         this == null -> ""
         else -> (this / 10.0).toString()
     }
-}
-
-
-/**
- * 根据当前（数据库中）的Schedules推算RuleList，若推算失败则返回null
- */
-private fun List<BangumiSchedule>.toRuleList(
-    firstBroadcastDate: LocalDate,
-): List<EpisodeBroadcastRuleUiState>? {
-    if (isEmpty()) return null
-
-    val orderedSchedules = sortedBy(BangumiSchedule::episodeId)
-    val firstSchedule = orderedSchedules.first()
-    if (
-        firstSchedule.episodeId != 1 ||
-        firstSchedule.broadcastDate != firstBroadcastDate ||
-        orderedSchedules.any { it.bangumiId != firstSchedule.bangumiId } ||
-        orderedSchedules.zipWithNext().any { (previous, current) ->
-            previous.episodeId == current.episodeId
-        }
-    ) {
-        return null
-    }
-
-    val rules = mutableListOf<EpisodeBroadcastRuleUiState>()
-    orderedSchedules.zipWithNext().forEach { (previous, current) ->
-        val normalBroadcastDate = previous.broadcastDate.plusWeeks(
-            (current.episodeId - previous.episodeId).toLong()
-        )
-        val offsetDays = ChronoUnit.DAYS.between(
-            normalBroadcastDate,
-            current.broadcastDate,
-        )
-        if (offsetDays % 7L != 0L) return null
-
-        val offsetWeeks = offsetDays / 7L
-        val rule = when {
-            offsetWeeks == 0L -> null
-            offsetWeeks == -1L -> EpisodeBroadcastRuleUiState(
-                rowId = rules.size + 1L,
-                episodeInput = current.episodeId.toString(),
-                ruleType = EpisodeBroadcastRuleType.SAME_DAY_AS_PREVIOUS,
-            )
-            offsetWeeks in 1L..Int.MAX_VALUE.toLong() -> EpisodeBroadcastRuleUiState(
-                rowId = rules.size + 1L,
-                episodeInput = current.episodeId.toString(),
-                ruleType = EpisodeBroadcastRuleType.DELAY,
-                delayWeeksInput = offsetWeeks.toString(),
-            )
-            else -> return null
-        }
-
-        rule?.let(rules::add)
-    }
-
-    return rules
-}
-
-/**
- * 根据编辑后的RuleList推算Schedules（并用于更新数据库）
- */
-private fun List<EpisodeBroadcastRuleUiState>.toScheduleList(
-    bangumiId: Int,
-    firstBroadcastDate: LocalDate,
-): List<BangumiSchedule> {
-    val schedules = mutableListOf(
-        BangumiSchedule(
-            bangumiId = bangumiId,
-            episodeId = 1,
-            broadcastDate = firstBroadcastDate,
-        )
-    )
-
-    sortedBy { rule -> requireNotNull(rule.episodeInput.toIntOrNull()) }
-        .forEach { rule ->
-            val episodeId = requireNotNull(rule.episodeInput.toIntOrNull())
-            require(episodeId > 1) {
-                "播出规则只能应用于第 2 集及之后的集数"
-            }
-
-            val previousAnchor = schedules.last()
-            val normalBroadcastDate = previousAnchor.broadcastDate.plusWeeks(
-                (episodeId - previousAnchor.episodeId).toLong()
-            )
-            val broadcastDate = when (requireNotNull(rule.ruleType)) {
-                EpisodeBroadcastRuleType.DELAY -> normalBroadcastDate.plusWeeks(
-                    requireNotNull(rule.delayWeeksInput.toLongOrNull())
-                )
-                EpisodeBroadcastRuleType.SAME_DAY_AS_PREVIOUS ->
-                    normalBroadcastDate.minusWeeks(1L)
-            }
-
-            schedules += BangumiSchedule(
-                bangumiId = bangumiId,
-                episodeId = episodeId,
-                broadcastDate = broadcastDate,
-            )
-        }
-
-    return schedules
 }
