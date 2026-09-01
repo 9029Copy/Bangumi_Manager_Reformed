@@ -13,4 +13,12 @@
     <string name="profile_color_preview_item_title">%1$s项目示例</string>
     <string name="profile_statistics_title">统计信息</string>
     <string name="profile_overview_title">季度概览</string>
+    <string name="profile_overview_season">%1$d 年 %2$d 月</string>
+    <string name="profile_overview_previous_season">上一季度：%1$s</string>
+    <string name="profile_overview_next_season">下一季度：%1$s</string>
+    <string name="profile_overview_score">评分</string>
+    <string name="profile_overview_score_unknown">—</string>
+    <plurals name="profile_overview_item_count">
+        <item quantity="other">共 %1$d 项</item>
+    </plurals>
 </resources>
