@@ -16,8 +16,13 @@
     <string name="profile_overview_season">%1$d 年 %2$d 月</string>
     <string name="profile_overview_previous_season">上一季度：%1$s</string>
     <string name="profile_overview_next_season">下一季度：%1$s</string>
+    <string name="profile_overview_select_season">选择季度</string>
+    <string name="profile_overview_picker_year">%1$d 年</string>
+    <string name="profile_overview_picker_month">%1$d 月</string>
     <string name="profile_overview_score">评分</string>
     <string name="profile_overview_score_unknown">—</string>
+    <string name="profile_overview_loading">加载中</string>
+    <string name="profile_overview_empty">暂无项目</string>
     <plurals name="profile_overview_item_count">
         <item quantity="other">共 %1$d 项</item>
     </plurals>
