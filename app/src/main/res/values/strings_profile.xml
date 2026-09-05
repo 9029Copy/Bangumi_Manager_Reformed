@@ -9,7 +9,12 @@
     <string name="profile_theme_dark">深色（待完善）</string>
     <string name="profile_color_updated">成功设置%1$d月默认颜色为：#%2$s</string>
     <string name="profile_color_settings_title">季度颜色设置</string>
-    <string name="profile_color_preview_title">颜色预览</string>
+    <string name="profile_color_preview_title">实际效果预览</string>
+    <string name="profile_color_preview_expand">展开颜色预览</string>
+    <string name="profile_color_preview_collapse">收起颜色预览</string>
+    <string name="profile_color_preview_month">%1$d月</string>
+    <string name="profile_color_preview_index">列表</string>
+    <string name="profile_color_preview_calendar">日历</string>
     <string name="profile_color_preview_item_title">%1$s项目示例</string>
     <string name="profile_statistics_title">统计信息</string>
     <string name="profile_overview_title">季度概览</string>

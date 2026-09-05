@@ -140,11 +140,12 @@ private fun ColorSettingsScreenContent(
                 )
             }
             item {
-                ColorPreviewSection(
+                ColorSettingsPreviewSection(
                     default01ColorLong = uiState.default01ColorLong,
                     default04ColorLong = uiState.default04ColorLong,
                     default07ColorLong = uiState.default07ColorLong,
                     default10ColorLong = uiState.default10ColorLong,
+                    initiallyExpanded = false,
                 )
             }
         }
