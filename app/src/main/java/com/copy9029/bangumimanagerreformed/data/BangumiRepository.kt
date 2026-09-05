@@ -82,8 +82,8 @@ class BangumiRepository @Inject constructor(
         )
     }
 
-    fun getBangumiSeasonYearRange(): Flow<BangumiSeasonYearRange> {
-        return bangumiDao.getBangumiSeasonYearRange()
+    fun getBangumiSeasonCounts(): Flow<List<BangumiSeasonCount>> {
+        return bangumiDao.getBangumiSeasonCounts()
     }
 
     fun getBangumiById(bangumiId: Int): Flow<Bangumi?> {

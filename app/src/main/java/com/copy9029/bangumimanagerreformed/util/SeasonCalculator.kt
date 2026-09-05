@@ -17,3 +17,17 @@ fun calcNearestSeason(
         else -> YearMonth.of(year, 10)
     }
 }
+
+fun calcCurrentSeason(
+    today: LocalDate,
+): YearMonth {
+    val year = today.year
+    val month = today.monthValue
+
+    return when (month) {
+        1, 2, 3 -> YearMonth.of(year, 1)
+        4, 5, 6 -> YearMonth.of(year, 4)
+        7, 8, 9 -> YearMonth.of(year, 7)
+        else -> YearMonth.of(year, 10)
+    }
+}

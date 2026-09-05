@@ -7,9 +7,10 @@ import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
-data class BangumiSeasonYearRange(
-    val minYear: Int?,
-    val maxYear: Int?,
+data class BangumiSeasonCount(
+    val seasonYear: Int,
+    val seasonMonth: Int,
+    val itemCount: Int,
 )
 
 @Dao
@@ -29,10 +30,11 @@ interface BangumiDao {
     ): Flow<List<Bangumi>>
 
     @Query("""
-        SELECT MIN(seasonYear) AS minYear, MAX(seasonYear) AS maxYear
+        SELECT seasonYear, seasonMonth, COUNT(*) AS itemCount
         FROM bangumi_items
+        GROUP BY seasonYear, seasonMonth
     """)
-    fun getBangumiSeasonYearRange(): Flow<BangumiSeasonYearRange>
+    fun getBangumiSeasonCounts(): Flow<List<BangumiSeasonCount>>
 
     @Query("SELECT * FROM bangumi_items ORDER BY bangumiId ASC")
     suspend fun getAllBangumisOnce(): List<Bangumi>

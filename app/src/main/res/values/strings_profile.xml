@@ -24,6 +24,8 @@
     <string name="profile_overview_select_season">选择季度</string>
     <string name="profile_overview_picker_year">%1$d 年</string>
     <string name="profile_overview_picker_month">%1$d 月</string>
+    <string name="profile_overview_picker_item_count">%1$d 项</string>
+    <string name="profile_overview_current_season">现在</string>
     <string name="profile_overview_score">评分</string>
     <string name="profile_overview_score_unknown">—</string>
     <string name="profile_overview_loading">加载中</string>

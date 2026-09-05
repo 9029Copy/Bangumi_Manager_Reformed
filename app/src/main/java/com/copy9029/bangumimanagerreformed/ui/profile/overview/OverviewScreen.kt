@@ -8,12 +8,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -32,12 +30,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -51,11 +47,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.copy9029.bangumimanagerreformed.R
-import com.copy9029.bangumimanagerreformed.ui.components.wheel_picker.FVerticalWheelPicker
-import com.copy9029.bangumimanagerreformed.ui.components.wheel_picker.rememberFWheelPickerState
 import com.copy9029.bangumimanagerreformed.ui.theme.BangumiManagerReformedTheme
 import my.nanihadesuka.compose.LazyColumnScrollbar
 import my.nanihadesuka.compose.ScrollbarSettings
@@ -181,8 +174,7 @@ private fun OverviewScreenContent(
     if (isSeasonPickerVisible) {
         SeasonPickerDialog(
             initialSeason = uiState.selectedSeason,
-            minSeasonYear = uiState.minSeasonYear,
-            maxSeasonYear = uiState.maxSeasonYear,
+            seasonOptions = uiState.seasonOptions,
             onSeasonSelected = onSeasonSelected,
             onDismissRequest = onSeasonPickerDismiss,
         )
@@ -340,118 +332,6 @@ private fun SeasonStepControl(
 }
 
 @Composable
-private fun SeasonPickerDialog(
-    initialSeason: OverviewSeason,
-    minSeasonYear: Int,
-    maxSeasonYear: Int,
-    onSeasonSelected: (OverviewSeason) -> Unit,
-    onDismissRequest: () -> Unit,
-) {
-    key(initialSeason, minSeasonYear, maxSeasonYear) {
-        val yearCount = maxSeasonYear - minSeasonYear + 1
-        val initialYearIndex = initialSeason.year
-            .coerceIn(minSeasonYear, maxSeasonYear) - minSeasonYear
-        val initialMonthIndex = OVERVIEW_SEASON_MONTHS
-            .indexOf(initialSeason.month)
-            .coerceAtLeast(0)
-        val yearPickerState = rememberFWheelPickerState(
-            initialIndex = initialYearIndex,
-        )
-        val monthPickerState = rememberFWheelPickerState(
-            initialIndex = initialMonthIndex,
-        )
-
-        Dialog(onDismissRequest = onDismissRequest) {
-        Surface(
-            modifier = Modifier
-                .widthIn(max = 300.dp)
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp),
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            tonalElevation = 6.dp,
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.profile_overview_select_season),
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(SeasonPickerHeight),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    FVerticalWheelPicker(
-                        modifier = Modifier.weight(1f),
-                        count = yearCount,
-                        state = yearPickerState,
-                        key = { index -> minSeasonYear + index },
-                        itemHeight = SeasonPickerItemHeight,
-                        unfocusedCount = SeasonPickerUnfocusedCount,
-                    ) { index ->
-                        Text(
-                            text = stringResource(
-                                R.string.profile_overview_picker_year,
-                                minSeasonYear + index,
-                            ),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                    }
-                    FVerticalWheelPicker(
-                        modifier = Modifier.weight(1f),
-                        count = OVERVIEW_SEASON_MONTHS.size,
-                        state = monthPickerState,
-                        key = { index -> OVERVIEW_SEASON_MONTHS[index] },
-                        itemHeight = SeasonPickerItemHeight,
-                        unfocusedCount = SeasonPickerUnfocusedCount,
-                    ) { index ->
-                        Text(
-                            text = stringResource(
-                                R.string.profile_overview_picker_month,
-                                OVERVIEW_SEASON_MONTHS[index],
-                            ),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                    }
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    TextButton(onClick = onDismissRequest) {
-                        Text(stringResource(R.string.action_cancel))
-                    }
-                    TextButton(
-                        onClick = {
-                            val yearIndex = yearPickerState.currentIndexSnapshot
-                                .takeIf { it in 0 until yearCount }
-                                ?: initialYearIndex
-                            val monthIndex = monthPickerState.currentIndexSnapshot
-                                .takeIf { it in OVERVIEW_SEASON_MONTHS.indices }
-                                ?: initialMonthIndex
-                            onSeasonSelected(
-                                OverviewSeason(
-                                    year = minSeasonYear + yearIndex,
-                                    month = OVERVIEW_SEASON_MONTHS[monthIndex],
-                                ),
-                            )
-                        },
-                    ) {
-                        Text(stringResource(R.string.action_confirm))
-                    }
-                }
-            }
-        }
-    }
-}
-}
-
-@Composable
 private fun OverviewListItem(
     uiState: OverviewItemUiState,
     modifier: Modifier = Modifier,
@@ -584,9 +464,27 @@ private fun OverviewPreviewContent(
 }
 
 private fun overviewPreviewUiState(): OverviewUiState {
+    val selectedSeason = OverviewSeason(year = 2026, month = 7)
+    val previewSeasonCounts = mapOf(
+        OverviewSeason(year = 2027, month = 1) to 6,
+        OverviewSeason(year = 2026, month = 10) to 12,
+        selectedSeason to 4,
+        OverviewSeason(year = 2026, month = 4) to 18,
+        OverviewSeason(year = 2025, month = 10) to 9,
+    )
+
     return OverviewUiState(
-        selectedSeason = OverviewSeason(year = 2026, month = 7),
+        selectedSeason = selectedSeason,
         isLoading = false,
+        seasonOptions = (2025..2027).flatMap { year ->
+            OVERVIEW_SEASON_MONTHS.map { month ->
+                val season = OverviewSeason(year = year, month = month)
+                OverviewSeasonOptionUiState(
+                    season = season,
+                    itemCount = previewSeasonCounts[season] ?: 0,
+                )
+            }
+        },
         items = listOf(
             OverviewItemUiState(
                 bangumiId = 1,
@@ -611,8 +509,3 @@ private fun overviewPreviewUiState(): OverviewUiState {
         ),
     )
 }
-
-private const val SeasonPickerUnfocusedCount = 2
-private val SeasonPickerItemHeight = 40.dp
-private val SeasonPickerHeight =
-    SeasonPickerItemHeight * (SeasonPickerUnfocusedCount * 2 + 1)
