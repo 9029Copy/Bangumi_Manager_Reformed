@@ -248,7 +248,7 @@ fun BangumiEditContent(
 
 @Preview(
     showBackground = true,
-    heightDp = 1200,
+    heightDp = 1000,
 )
 @Composable
 private fun PreviewBangumiEditContent() {
@@ -305,7 +305,7 @@ private fun PreviewBangumiEditContent() {
 
 @Preview(
     showBackground = true,
-    heightDp = 1200,
+    heightDp = 1000,
 )
 @Composable
 private fun PreviewBangumiEditContent2() {

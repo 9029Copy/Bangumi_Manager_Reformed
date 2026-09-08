@@ -60,6 +60,7 @@ import java.time.temporal.ChronoUnit
  *
  * Original implementation by re-ovo:
  * https://gist.github.com/re-ovo/2b4cc2c4fdfb03784fa8643dd360f4a5
+ * The referenced Gist does not declare a license; see THIRD_PARTY_NOTICES.md.
  */
 @Composable
 fun AppDatePickerDialog(

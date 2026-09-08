@@ -376,7 +376,7 @@ private fun PreviewCalendarScreenContent() {
                     (today.dayOfWeek.value - 1 + 7 * 10).toLong()
                 ),
                 weekCount = 21,
-                initialWeekIndex = 10 - 1 + 17,
+                initialWeekIndex = 10 - 1,
                 bangumisByDate = (0..20).associate { index ->
                     val date = today.plusDays(index.toLong() - 1L)
                     date to listOf(

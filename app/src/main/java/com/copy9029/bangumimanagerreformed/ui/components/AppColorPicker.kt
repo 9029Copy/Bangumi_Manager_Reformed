@@ -2,6 +2,7 @@
  * Uses skydoves/colorpicker-compose.
  * https://github.com/skydoves/colorpicker-compose
  * Licensed under the Apache License, Version 2.0.
+ * See licenses/colorpicker-compose-LICENSE.txt.
  */
 
 package com.copy9029.bangumimanagerreformed.ui.components

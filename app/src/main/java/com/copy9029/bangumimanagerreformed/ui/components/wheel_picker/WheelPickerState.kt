@@ -1,6 +1,8 @@
 /*
  * Adapted from https://github.com/zj565061763/compose-wheel-picker
- * Licensed under the MIT License.
+ * Copyright (c) 2022 Sunday
+ * Licensed under the MIT License. See licenses/compose-wheel-picker-LICENSE.txt.
+ * Modified for Bangumi Manager Reformed.
  */
 package com.copy9029.bangumimanagerreformed.ui.components.wheel_picker
 
