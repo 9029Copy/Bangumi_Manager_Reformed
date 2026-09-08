@@ -3,6 +3,7 @@
 /.kotlin/
 /.idea/
 /app/release/
+/design/
 /local.properties
 /.idea/caches
 /.idea/libraries
