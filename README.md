@@ -2,7 +2,7 @@
 
 一款使用 Jetpack Compose 编写的 Android 番剧进度管理应用。它围绕番剧季度、播出日期和观看进度组织本地数据，并提供日历、项目列表、季度概览以及备份恢复等功能。
 
-当前版本：`0.5.0-beta01`
+当前版本：`0.5.1-beta01`
 
 [下载最新版本](https://github.com/9029Copy/Bangumi_Manager_Reformed/releases) · [查看更新日志](CHANGELOG.md)
 
